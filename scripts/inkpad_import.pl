@@ -26,7 +26,7 @@
 # ~~~~
 #  * Enhance error-reporting
 #  * Use Dialogs on errors
-#  * Sixth bit of the item is the stroke ID, pack that in the SVG?
+#  * Sixth bit of the item is the stroke ID, pack that in the SVG with group tags (<g> & </g>)?
 #
 # Developer comments
 # ~~~~~~~~~~~~~~~~~~
