@@ -337,6 +337,10 @@ sub process
 
 sub top2svg
 {
+	#
+	# Initialize
+	#
+	
 	# Input values
 	my $file_top = shift;
 	my $file_svg = shift;
@@ -354,25 +358,17 @@ sub top2svg
 	return &log(-1, "No input file given") unless ($file_top);
 	return &log(-1, "No output file given") unless ($file_svg);
 	return &log(-1, "Output file \"$file_svg\" already exists") if (-e $file_svg);
+
+	
+	
+	#
+	# Read data
+	#
 	
 	# Open the files
-	&log(3, "Opening input and output streams");
+	&log(3, "Opening input stream");
 	open (TOP, $file_top) or return &log(-1, "Could not open input file \"$file_top\" ($!)");
 	binmode(TOP);
-	open (SVG, ">:utf8", $file_svg) or &log(-1, "Could not open output file \"$file_top\" ($!)");
-
-	# Print SVG header
-	&log(3, "Writing SVG header");
-	print SVG << "END"
-<?xml version="1.0" encoding="utf-8"?> 
-<svg xmlns = "http://www.w3.org/2000/svg"
-	xmlns:xlink = "http://www.w3.org/1999/xlink"
-	xmlns:ev = "http://www.w3.org/2001/xml-events"
-	version = "1.1" baseProfile = "full"
-	width = "$Layout{'Width'}" height = "$Layout{'Height'}" viewBox = "0 0 $xmax $ymax">
-	<rect x="0" y="0" width="$xmax" height="$ymax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>
-END
-;
 
 	# Check header integrity
 	&log(3, "Verifying header");
@@ -388,6 +384,10 @@ END
 	my $y1 = $ymax - ($data_begin[1] + $data_begin[2] * 256);
 	my $x1 = $data_begin[3] + $data_begin[4] * 256;
 	
+	# Array of arrays, containing all point data
+	##TODO: check memory usage on large drawings
+	my @data_paths;
+	
 	# Process actual data	(Item format: 0/135 - Y coörd - 256*Y coörd - X coörd - 256*X coörd - Stroke item)
 	&log(3, "Reading and converting data points");
 	while (read(TOP, $data_buffer, 6))
@@ -395,7 +395,7 @@ END
 		my @data_end = (unpack("C*",$data_buffer));
 		my $y2 = $ymax - ($data_end[1] + $data_end[2] * 256);
 		my $x2 = $data_end[3] + $data_end[4] * 256;
-		print SVG qq(\t<line x1 = "$x1" y1 = "$y1" x2 = "$x2" y2 = "$y2" fill = "none" stroke = "$Layout{'Colour_foreground'}" stroke-width = "$line"/>\n);
+		push @{ $data_paths[$data_end[5]] }, [$x1, $y1, $x2, $y2];	# Save the data points
 		if ($data_end[0] == 0)	# First bit was a zero, which means we are at the end of the file
 		{
 			# Note to self: WHAT is the meaning of this piece of code? When $data_end[0] is zero, we are at the last stroke, so we can't read 6 bytes out anymore... Maybe a 0 index does occur at the beginning of the file?
@@ -411,9 +411,44 @@ END
 		}
 	}
 	
-	# Close the files
-	&log(3, "Closing input and output streams");
+	# Close file
+	&log(3, "Closing input streams");
 	close (TOP);
+	
+	
+	#
+	# Write data
+	#
+
+	# Open file
+	&log(3, "Opening output stream");
+	open (SVG, ">:utf8", $file_svg) or &log(-1, "Could not open output file \"$file_top\" ($!)");
+
+	# Print SVG header
+	&log(3, "Writing SVG header");
+	print SVG << "END"
+<?xml version="1.0" encoding="utf-8"?> 
+<svg xmlns = "http://www.w3.org/2000/svg"
+	xmlns:xlink = "http://www.w3.org/1999/xlink"
+	xmlns:ev = "http://www.w3.org/2001/xml-events"
+	version = "1.1" baseProfile = "full"
+	width = "$Layout{'Width'}" height = "$Layout{'Height'}" viewBox = "0 0 $xmax $ymax">
+	<rect x="0" y="0" width="$xmax" height="$ymax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>
+END
+;
+
+	# Write data points in XML format
+	foreach my $data_path (@data_paths)
+	{
+		foreach my $data_stroke (@{ $data_path })
+		{
+			my ($x1, $y1, $x2, $y2) = @{ $data_stroke };
+			print SVG qq(\t<line x1 = "$x1" y1 = "$y1" x2 = "$x2" y2 = "$y2" fill = "none" stroke = "$Layout{'Colour_foreground'}" stroke-width = "$line"/>\n);
+		}
+	}
+
+	# Close the file
+	&log(3, "Closing output stream");
 	print SVG " </svg>\n";
 	close (SVG);
 	
