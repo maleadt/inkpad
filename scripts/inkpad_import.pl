@@ -438,11 +438,16 @@ END
 ;
 
 	# Write data points in XML format
+	my $debug_strokes = 0;
+	my $debug_breaks = 0;
+	my $debug_paths = 0;
 	foreach my $data_path (@data_paths)
 	{
 		# Variables
 		my ($x1, $y1, $x2, $y2) = (undef, undef, undef, undef);
 		my ($x1_prev, $y1_prev, $x2_prev, $y2_prev) = (undef, undef, undef, undef);
+		$debug_paths++;
+		##TODO: enhanced previous path detection, maybe search the entire data array?
 		
 		# Start the path
 		print SVG qq(\t<path fill="none" stroke="$Layout{'Colour_foreground'}" stroke-width="$line" d=");
@@ -459,6 +464,9 @@ END
 				{
 					# ...so continue the stroke
 					print SVG qq($x2,$y2 );
+					
+					# and log it
+					$debug_strokes++;
 				}
 
 				# No match...
@@ -469,6 +477,10 @@ END
 					
 					# and start a new one
 					print SVG qq(M$x1,$y1 L$x2,$y2 );
+					
+					# and log it
+					$debug_strokes++;
+					$debug_breaks++;
 
 				}
 			}
@@ -477,6 +489,9 @@ END
 			else
 			{
 				print SVG qq(M$x1,$y1 L$x2,$y2 );
+				
+				# and log it
+				$debug_strokes++;
 			}
 			
 			# Shift data
@@ -486,6 +501,9 @@ END
 		# End the path
 		print SVG qq("/>\n);
 	}
+		
+	# Verbose log
+	&log(3, "Got $debug_paths paths, all together $debug_strokes strokes, but with $debug_breaks stroke interruptions");
 
 	# Close the file
 	&log(3, "Closing output stream");
