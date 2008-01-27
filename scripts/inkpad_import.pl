@@ -38,13 +38,6 @@
 #   2 = Very verbose message (process launching)
 #   3 = Extremely verbose message (process internals)
 #
-# Developer comments
-# ~~~~~~~~~~~~~~~~~~
-#  * Three values need user modification:
-#    [ $directory_source = mount point of the Ink Pad (not needed if you use the UDEV rule) ]
-#      $directory_target = Target directory for the images
-#      @months = localisation for the folder naming
-#
 
 
 # Copyright (c) 2008 MALEADt <maleadt@gmail.com>
