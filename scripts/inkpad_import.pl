@@ -30,12 +30,12 @@
 #
 # Log priority levels
 # ~~~~~~~~~~~~~~~~~~~
-#  -3 = Fatal error (entire script fails)
-#  -2 = Critical error (process has crashed)
-#  -1 = Warning (possibel failure)
+#  -3 = Fatal error (script cannot be launched)
+#  -2 = Critical error (script has crashed)
+#  -1 = Warning (possible failure)
 #   0 = Neutral message
-#   1 = Verbose message
-#   2 = Very verbose message
+#   1 = Verbose message (main thread internals)
+#   2 = Very verbose message (process launching)
 #   3 = Extremely verbose message (process internals)
 #
 # Developer comments
@@ -96,7 +96,7 @@
 # Needed modules
 use strict;
 use warnings;
-use Getopt::Long
+use Getopt::Long;
 
 # Counter variables
 my $directory_subfolderCount = 0;
@@ -119,23 +119,26 @@ my $bin_compress = "gzip";
 #
 
 # Read parameters
-my ($Opt_Source, $Opt_Target, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Help);
+my ($Opt_Source, $Opt_Target, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
 my $Opt_Result = GetOptions(
-	"source=s"	=>	"\$Opt_Source",
-	"target=s"	=>	"\$Opt_Target",
-	"no-compress"	=>	"\$Opt_NoCompress",
-	"no-delete"	=>	"\$Opt_NoDelete",
-	"verbosity=i"	=>	"\$Opt_Verbose",
-	"quiet"		=>	"\$Opt_Quiet",
-	"really-quiet"	=>	"\$Opt_ReallyQuiet",
-	"help"		=>	"\$Opt_Help",
+	"source=s"	=>	\$Opt_Source,
+	"target=s"	=>	\$Opt_Target,
+	"no-compress"	=>	\$Opt_NoCompress,
+	"no-delete"	=>	\$Opt_NoDelete,
+	"verbosity=i"	=>	\$Opt_Verbose,
+	"quiet"		=>	\$Opt_Quiet,
+	"really-quiet"	=>	\$Opt_ReallyQuiet,
+	"help"		=>	\$Opt_Help,
 );
 
 # Output handling
-my $output_level;
-$output_level = $Opt_Verbose (if $Opt_Verbose);
+my $output_level = 0;
+$output_level = $Opt_Verbose if ($Opt_Verbose);
 $output_level = -1 if ($Opt_Quiet);
-$output_level = -2 of ($Opt_ReallyQuiet);
+$output_level = -2 if ($Opt_ReallyQuiet);
+
+# Welcome message
+&log(0, "Initializing");
 
 # Display help, and exit
 if ($Opt_Help)
@@ -166,7 +169,7 @@ Additional parameters:
   --really-quiet    Be really quiet (only display errors)
   --help            Display this help
 
-Copyright 2008, by Tim Besard (tim.besard@gmail.com)
+Copyright 2008, by Tim Besard (tim.besard\@gmail.com)
 END
 ;
 	exit;
@@ -177,8 +180,8 @@ my $directory_source = '/media/disk';	# Default value
 if ($Opt_Source)
 {
 	# We have an override value
-	&log(
 	$directory_source = $Opt_Source;
+	&log(1, "Source directory has been overrided to \"$directory_source\"");
 }
 else
 {
@@ -188,10 +191,11 @@ else
 	{
 		next unless (m/PenPadStorage on ([^ ]+)/);
 		$directory_source = $1;
-		print "- Detected mounted Pen Pad storage on \"$1\"\n";	#" Strange GEDIT behaviour...
+		&log(1, "Source directory has been altered by UDEV rule to \"$directory_source\"");
 	}
 	close MOUNTS;
 }
+&log(1, "Using source directory: \"$directory_source\"");
 
 # Target directory handling
 my $directory_target = '/home/tim/Afbeeldingen/Tekeningen';
@@ -199,14 +203,18 @@ if ($Opt_Target)
 {
 	# We have an override value
 	$directory_target = $Opt_Target;
+	&log(1, "Target directory has been overrided to \"$directory_target\"");
 }
+&log(1, "Using target directory: \"$directory_target\"");
+
+# Other debug statements
+&log(1, "Compression has been disabled") if ($Opt_NoCompress);
+&log(1, "Will not delete source files") if ($Opt_NoDelete);
 
 
 ##########
 ###MAIN###
 ##########
-
-print "* Initializing\n";
 
 # Generate a subfolder tag
 my @months = qw (januari februari maart april mei juni juli augustus september oktober november december);
@@ -216,17 +224,27 @@ my $date_day = $timeData[3];
 my $date_month = $months[$timeData[4]];
 my $directory_subfolder = "$date_day $date_month $date_year";
 
-# Process directory if valid
-$directory_source =~ s/\/$//;	# Remove ending "/"
-if (-e "$directory_source/mynote.cfg")
+# Validate target directory
+$directory_target =~ s/\/$//;	# Remove ending "/"
+if (!-d $directory_target)
 {
+	&log(-2, "Target directory \"$directory_target\" is unexistant or not accisable");
+	exit;
+}
+
+# Validate source directory
+$directory_source =~ s/\/$//;	# Remove ending "/"
+if (-d $directory_source)
+{
+	&log(0, "Scanning and converting all files in \"$directory_source\" recursively");
 	process($directory_source);
 } else {
-	print "! Cannot use \"$directory_source\"\n";
+	&log(-2, "Source directory \"$directory_source\" is unexistant or not accisable");
 	exit;
 }
 
 # Bye-bye
+&log(0, "Exiting");
 exit;
 
 
@@ -244,21 +262,24 @@ sub process
 {
 	# Input values
 	my $directory = shift;
-	print "* Processing \"$directory\"\n";
+	&log(2, "Scanning directory \"$directory\"");
 	
 	# Directory handling, did we already create a new folder?
 	my $directory_newfolder = 0;
 	my $directory_nonTop = 0;
-	
+
 	# Open the directory
-	opendir(*DIR, $directory) or die "cannot open directory ($!)";
+	local *DIR;
+	opendir(DIR, $directory) or die "cannot open directory ($!)";
 	
 	# List all files in the directory
-	while (defined(my $file = readdir(*DIR)))
+	while (defined(my $file = readdir(DIR)))
 	{
 		# We got a directory
 		if (-d "$directory/$file")
 		{
+			&log(3, "Got directory $file");
+			
 			# Skip unwanted directories (. and ..)
 			next if ($file =~ m/^\.{1,2}$/);
 			
@@ -273,6 +294,8 @@ sub process
 		# We got a file
 		elsif (-e "$directory/$file")
 		{
+			&log(3, "Got file $file");
+			
 			# We need a .top file!
 			$directory_nonTop++ unless ($file =~ m/^(.+)\.top$/i);	# We got a non .top file, don't delete this folder!
 			next unless ($file =~ m/^(.+)\.top$/i);
@@ -287,14 +310,21 @@ sub process
 				$directory_newfolder = 1;
 			}
 			
-			# Start the conversion
-			top2svgz("$directory/$file", "$directory_target/$directory_subfolder - $directory_subfolderCount/$1.svgz");
+			# Start the conversion to the requested file format
+			if ($Opt_NoCompress)
+			{
+				top2svg("$directory/$file", "$directory_target/$directory_subfolder - $directory_subfolderCount/$1.svg");
+			} else {
+				top2svgz("$directory/$file", "$directory_target/$directory_subfolder - $directory_subfolderCount/$1.svgz");
+			}
 			
 			# Delete the original file
 			unlink "$directory/$file" unless ($Opt_NoDelete);
 		}
 	}
-	closedir(*DIR);
+	closedir(DIR);
+	
+	&log(3, "Finished processing $directory");
 	
 	# Clean up the processed directory (only if we are allowed to!)
 	rmdir $directory if (($directory_nonTop == 0)&&($Opt_NoDelete != 1));
@@ -309,7 +339,8 @@ sub top2svg
 	# Input values
 	my $file_top = shift;
 	my $file_svg = shift;
-	print "\t- Converting \"$file_top\"\n";
+	
+	&log(2, "Converting \"$file_top\" to \"$file_svg\"");
 	
 	# Configure
 	my $xmax = 8800;
@@ -318,16 +349,18 @@ sub top2svg
 	my $data_buffer = "";
 
 	# Error check
-	return (0, "no input file given") unless ($file_top);
-	return (0, "could not parse filename") unless ($file_svg);
-	return (0, "target file already exists") if (-e $file_svg);
+	return &log(-1, "No input file given") unless ($file_top);
+	return &log(-1, "No output file given") unless ($file_svg);
+	return &log(-1, "Output file \"$file_svg\" already exists") if (-e $file_svg);
 	
 	# Open the files
-	open (TOP, $file_top) or return (0, "could not open input file ($!)");
+	&log(3, "Opening input and output streams");
+	open (TOP, $file_top) or return &log(-1, "Could not open input file \"$file_top\" ($!)");
 	binmode(TOP);
-	open (SVG, ">:utf8", $file_svg) or return (0, "could not open output file ($!)");
+	open (SVG, ">:utf8", $file_svg) or &log(-1, "Could not open output file \"$file_top\" ($!)");
 
-	# Prine SVG header
+	# Print SVG header
+	&log(3, "Writing SVG header");
 	print SVG << "END"
 <?xml version="1.0" encoding="utf-8"?> 
 <svg xmlns = "http://www.w3.org/2000/svg"
@@ -340,18 +373,21 @@ END
 ;
 
 	# Check header integrity
+	&log(3, "Verifying header");
 	read(TOP, $data_buffer, 6);
 	if ($data_buffer ne "WALTOP")
-		{ return (0, "unknown file format"); }
+		{ &log(-1, "Damaged header: \"$file_top\"") }
 	
 	# Process header
+	&log(3, "Processing header");
 	read(TOP, $data_buffer, 26);
-	read(TOP, $data_buffer, 6) or return (0, "file is empty");
+	read(TOP, $data_buffer, 6) or &log(-1, "File is empty: \"$file_top\"");
 	my @data_begin = (unpack("C*",$data_buffer));
 	my $y1 = $ymax - ($data_begin[1] + $data_begin[2] * 256);
 	my $x1 = $data_begin[3] + $data_begin[4] * 256;
 	
 	# Process actual data	(Item format: 0/135 - Y coörd - 256*Y coörd - X coörd - 256*X coörd - Stroke item)
+	&log(3, "Reading and converting data points");
 	while (read(TOP, $data_buffer, 6))
 	{
 		my @data_end = (unpack("C*",$data_buffer));
@@ -374,6 +410,7 @@ END
 	}
 	
 	# Close the files
+	&log(3, "Closing input and output streams");
 	close (TOP);
 	print SVG " </svg>\n";
 	close (SVG);
@@ -406,18 +443,46 @@ sub top2svgz
 }
 
 sub compress
-{
+{	
 	# Input values
 	my $file_uncompressed = shift;
 	my $file_compressed = shift;
 	
+	&log(2, "Compressing \"$file_uncompressed\" to \"$file_compressed\"");
+	
 	# Compress file
+	&log(3, "Compressing \"$file_uncompressed\"");
 	system($bin_compress, "-f9", $file_uncompressed);
 	
 	# Rename file
+	&log(3, "Renaming \"$file_uncompressed\" to \"$file_compressed\"");
 	rename("$file_uncompressed.gz", $file_compressed);
 	
 	return 1;
+}
+
+
+#
+# System routines
+#
+
+# Log routine, enhanced print routine with priority options
+sub log
+{
+	# Input values
+	my $log_level = shift;
+	my $log_msg = shift;
+	
+	# Prefix table
+	my @prefix = ("!", "!", "!", "*" , "\t-", "\t\t-", "\t\t~");
+	
+	# Print the message; if we want to see it
+	if ($log_level <= $output_level)	# $output_level is the maximum level we want to see
+	{
+		print $prefix[$log_level + 3], " ", $log_msg, "\n";
+	}
+	
+	return;
 }
 
 __END__
