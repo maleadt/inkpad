@@ -28,6 +28,16 @@
 #  * Use Dialogs on errors
 #  * Sixth bit of the item is the stroke ID, pack that in the SVG with group tags (<g> & </g>)?
 #
+# Log priority levels
+# ~~~~~~~~~~~~~~~~~~~
+#  -3 = Fatal error (entire script fails)
+#  -2 = Critical error (process has crashed)
+#  -1 = Warning (possibel failure)
+#   0 = Neutral message
+#   1 = Verbose message
+#   2 = Very verbose message
+#   3 = Extremely verbose message (process internals)
+#
 # Developer comments
 # ~~~~~~~~~~~~~~~~~~
 #  * Three values need user modification:
@@ -79,17 +89,17 @@
 ##CONFIG##
 ##########
 
+#
+# Initialisation
+#
+
 # Needed modules
 use strict;
 use warnings;
+use Getopt::Long
 
 # Counter variables
 my $directory_subfolderCount = 0;
-
-
-#
-# User-configurable variables
-#
 
 # Layout properties
 my %Layout = (
@@ -103,10 +113,93 @@ my %Layout = (
 # Binaries
 my $bin_compress = "gzip";
 
-# Directory setup
-my $directory_source = '/media/disk';	# This is an override value, if you don't use the udev rule
-my $directory_target = '/home/tim/Afbeeldingen/Tekeningen';
 
+#
+# Command-line parameters
+#
+
+# Read parameters
+my ($Opt_Source, $Opt_Target, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Help);
+my $Opt_Result = GetOptions(
+	"source=s"	=>	"\$Opt_Source",
+	"target=s"	=>	"\$Opt_Target",
+	"no-compress"	=>	"\$Opt_NoCompress",
+	"no-delete"	=>	"\$Opt_NoDelete",
+	"verbosity=i"	=>	"\$Opt_Verbose",
+	"quiet"		=>	"\$Opt_Quiet",
+	"really-quiet"	=>	"\$Opt_ReallyQuiet",
+	"help"		=>	"\$Opt_Help",
+);
+
+# Output handling
+my $output_level;
+$output_level = $Opt_Verbose (if $Opt_Verbose);
+$output_level = -1 if ($Opt_Quiet);
+$output_level = -2 of ($Opt_ReallyQuiet);
+
+# Display help, and exit
+if ($Opt_Help)
+{
+	print <<END
+Usage: inkpad_import.pl [OPTIONS]
+Import proprietary .TOP files from a Medion MD 85276 Digital Ink Pad,
+convert them to an Gzip compressed SVG/XML format, and save them
+on a local source
+
+Additional parameters:
+  --source=PATH     Source directory for the .TOP files.
+                      Most likely this will the mount point
+                      of your MD 85276.
+                    If not specified, the script will try to
+                      detect the mount point (will only work
+                      if the UDEV rule has been activated),
+                      or default to "/media/disk".
+  --target=PATH     Target directory for the .SVG(Z) files.
+                      Subdirectories will be created based on
+                      the current date and the subfolders relative
+                      to the source directory.
+  --no-compress     No compression will be used, resulting files
+                      will be raw SVG/XML.
+  --no-delete       Original files and folders will not be deleted
+  --verbosity=LVL   Level of verbose output [1, 2, 3]
+  --quiet           Be quiet (only display errors and warnings)
+  --really-quiet    Be really quiet (only display errors)
+  --help            Display this help
+
+Copyright 2008, by Tim Besard (tim.besard@gmail.com)
+END
+;
+	exit;
+}
+
+# Source directory handling
+my $directory_source = '/media/disk';	# Default value
+if ($Opt_Source)
+{
+	# We have an override value
+	&log(
+	$directory_source = $Opt_Source;
+}
+else
+{
+	# We do not have an override value, check for UDEV rule
+	open(MOUNTS, "/bin/mount |");
+	while (<MOUNTS>)
+	{
+		next unless (m/PenPadStorage on ([^ ]+)/);
+		$directory_source = $1;
+		print "- Detected mounted Pen Pad storage on \"$1\"\n";	#" Strange GEDIT behaviour...
+	}
+	close MOUNTS;
+}
+
+# Target directory handling
+my $directory_target = '/home/tim/Afbeeldingen/Tekeningen';
+if ($Opt_Target)
+{
+	# We have an override value
+	$directory_target = $Opt_Target;
+}
 
 
 ##########
@@ -114,16 +207,6 @@ my $directory_target = '/home/tim/Afbeeldingen/Tekeningen';
 ##########
 
 print "* Initializing\n";
-
-# Find out mount point
-open(MOUNTS, "/bin/mount |");
-while (<MOUNTS>)
-{
-	next unless (m/PenPadStorage on ([^ ]+)/);	
-	$directory_source = $1;
-	print "- Detected mounted Pen Pad storage on \"$1\"\n";
-}
-close MOUNTS;
 
 # Generate a subfolder tag
 my @months = qw (januari februari maart april mei juni juli augustus september oktober november december);
@@ -208,13 +291,13 @@ sub process
 			top2svgz("$directory/$file", "$directory_target/$directory_subfolder - $directory_subfolderCount/$1.svgz");
 			
 			# Delete the original file
-			unlink "$directory/$file";
+			unlink "$directory/$file" unless ($Opt_NoDelete);
 		}
 	}
 	closedir(*DIR);
 	
 	# Clean up the processed directory (only if we are allowed to!)
-	rmdir $directory if ($directory_nonTop == 0);
+	rmdir $directory if (($directory_nonTop == 0)&&($Opt_NoDelete != 1));
 }
 
 #
