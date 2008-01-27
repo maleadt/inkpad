@@ -440,11 +440,51 @@ END
 	# Write data points in XML format
 	foreach my $data_path (@data_paths)
 	{
+		# Variables
+		my ($x1, $y1, $x2, $y2) = (undef, undef, undef, undef);
+		my ($x1_prev, $y1_prev, $x2_prev, $y2_prev) = (undef, undef, undef, undef);
+		
+		# Start the path
+		print SVG qq(\t<path fill="none" stroke="$Layout{'Colour_foreground'}" stroke-width="$line" d=");
 		foreach my $data_stroke (@{ $data_path })
 		{
-			my ($x1, $y1, $x2, $y2) = @{ $data_stroke };
-			print SVG qq(\t<line x1 = "$x1" y1 = "$y1" x2 = "$x2" y2 = "$y2" fill = "none" stroke = "$Layout{'Colour_foreground'}" stroke-width = "$line"/>\n);
+			# Save current data
+			($x1, $y1, $x2, $y2) = @{ $data_stroke };
+			
+			# Only calculate path if we got previous data
+			if ((defined $x1_prev)&&(defined $y1_prev)&&(defined $x2_prev)&&(defined $y2_prev))
+			{
+				# Endpoints of previous stroke matches with beginpoints of current stroke...
+				if (($x2_prev == $x1)&&($y2_prev == $y1))
+				{
+					# ...so continue the stroke
+					print SVG qq($x2,$y2 );
+				}
+
+				# No match...
+				else
+				{
+					# ...so end the stroke
+					print SVG qq($x2_prev,$y2_prev );
+					
+					# and start a new one
+					print SVG qq(M$x1,$y1 L$x2,$y2 );
+
+				}
+			}
+			
+			# We got no previous data, start a begin point
+			else
+			{
+				print SVG qq(M$x1,$y1 L$x2,$y2 );
+			}
+			
+			# Shift data
+			($x1_prev, $y1_prev, $x2_prev, $y2_prev) = ($x1, $y1, $x2, $y2);
 		}
+			
+		# End the path
+		print SVG qq("/>\n);
 	}
 
 	# Close the file
