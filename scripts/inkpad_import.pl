@@ -26,7 +26,7 @@
 # ~~~~
 #  * Enhance error-reporting
 #  * Use Dialogs on errors
-#  * Sixth bit of the item is the stroke ID, pack that in the SVG with group tags (<g> & </g>)?
+#  * Find out what the sixth bit in the .TOP file means, it isn't the stroke ID (as not using it results in less path breakages)
 #
 # Log priority levels
 # ~~~~~~~~~~~~~~~~~~~
@@ -386,7 +386,7 @@ sub top2svg
 	
 	# Array of arrays, containing all point data
 	##TODO: check memory usage on large drawings
-	my @data_paths;
+	my @data_points;
 	
 	# Process actual data	(Item format: 0/135 - Y coörd - 256*Y coörd - X coörd - 256*X coörd - Stroke item)
 	&log(3, "Reading and converting data points");
@@ -395,7 +395,7 @@ sub top2svg
 		my @data_end = (unpack("C*",$data_buffer));
 		my $y2 = $ymax - ($data_end[1] + $data_end[2] * 256);
 		my $x2 = $data_end[3] + $data_end[4] * 256;
-		push @{ $data_paths[$data_end[5]] }, [$x1, $y1, $x2, $y2];	# Save the data points
+		push @data_points, [$x1, $y1, $x2, $y2];	# Save the data points
 		if ($data_end[0] == 0)	# First bit was a zero, which means we are at the end of the file
 		{
 			# Note to self: WHAT is the meaning of this piece of code? When $data_end[0] is zero, we are at the last stroke, so we can't read 6 bytes out anymore... Maybe a 0 index does occur at the beginning of the file?
@@ -415,6 +415,9 @@ sub top2svg
 	&log(3, "Closing input streams");
 	close (TOP);
 	
+	# Undef variables we'll need later on
+	undef $x1, $y1;
+	
 	
 	#
 	# Write data
@@ -428,82 +431,74 @@ sub top2svg
 	&log(3, "Writing SVG header");
 	print SVG << "END"
 <?xml version="1.0" encoding="utf-8"?> 
-<svg xmlns = "http://www.w3.org/2000/svg"
-	xmlns:xlink = "http://www.w3.org/1999/xlink"
-	xmlns:ev = "http://www.w3.org/2001/xml-events"
-	version = "1.1" baseProfile = "full"
-	width = "$Layout{'Width'}" height = "$Layout{'Height'}" viewBox = "0 0 $xmax $ymax">
+<svg xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xmlns:ev="http://www.w3.org/2001/xml-events"
+	version="1.1" baseProfile="full"
+	width="$Layout{'Width'}" height="$Layout{'Height'}" viewBox="0 0 $xmax $ymax">
 	<rect x="0" y="0" width="$xmax" height="$ymax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>
 END
 ;
 
 	# Write data points in XML format
-	my $debug_strokes = 0;
-	my $debug_breaks = 0;
 	my $debug_paths = 0;
-	foreach my $data_path (@data_paths)
+	my $debug_strokes = 0;	
+	my $path_data = qq(fill="none" stroke="$Layout{'Colour_foreground'}" stroke-width="$line");
+	my ($x1, $y1, $x2, $y2) = (undef, undef, undef, undef);
+	my ($x1_prev, $y1_prev, $x2_prev, $y2_prev) = (undef, undef, undef, undef);
+	
+	
+	# Start the calculation
+	foreach my $data_stroke (@data_points)
 	{
-		# Variables
-		my ($x1, $y1, $x2, $y2) = (undef, undef, undef, undef);
-		my ($x1_prev, $y1_prev, $x2_prev, $y2_prev) = (undef, undef, undef, undef);
-		$debug_paths++;
-		##TODO: enhanced previous path detection, maybe search the entire data array?
+		# Save current data
+		($x1, $y1, $x2, $y2) = @{ $data_stroke };
 		
-		# Start the path
-		print SVG qq(\t<path fill="none" stroke="$Layout{'Colour_foreground'}" stroke-width="$line" d=");
-		foreach my $data_stroke (@{ $data_path })
+		# Only calculate path if we got previous data
+		if ((defined $x1_prev)&&(defined $y1_prev)&&(defined $x2_prev)&&(defined $y2_prev))
 		{
-			# Save current data
-			($x1, $y1, $x2, $y2) = @{ $data_stroke };
-			
-			# Only calculate path if we got previous data
-			if ((defined $x1_prev)&&(defined $y1_prev)&&(defined $x2_prev)&&(defined $y2_prev))
+			# Endpoints of previous stroke matches with beginpoints of current stroke...
+			if (($x2_prev == $x1)&&($y2_prev == $y1))
 			{
-				# Endpoints of previous stroke matches with beginpoints of current stroke...
-				if (($x2_prev == $x1)&&($y2_prev == $y1))
-				{
-					# ...so continue the stroke
-					print SVG qq($x2,$y2 );
-					
-					# and log it
-					$debug_strokes++;
-				}
-
-				# No match...
-				else
-				{
-					# ...so end the stroke
-					print SVG qq($x2_prev,$y2_prev );
-					
-					# and start a new one
-					print SVG qq(M$x1,$y1 L$x2,$y2 );
-					
-					# and log it
-					$debug_strokes++;
-					$debug_breaks++;
-
-				}
-			}
-			
-			# We got no previous data, start a begin point
-			else
-			{
-				print SVG qq(M$x1,$y1 L$x2,$y2 );
+				# ...so continue the stroke
+				print SVG qq($x2,$y2 );
 				
 				# and log it
 				$debug_strokes++;
 			}
-			
-			# Shift data
-			($x1_prev, $y1_prev, $x2_prev, $y2_prev) = ($x1, $y1, $x2, $y2);
+				# No match...
+			else
+			{
+				# ...so end the path
+				print SVG qq($x2_prev,$y2_prev"/>\n);
+				
+				# and start a new one
+				print SVG qq(\t<path $path_data d="M$x1,$y1 L$x2,$y2 );
+				
+				# and log it
+				$debug_strokes++;
+				$debug_paths++;
+				}
 		}
+		
+		# We got no previous data, start a new path
+		else
+		{
+			print SVG qq(\t<path $path_data d="M$x1,$y1 L$x2,$y2 );
 			
-		# End the path
-		print SVG qq("/>\n);
+			# and log it
+			$debug_paths++;
+		}
+		
+		# Shift data
+		($x1_prev, $y1_prev, $x2_prev, $y2_prev) = ($x1, $y1, $x2, $y2);
 	}
+	
+	# End the last stroke
+	print SVG qq($x2_prev,$y2_prev"/>\n);
 		
 	# Verbose log
-	&log(3, "Got $debug_paths paths, all together $debug_strokes strokes, but with $debug_breaks stroke interruptions");
+	&log(3, "Got $debug_paths paths, all together $debug_strokes strokes");
 
 	# Close the file
 	&log(3, "Closing output stream");
