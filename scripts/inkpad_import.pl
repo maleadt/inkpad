@@ -40,7 +40,7 @@
 #
 
 
-# Copyright (c) 2008 MALEADt <maleadt@gmail.com>
+# Copyright (c) 2008 Tim Besard <tim.besard@gmail.com>
 # Based upon top2svg v0.2, copyright (c) 2007 AngieSoft
 # All rights reserved.
 #
