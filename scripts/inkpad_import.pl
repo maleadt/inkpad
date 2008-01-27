@@ -101,13 +101,14 @@ use Getopt::Long;
 # Counter variables
 my $directory_subfolderCount = 0;
 
+##TODO: Bereik (width height), effectief full A4?
 # Layout properties
 my %Layout = (
 	'Colour_foreground'	 =>	'black',
 	'Colour_background'	 =>	'white',
 	'Thickness'		 =>	10,		# Should be larger then 3px
-	'Width'			 =>	600,
-	'Height'		 =>	900
+	'Width'			 =>	"210mm",
+	'Height'		 =>	"279.4mm"
 );
 
 # Binaries
@@ -343,6 +344,7 @@ sub top2svg
 	&log(2, "Converting \"$file_top\" to \"$file_svg\"");
 	
 	# Configure
+	##TODO: bereik van inkpad, effectief 8800 x 12000?
 	my $xmax = 8800;
 	my $ymax = 12000;
 	my $line = $Layout{'Thickness'} . "px";
