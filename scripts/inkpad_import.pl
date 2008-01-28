@@ -102,8 +102,8 @@ my %Layout = (
 	'Colour_background'	 =>	'white',
 	'Thickness'		 =>	10,		# Should be larger then 3px
 	'Width'			 =>	8500,
-	'Height'		 =>	12000,
-	'OffsetX'		 =>	0,
+	'Height'		 =>	12000,		# Width and height are real dimensions...
+	'OffsetX'		 =>	0,		# ...they get corrected throughout the script by the offset values
 	'OffsetY'		 =>	1000,
 );
 
@@ -261,6 +261,8 @@ exit;
 # General routines
 #
 
+# Scan directory recursively
+##TODO: depend launched read and write routines on found file (hash: extention -> conversion routine)
 sub process
 {
 	# Input values
@@ -330,14 +332,39 @@ sub process
 	&log(3, "Finished processing $directory");
 	
 	# Clean up the processed directory (only if we are allowed to!)
-	rmdir $directory if (($directory_nonTop == 0)&&($Opt_NoDelete != 1));
+	rmdir $directory if (	  ($directory_nonTop == 0)			# If we have no non-.TOP files
+				&&($Opt_NoDelete != 1)				# If the user hasn't said otherwise
+				&&($directory ne $directory_source)	);	# If the directory isn't the top directory
 }
 
+# Compress given file
+##TODO: no fix ext detecion, just detect ext and add a z
+sub compress
+{	
+	# Input values
+	my $file_uncompressed = shift;
+	my $file_compressed = shift;
+	
+	&log(2, "Compressing \"$file_uncompressed\" to \"$file_compressed\"");
+	
+	# Compress file
+	&log(3, "Compressing \"$file_uncompressed\"");
+	system($bin_compress, "-f9", $file_uncompressed);
+	
+	# Rename file
+	&log(3, "Renaming \"$file_uncompressed\" to \"$file_compressed\"");
+	rename("$file_uncompressed.gz", $file_compressed);
+	
+	return 1;
+}
+
+
 #
-# Top to SVG routines
+# Reading and writing routines
 #
 
-sub top2svg
+# Read data points from TOP format
+sub readTop
 {
 	#
 	# Initialize
@@ -345,24 +372,21 @@ sub top2svg
 	
 	# Input values
 	my $file_top = shift;
-	my $file_svg = shift;
 	
-	&log(2, "Converting \"$file_top\" to \"$file_svg\"");
-	
-	# Configure
-	my $line = $Layout{'Thickness'} . "px";
+	# Read data
 	my $data_buffer = "";
+	my @data_points;
 
 	# Error check
 	return &log(-1, "No input file given") unless ($file_top);
-	return &log(-1, "No output file given") unless ($file_svg);
-	return &log(-1, "Output file \"$file_svg\" already exists") if (-e $file_svg);
 
 	
 	
 	#
 	# Read data
 	#
+	
+	&log(2, "Reading from \"$file_top\"");
 	
 	# Open the files
 	&log(3, "Opening input stream");
@@ -382,10 +406,6 @@ sub top2svg
 	my @data_begin = (unpack("C*",$data_buffer));
 	my $y1 = $Layout{'Height'} - ($data_begin[1] + $data_begin[2] * 256);
 	my $x1 = $data_begin[3] + $data_begin[4] * 256;
-	
-	# Array of arrays, containing all point data
-	##TODO: check memory usage on large drawings
-	my @data_points;
 	
 	# Process actual data	(Item format: 0/135 - Y coörd - 256*Y coörd - X coörd - 256*X coörd - Stroke item)
 	&log(3, "Reading and converting data points");
@@ -426,17 +446,35 @@ sub top2svg
 	&log(3, "Closing input streams");
 	close (TOP);
 	
-	# Undef variables we'll need later on
-	undef $x1, $y1;
+	return \@data_points;
+}
+
+
+# Write data points in SVG format
+sub writeSvg
+{
+	#
+	# Initialize
+	#
 	
+	# Input values
+	my $file_svg = shift;
+	my $data_points_ref = shift;
+	my @data_points = @$data_points_ref;
+	
+	# Error check
+	return &log(-1, "Output file \"$file_svg\" already exists") if (-e $file_svg);
+
 	
 	#
 	# Write data
 	#
+	
+	&log(2, "Writing to \"$file_svg\"");
 
 	# Open file
 	&log(3, "Opening output stream");
-	open (SVG, ">:utf8", $file_svg) or &log(-1, "Could not open output file \"$file_top\" ($!)");
+	open (SVG, ">:utf8", $file_svg) or &log(-1, "Could not open output file \"$file_svg\" ($!)");
 
 	# Print SVG header
 	&log(3, "Writing SVG header");
@@ -469,7 +507,7 @@ END
 	# Write data points in XML format
 	my $debug_paths = 0;
 	my $debug_strokes = 0;	
-	my $path_data = qq(fill="none" stroke="$Layout{'Colour_foreground'}" stroke-width="$line");
+	my $path_data = qq(fill="none" stroke="$Layout{'Colour_foreground'}" stroke-width="$Layout{'Thickness'}px");
 	my ($x1, $y1, $x2, $y2) = (undef, undef, undef, undef);
 	my ($x1_prev, $y1_prev, $x2_prev, $y2_prev) = (undef, undef, undef, undef);
 	
@@ -534,6 +572,40 @@ END
 	return 1;
 }
 
+#
+# Graphical routines
+#
+
+# Process data points, and detect paths
+##TODO: merge the path detection from writeSVG to here
+##TODO: change the @data_points layout to a more generic format (which support paths, and could server as input for all write routines)
+##       Purpose, generic format can be preprocessed by several bezier detection routines
+
+#
+# Conversion wrappers
+#
+
+# TOP to SVG wrapper
+sub top2svg
+{
+	#
+	# Initialize
+	#
+	
+	# Input values
+	my $file_top = shift;
+	my $file_svg = shift;
+	
+	&log(2, "Converting \"$file_top\" to \"$file_svg\"");
+	
+	# Convert them
+	my $data_points_ref = readTop($file_top);
+	writeSvg($file_svg, $data_points_ref);
+	
+	return 1;
+}
+
+# TOP to SVGZ wrapper
 sub top2svgz
 {
 	# Input values
@@ -554,25 +626,6 @@ sub top2svgz
 	
 	# Compress file
 	compress($file_svg, $file_svgz);
-	
-	return 1;
-}
-
-sub compress
-{	
-	# Input values
-	my $file_uncompressed = shift;
-	my $file_compressed = shift;
-	
-	&log(2, "Compressing \"$file_uncompressed\" to \"$file_compressed\"");
-	
-	# Compress file
-	&log(3, "Compressing \"$file_uncompressed\"");
-	system($bin_compress, "-f9", $file_uncompressed);
-	
-	# Rename file
-	&log(3, "Renaming \"$file_uncompressed\" to \"$file_compressed\"");
-	rename("$file_uncompressed.gz", $file_compressed);
 	
 	return 1;
 }
