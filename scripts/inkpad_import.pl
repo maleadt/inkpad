@@ -131,11 +131,12 @@ my $bin_compress = "gzip";
 #
 
 # Read parameters
-my ($Opt_Source, $Opt_Target, $Opt_Landscape, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
+my ($Opt_Source, $Opt_Target, $Opt_Landscape, $Opt_Scale, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
 my $Opt_Result = GetOptions(
 	"source=s"	=>	\$Opt_Source,
 	"target=s"	=>	\$Opt_Target,
 	"landscape"	=>	\$Opt_Landscape,
+	"scale=i"	=>	\$Opt_Scale,
 	"no-compress"	=>	\$Opt_NoCompress,
 	"no-delete"	=>	\$Opt_NoDelete,
 	"verbosity=i"	=>	\$Opt_Verbose,
@@ -171,6 +172,7 @@ Additional parameters:
                       if the UDEV rule has been activated),
                       or default to "/media/disk".
   --landscape       Generate SVG in landscape format
+  --scale=PERCENT   Scale the image by a given percent (default 10)
   --target=PATH     Target directory for the .SVG(Z) files.
                       Subdirectories will be created based on
                       the current date and the subfolders relative
@@ -220,6 +222,9 @@ if ($Opt_Target)
 	&log(1, "Target directory has been overrided to \"$directory_target\"");
 }
 &log(1, "Using target directory: \"$directory_target\"");
+
+# Scale level handling
+$Layout{'Scale'} = ($Opt_Scale / 10) if ($Opt_Scale);
 
 # Other debug statements
 &log(1, "Compression has been disabled") if ($Opt_NoCompress);
@@ -756,8 +761,8 @@ sub top2svg
 	# Convert them
 	my $data_points_ref = readTop($file_top);
 	$data_points_ref = processMultipath($data_points_ref);
-	$data_points_ref = processRotate($data_points_ref, 90);
-	$data_points_ref = processRelocate($data_points_ref);
+	#$data_points_ref = processRotate($data_points_ref, 90);
+	#$data_points_ref = processRelocate($data_points_ref);
 	writeSvg($file_svg, $data_points_ref);
 	
 	return 1;
