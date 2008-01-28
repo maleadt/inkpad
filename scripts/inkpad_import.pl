@@ -108,8 +108,8 @@ my %Layout = (
 );
 
 # Calculate frame size
-$Layout{'HeightView'} = $Layout{'Height'} / 10;
-$Layout{'WidthView'} = $Layout{'Width'} / 10;
+$Layout{'HeightView'} = ( $Layout{'Height'} - $Layout{'OffsetY'} ) / 10;
+$Layout{'WidthView'} = ( $Layout{'Width'} - $Layout{'OffsetX'} ) / 10;
 
 # Binaries
 my $bin_compress = "gzip";
