@@ -94,14 +94,19 @@ use Getopt::Long;
 # Counter variables
 my $directory_subfolderCount = 0;
 
-##TODO: Bereik (width height), effectief full A4?
+# LINKERHOEK = (0, 1000)
+# RECHTERHOEK = (8500, 12000)
 # Layout properties
 my %Layout = (
 	'Colour_foreground'	 =>	'black',
 	'Colour_background'	 =>	'white',
 	'Thickness'		 =>	10,		# Should be larger then 3px
 	'Width'			 =>	"210mm",
-	'Height'		 =>	"279.4mm"
+	'Height'		 =>	"279.4mm",
+	'Width_px'		 =>	8500,
+	'Height_px'		 =>	11000,
+	'OffsetX'		 =>	0,
+	'OffsetY'		 =>	1000,
 );
 
 # Binaries
@@ -113,10 +118,11 @@ my $bin_compress = "gzip";
 #
 
 # Read parameters
-my ($Opt_Source, $Opt_Target, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
+my ($Opt_Source, $Opt_Target, $Opt_Landscape, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
 my $Opt_Result = GetOptions(
 	"source=s"	=>	\$Opt_Source,
 	"target=s"	=>	\$Opt_Target,
+	"landscape"	=>	\$Opt_Landscape,
 	"no-compress"	=>	\$Opt_NoCompress,
 	"no-delete"	=>	\$Opt_NoDelete,
 	"verbosity=i"	=>	\$Opt_Verbose,
@@ -151,6 +157,7 @@ Additional parameters:
                       detect the mount point (will only work
                       if the UDEV rule has been activated),
                       or default to "/media/disk".
+  --landscape       Generate SVG in landscape format
   --target=PATH     Target directory for the .SVG(Z) files.
                       Subdirectories will be created based on
                       the current date and the subfolders relative
@@ -341,9 +348,6 @@ sub top2svg
 	&log(2, "Converting \"$file_top\" to \"$file_svg\"");
 	
 	# Configure
-	##TODO: bereik van inkpad, effectief 8800 x 12000?
-	my $xmax = 8800;
-	my $ymax = 12000;
 	my $line = $Layout{'Thickness'} . "px";
 	my $data_buffer = "";
 
@@ -374,7 +378,7 @@ sub top2svg
 	read(TOP, $data_buffer, 26);
 	read(TOP, $data_buffer, 6) or &log(-1, "File is empty: \"$file_top\"");
 	my @data_begin = (unpack("C*",$data_buffer));
-	my $y1 = $ymax - ($data_begin[1] + $data_begin[2] * 256);
+	my $y1 = $Layout{'Height_px'} - ($data_begin[1] + $data_begin[2] * 256);
 	my $x1 = $data_begin[3] + $data_begin[4] * 256;
 	
 	# Array of arrays, containing all point data
@@ -386,20 +390,32 @@ sub top2svg
 	while (read(TOP, $data_buffer, 6))
 	{
 		my @data_end = (unpack("C*",$data_buffer));
-		my $y2 = $ymax - ($data_end[1] + $data_end[2] * 256);
+		my $y2 = $Layout{'Height_px'} - ($data_end[1] + $data_end[2] * 256);
 		my $x2 = $data_end[3] + $data_end[4] * 256;
-		push @data_points, [$x1, $y1, $x2, $y2];	# Save the data points
+		
+		# Save data points...
+		if ($Opt_Landscape)
+		{
+			# ...in landscape mode];
+			push @data_points, [$Layout{'Height_px'} - ($y1 - $Layout{'OffsetY'}), $x1 - $Layout{'OffsetX'}, $Layout{'Height_px'} - ($y2 - $Layout{'OffsetY'}), $x2 - $Layout{'OffsetX'}];
+		}
+		else
+		{
+			# ...in normal mode
+			push @data_points, [$x1 - $Layout{'OffsetX'}, $y1 - $Layout{'OffsetY'}, $x2 - $Layout{'OffsetX'}, $y2 - $Layout{'OffsetY'}];
+		}
+		
 		if ($data_end[0] == 0)	# First bit was a zero, which means we are at the end of the file
 		{
 			# Note to self: WHAT is the meaning of this piece of code? When $data_end[0] is zero, we are at the last stroke, so we can't read 6 bytes out anymore... Maybe a 0 index does occur at the beginning of the file?
 			read(TOP, $data_buffer, 6);
 			next unless $data_buffer;	# Empty buffer, skip this one
 			@data_begin = (unpack("C*",$data_buffer));
-			$y1 = $ymax - ($data_begin[1] + $data_begin[2] * 256);
+			$y1 = $Layout{'Height_px'} - ($data_begin[1] + $data_begin[2] * 256);
 			$x1 = $data_begin[3] + $data_begin[4] * 256;
 		} else {
 			@data_begin = @data_end;
-			$y1 = $ymax - ($data_begin[1] + $data_begin[2] * 256);
+			$y1 = $Layout{'Height_px'} - ($data_begin[1] + $data_begin[2] * 256);
 			$x1 = $data_begin[3] + $data_begin[4] * 256;
 		}
 	}
@@ -428,10 +444,23 @@ sub top2svg
 	xmlns:xlink="http://www.w3.org/1999/xlink"
 	xmlns:ev="http://www.w3.org/2001/xml-events"
 	version="1.1" baseProfile="full"
-	width="$Layout{'Width'}" height="$Layout{'Height'}" viewBox="0 0 $xmax $ymax">
-	<rect x="0" y="0" width="$xmax" height="$ymax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>
 END
 ;
+
+	# Viewbox
+	if ($Opt_Landscape)
+	{
+		# Landscape mode
+		print SVG qq(\twidth="$Layout{'Height'}" height="$Layout{'Width'}" viewBox="0 0 $Layout{'Height_px'} $Layout{'Width_px'}">\n);
+		print SVG qq(\t<rect x="0" y="0" width="$Layout{'Height_px'}" height="$Layout{'Width_px'}" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
+	}
+	
+	else
+	{
+		# Normal mode
+		print SVG qq(\twidth="$Layout{'Width'}" height="$Layout{'Height'}" viewBox="0 0 $Layout{'Width_px'} $Layout{'Height_px'}">\n);
+		print SVG qq(\t<rect x="0" y="0" width="$Layout{'Width_px'}" height="$Layout{'Height_px'}" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
+	}
 
 	# Write data points in XML format
 	my $debug_paths = 0;
