@@ -101,13 +101,15 @@ my %Layout = (
 	'Colour_foreground'	 =>	'black',
 	'Colour_background'	 =>	'white',
 	'Thickness'		 =>	10,		# Should be larger then 3px
-	'Width'			 =>	"210mm",
-	'Height'		 =>	"279.4mm",
-	'Width_px'		 =>	8500,
-	'Height_px'		 =>	11000,
+	'Width'			 =>	8500,
+	'Height'		 =>	12000,
 	'OffsetX'		 =>	0,
 	'OffsetY'		 =>	1000,
 );
+
+# Calculate frame size
+$Layout{'HeightView'} = $Layout{'Height'} / 10;
+$Layout{'WidthView'} = $Layout{'Width'} / 10;
 
 # Binaries
 my $bin_compress = "gzip";
@@ -378,7 +380,7 @@ sub top2svg
 	read(TOP, $data_buffer, 26);
 	read(TOP, $data_buffer, 6) or &log(-1, "File is empty: \"$file_top\"");
 	my @data_begin = (unpack("C*",$data_buffer));
-	my $y1 = $Layout{'Height_px'} - ($data_begin[1] + $data_begin[2] * 256);
+	my $y1 = $Layout{'Height'} - ($data_begin[1] + $data_begin[2] * 256);
 	my $x1 = $data_begin[3] + $data_begin[4] * 256;
 	
 	# Array of arrays, containing all point data
@@ -390,14 +392,14 @@ sub top2svg
 	while (read(TOP, $data_buffer, 6))
 	{
 		my @data_end = (unpack("C*",$data_buffer));
-		my $y2 = $Layout{'Height_px'} - ($data_end[1] + $data_end[2] * 256);
+		my $y2 = $Layout{'Height'} - ($data_end[1] + $data_end[2] * 256);
 		my $x2 = $data_end[3] + $data_end[4] * 256;
 		
 		# Save data points...
 		if ($Opt_Landscape)
 		{
 			# ...in landscape mode];
-			push @data_points, [$Layout{'Height_px'} - ($y1 - $Layout{'OffsetY'}), $x1 - $Layout{'OffsetX'}, $Layout{'Height_px'} - ($y2 - $Layout{'OffsetY'}), $x2 - $Layout{'OffsetX'}];
+			push @data_points, [$Layout{'Height'} - $y1, $x1 - $Layout{'OffsetX'}, $Layout{'Height'} - $y2, $x2 - $Layout{'OffsetX'}];
 		}
 		else
 		{
@@ -411,11 +413,11 @@ sub top2svg
 			read(TOP, $data_buffer, 6);
 			next unless $data_buffer;	# Empty buffer, skip this one
 			@data_begin = (unpack("C*",$data_buffer));
-			$y1 = $Layout{'Height_px'} - ($data_begin[1] + $data_begin[2] * 256);
+			$y1 = $Layout{'Height'} - ($data_begin[1] + $data_begin[2] * 256);
 			$x1 = $data_begin[3] + $data_begin[4] * 256;
 		} else {
 			@data_begin = @data_end;
-			$y1 = $Layout{'Height_px'} - ($data_begin[1] + $data_begin[2] * 256);
+			$y1 = $Layout{'Height'} - ($data_begin[1] + $data_begin[2] * 256);
 			$x1 = $data_begin[3] + $data_begin[4] * 256;
 		}
 	}
@@ -448,19 +450,21 @@ END
 ;
 
 	# Viewbox
+	my $ymax = $Layout{'Height'} - $Layout{'OffsetY'};
+	my $xmax = $Layout{'Width'} - $Layout{'OffsetX'};
 	if ($Opt_Landscape)
-	{
-		# Landscape mode
-		print SVG qq(\twidth="$Layout{'Height'}" height="$Layout{'Width'}" viewBox="0 0 $Layout{'Height_px'} $Layout{'Width_px'}">\n);
-		print SVG qq(\t<rect x="0" y="0" width="$Layout{'Height_px'}" height="$Layout{'Width_px'}" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
-	}
-	
-	else
-	{
-		# Normal mode
-		print SVG qq(\twidth="$Layout{'Width'}" height="$Layout{'Height'}" viewBox="0 0 $Layout{'Width_px'} $Layout{'Height_px'}">\n);
-		print SVG qq(\t<rect x="0" y="0" width="$Layout{'Width_px'}" height="$Layout{'Height_px'}" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
-	}
+        {
+                # Landscape mode
+		print SVG qq(\twidth="$Layout{'HeightView'}" height="$Layout{'WidthView'}" viewBox="0 0 $ymax $xmax">\n);
+                print SVG qq(\t<rect x="0" y="0" width="$ymax" height="$xmax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
+        }
+        
+        else
+        {
+                # Normal mode
+		print SVG qq(\twidth="$Layout{'WidthView'}" height="$Layout{'HeightView'}" viewBox="0 0 $xmax $ymax">\n);
+                print SVG qq(\t<rect x="0" y="0" width="$xmax" height="$ymax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
+        }
 
 	# Write data points in XML format
 	my $debug_paths = 0;
