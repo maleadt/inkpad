@@ -100,6 +100,8 @@
 use strict;
 use warnings;
 use Getopt::Long;
+use GD;
+use GD::Polyline;
 
 # Counter variables
 my $directory_subfolderCount = 0;
@@ -116,6 +118,7 @@ my %Layout = (
 	'OffsetX'		=>	0,		# ...they get corrected throughout the script by the offset values
 	'OffsetY'		=>	1000,
 	'Scale'			=>	0.1,
+	'Output_format'		=>	"svg",
 );
 
 # Calculate frame size
@@ -131,13 +134,13 @@ my $bin_compress = "gzip";
 #
 
 # Read parameters
-my ($Opt_Source, $Opt_Target, $Opt_Landscape, $Opt_Scale, $Opt_NoCompress, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
+my ($Opt_Source, $Opt_Target, $Opt_Landscape, $Opt_Scale, $Opt_formatOut, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
 my $Opt_Result = GetOptions(
 	"source=s"	=>	\$Opt_Source,
 	"target=s"	=>	\$Opt_Target,
 	"landscape"	=>	\$Opt_Landscape,
 	"scale=i"	=>	\$Opt_Scale,
-	"no-compress"	=>	\$Opt_NoCompress,
+	"out-format=s"	=>	\$Opt_formatOut,
 	"no-delete"	=>	\$Opt_NoDelete,
 	"verbosity=i"	=>	\$Opt_Verbose,
 	"quiet"		=>	\$Opt_Quiet,
@@ -177,8 +180,7 @@ Additional parameters:
                       Subdirectories will be created based on
                       the current date and the subfolders relative
                       to the source directory.
-  --no-compress     No compression will be used, resulting files
-                      will be raw SVG/XML.
+  --out-format=EXT  Format of output file [SVG-SVGZ-PNG-JPG-GIF]
   --no-delete       Original files and folders will not be deleted
   --verbosity=LVL   Level of verbose output [1, 2, 3]
   --quiet           Be quiet (only display errors and warnings)
@@ -223,11 +225,11 @@ if ($Opt_Target)
 }
 &log(1, "Using target directory: \"$directory_target\"");
 
-# Scale level handling
+# Other values
 $Layout{'Scale'} = ($Opt_Scale / 10) if ($Opt_Scale);
+$Layout{'Output_format'} = $Opt_formatOut if ($Opt_formatOut);
 
 # Other debug statements
-&log(1, "Compression has been disabled") if ($Opt_NoCompress);
 &log(1, "Will not delete source files") if ($Opt_NoDelete);
 
 
@@ -332,12 +334,12 @@ sub process
 			}
 			
 			# Start the conversion to the requested file format
-			if ($Opt_NoCompress)
-			{
-				top2svg("$directory/$file", "$directory_target/$directory_subfolder - $directory_subfolderCount/$1.svg");
-			} else {
-				top2svgz("$directory/$file", "$directory_target/$directory_subfolder - $directory_subfolderCount/$1.svgz");
-			}
+			convert(	"$directory/$file",
+					"TOP",
+
+					"$directory_target/$directory_subfolder - $directory_subfolderCount/$1.$Layout{'Output_format'}",
+					$Layout{'Output_format'}
+				);
 			
 			# Delete the original file
 			unlink "$directory/$file" unless ($Opt_NoDelete);
@@ -462,6 +464,22 @@ sub readTop
 	return \@data_points;
 }
 
+# Write data points to SVGZ
+sub writeSvgz
+{
+	# Input values
+	my $data_points_ref = shift;
+	my $file = shift;
+	
+	# Write a SVG file
+	writeSvg($data_points_ref, "$file.temp");
+	
+	# Compress file
+	compress("$file.temp", $file);
+	
+	return 1;
+}
+
 # Write data points in SVG format
 sub writeSvg
 {
@@ -470,9 +488,9 @@ sub writeSvg
 	#
 	
 	# Input values
-	my $file_svg = shift;
 	my $data_points_ref = shift;
 	my @data_points = @$data_points_ref;
+	my $file_svg = shift;
 	
 	# Error check
 	return &log(-1, "Output file \"$file_svg\" already exists") if (-e $file_svg);
@@ -547,8 +565,142 @@ END
 	return 1;
 }
 
+# Write data points in PNG format
+sub writePng
+{
+	#
+	# Initialize
+	#
+	
+	# Input values
+	my $data_points_ref = shift;
+	my $file = shift;
+	
+	# Error check
+	return &log(-1, "Output file \"$file\" already exists") if (-e $file);
+	
+	# Render and output the image
+	my $image = imageRender($data_points_ref);
+	imageWrite($image, "$file", "PNG");
+	
+	return;
+}
 
+##TODO: get imageRender working!!
+# Render a GD image based on the data points
+sub imageRender
+{
+	# Input values
+	my $data_points_ref = shift;
+	my @data_points = @$data_points_ref;
 
+	# Find the extrema's
+	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
+	my $width = ( $x_max - $x_min ) * $Layout{'Scale'};
+	my $height = ( $y_max - $y_min ) * $Layout{'Scale'};
+	
+	# Create a new image
+	my $image = new GD::Image($width, $height);
+
+	# Allocate some colours
+	my $colour_white = $image->colorAllocate(255,255,255);
+	my $colour_black = $image->colorAllocate(0,0,0);       
+	my $colour_red = $image->colorAllocate(255,0,0);      
+	my $colour_blue = $image->colorAllocate(0,0,255);
+
+	# Build the image
+	foreach my $data_stroke (@data_points)
+	{
+		# Get the type of path
+		my $type = shift(@{$data_stroke});
+		
+		# A line stroke
+		if ($type eq "L")
+		{
+			# The line
+			my $line = new GD::Polyline;
+		
+			# Every following couple of coördinates is a path continuation
+			while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
+			{
+				$line->addPt($xn * $Layout{'Scale'}, $yn * $Layout{'Scale'});
+			}
+			
+			# Add the line to the image
+			$image->polydraw($line,$colour_black) or die($!);
+		}
+	}
+	
+	return $image;
+}
+
+# Render a GD image based on the data points
+sub imageRender_line
+{
+	# Input values
+	my $data_points_ref = shift;
+	my @data_points = @$data_points_ref;
+
+	# Find the extrema's
+	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
+	my $width = ( $x_max - $x_min ) * $Layout{'Scale'};
+	my $height = ( $y_max - $y_min ) * $Layout{'Scale'};
+	
+	# Create a new image
+	my $image = new GD::Image($width, $height);
+	$image->setThickness($Layout{'Thickness'});
+
+	# Allocate some colours
+	my $colour_white = $image->colorAllocate(255,255,255);
+	my $colour_black = $image->colorAllocate(0,0,0);       
+	my $colour_red = $image->colorAllocate(255,0,0);      
+	my $colour_blue = $image->colorAllocate(0,0,255);
+
+	# Build the image
+	foreach my $data_stroke (@data_points)
+	{
+		# Get the type of path
+		my $type = shift(@{$data_stroke});
+		
+		# A line stroke
+		if ($type eq "L")
+		{		
+			# Every following couple of coördinates is a path continuation
+			my ($xn_prev, $yn_prev);
+			while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
+			{
+				$image->line($xn_prev * $Layout{'Scale'}, $yn_prev * $Layout{'Scale'}, $xn * $Layout{'Scale'}, $yn * $Layout{'Scale'}, $colour_black) if ((defined $xn_prev) && (defined $yn_prev));
+				($xn_prev, $yn_prev) = ($xn, $yn);
+			}
+		}
+	}
+	
+	return $image;
+}
+
+# Output the rendered file
+sub imageWrite
+{
+	# Input values
+	my $image = shift;
+	my $file = shift;
+	my $type = shift;
+	
+	# Detect extention if not given
+	$file =~ /\.([^.]+)$/i;
+	$type = $1 unless $type;
+	
+	# Open file for writing
+	open(FILE, ">$file");
+	binmode FILE;
+	
+	# Output the file
+	print FILE $image->png if ($type =~ m/^png$/i);
+	print FILE $image->gif if ($type =~ m/^gif$/i);
+	print FILE $image->jpeg(100) if ($type =~ m/^(jpeg|jpg)$/i);
+	
+	return;
+}
 
 #
 # Data processing routines
@@ -709,7 +861,7 @@ sub findExtremas
 	my @data_points = @$data_points_ref;
 	
 	# Output values
-	my ($x_min, $y_min, $x_max, $y_max) = (999999, 9999999, -999999, -999999);
+	my ($x_min, $y_min, $x_max, $y_max);
 	
 	# Find extrema's
 	foreach my $data_stroke (@data_points)
@@ -726,10 +878,10 @@ sub findExtremas
 			# Loop all points
 			while(((my $xn = shift(@data_stroke_dup))&&(my $yn = shift(@data_stroke_dup))))
 			{
-				$x_min = $xn if ($xn < $x_min);
-				$y_min = $yn if ($yn < $y_min);
-				$x_max = $xn if ($xn > $x_max);
-				$y_max = $yn if ($yn > $y_max);
+				$x_min = $xn if ((!defined $x_min)||($xn < $x_min));
+				$y_min = $yn if ((!defined $y_min)||($yn < $y_min));
+				$x_max = $xn if ((!defined $x_max)||($xn > $x_max));
+				$y_max = $yn if ((!defined $y_max)||($yn > $y_max));
 			}
 		}
 	}
@@ -745,50 +897,32 @@ sub findExtremas
 # Conversion wrappers
 #
 
-# TOP to SVG wrapper
-sub top2svg
+##TODO: link possible preprocessing to variables (autocrop, rotate, translate, smoothn)
+# Convert given TOP file to another format
+sub convert
 {
 	#
 	# Initialize
 	#
 	
 	# Input values
-	my $file_top = shift;
-	my $file_svg = shift;
+	my $fileIn = shift;
+	my $typeIn = shift;
 	
-	&log(2, "Converting \"$file_top\" to \"$file_svg\"");
+	# Output values
+	my $fileOut = shift;
+	my $typeOut = shift;
 	
-	# Convert them
-	my $data_points_ref = readTop($file_top);
-	$data_points_ref = processMultipath($data_points_ref);
-	#$data_points_ref = processRotate($data_points_ref, 90);
-	#$data_points_ref = processRelocate($data_points_ref);
-	writeSvg($file_svg, $data_points_ref);
+	# Input
+	my $data_points_ref;
+	if ($typeIn =~ m/top/i) { $data_points_ref = readTop($fileIn) }
+	else { die("Unknown input file format: \"$typeIn\"") }
 	
-	return 1;
-}
-
-# TOP to SVGZ wrapper
-sub top2svgz
-{
-	# Input values
-	my $file_top = shift;
-	my $file_svgz = shift;
-	
-	# Temporary SVG file
-	my $file_svg;
-	if ($file_svgz =~ m/^(.+)\.svgz/)
-		{ $file_svg = "$1.svg"; }
-	elsif ($file_svgz =~ m/^(.+)\.top/)	# SVGZ file doesn't end on SVGZ, let's check the .top file
-		{ $file_svg = "$1.svg"; }
-	else					# TOP file doesn't end on TOP (in fact an impossible situation),
-		{ $file_svg = "$file_top.svg" }	# let's name it .top.gz
-	
-	# Process file
-	top2svg($file_top, $file_svg);
-	
-	# Compress file
-	compress($file_svg, $file_svgz);
+	# Output
+	if ($typeOut =~ m/^svg$/i) { writeSvg($data_points_ref, $fileOut) }
+	elsif ($typeOut =~ m/^svgz$/i) { writeSvgz($data_points_ref, $fileOut) }
+	elsif ($typeOut =~ m/^png$/i) {writePng($data_points_ref, $fileOut) }
+	else { die("Unknown output file format: \"$typeOut\"") }
 	
 	return 1;
 }
