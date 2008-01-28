@@ -38,6 +38,16 @@
 #   2 = Very verbose message (process launching)
 #   3 = Extremely verbose message (process internals)
 #
+# Data format descriptions
+# ~~~~~~~~~~~~~~~~~~~~~~~~
+#  @data_points
+#    Array of arrays, in which each array contains the following fields
+#     - Type of stroke (_Line)
+#     - Starting coördinate X
+#     - Starting coördinate Y
+#   [ - Point coördinate X ]
+#   [ - Point coördinate Y ] x n
+#
 
 
 # Copyright (c) 2008 Tim Besard <tim.besard@gmail.com>
@@ -98,13 +108,14 @@ my $directory_subfolderCount = 0;
 # RECHTERHOEK = (8500, 12000)
 # Layout properties
 my %Layout = (
-	'Colour_foreground'	 =>	'black',
-	'Colour_background'	 =>	'white',
-	'Thickness'		 =>	10,		# Should be larger then 3px
-	'Width'			 =>	8500,
-	'Height'		 =>	12000,		# Width and height are real dimensions...
-	'OffsetX'		 =>	0,		# ...they get corrected throughout the script by the offset values
-	'OffsetY'		 =>	1000,
+	'Colour_foreground'	=>	'black',
+	'Colour_background'	=>	'white',
+	'Thickness'		=>	10,		# Should be larger then 3px
+	'Width'			=>	8500,
+	'Height'		=>	12000,		# Width and height are real dimensions...
+	'OffsetX'		=>	0,		# ...they get corrected throughout the script by the offset values
+	'OffsetY'		=>	1000,
+	'Scale'			=>	0.1,
 );
 
 # Calculate frame size
@@ -338,7 +349,6 @@ sub process
 }
 
 # Compress given file
-##TODO: no fix ext detecion, just detect ext and add a z
 sub compress
 {	
 	# Input values
@@ -357,6 +367,8 @@ sub compress
 	
 	return 1;
 }
+
+
 
 
 #
@@ -415,17 +427,13 @@ sub readTop
 		my $y2 = $Layout{'Height'} - ($data_end[1] + $data_end[2] * 256);
 		my $x2 = $data_end[3] + $data_end[4] * 256;
 		
-		# Save data points...
-		if ($Opt_Landscape)
-		{
-			# ...in landscape mode];
-			push @data_points, [$Layout{'Height'} - $y1, $x1 - $Layout{'OffsetX'}, $Layout{'Height'} - $y2, $x2 - $Layout{'OffsetX'}];
-		}
-		else
-		{
-			# ...in normal mode
-			push @data_points, [$x1 - $Layout{'OffsetX'}, $y1 - $Layout{'OffsetY'}, $x2 - $Layout{'OffsetX'}, $y2 - $Layout{'OffsetY'}];
-		}
+		# Save data points
+		push @data_points, [	"L",
+					$x1 - $Layout{'OffsetX'},
+					$y1 - $Layout{'OffsetY'},
+					$x2 - $Layout{'OffsetX'},
+					$y2 - $Layout{'OffsetY'}
+					];
 		
 		if ($data_end[0] == 0)	# First bit was a zero, which means we are at the end of the file
 		{
@@ -448,7 +456,6 @@ sub readTop
 	
 	return \@data_points;
 }
-
 
 # Write data points in SVG format
 sub writeSvg
@@ -487,82 +494,45 @@ sub writeSvg
 END
 ;
 
-	# Viewbox
-	my $ymax = $Layout{'Height'} - $Layout{'OffsetY'};
-	my $xmax = $Layout{'Width'} - $Layout{'OffsetX'};
-	if ($Opt_Landscape)
-        {
-                # Landscape mode
-		print SVG qq(\twidth="$Layout{'HeightView'}" height="$Layout{'WidthView'}" viewBox="0 0 $ymax $xmax">\n);
-                print SVG qq(\t<rect x="0" y="0" width="$ymax" height="$xmax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
-        }
-        
-        else
-        {
-                # Normal mode
-		print SVG qq(\twidth="$Layout{'WidthView'}" height="$Layout{'HeightView'}" viewBox="0 0 $xmax $ymax">\n);
-                print SVG qq(\t<rect x="0" y="0" width="$xmax" height="$ymax" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
-        }
+	# Find the extrema's
+	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
+	my $width = ( $x_max - $x_min ) * $Layout{'Scale'};
+	my $height = ( $y_max - $y_min ) * $Layout{'Scale'};
+	
+	# Normal mode
+	print SVG qq(\twidth="$width" height="$height" viewBox="$x_min $y_min $x_max $y_max">\n);
+	print SVG qq(\t<rect x="$x_min" y="$y_min" width="$x_max" height="$y_max" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
 
 	# Write data points in XML format
 	my $debug_paths = 0;
 	my $debug_strokes = 0;	
 	my $path_data = qq(fill="none" stroke="$Layout{'Colour_foreground'}" stroke-width="$Layout{'Thickness'}px");
-	my ($x1, $y1, $x2, $y2) = (undef, undef, undef, undef);
-	my ($x1_prev, $y1_prev, $x2_prev, $y2_prev) = (undef, undef, undef, undef);
 	
 	
-	# Start the calculation
+	# Output given path data
 	foreach my $data_stroke (@data_points)
 	{
-		# Save current data
-		($x1, $y1, $x2, $y2) = @{ $data_stroke };
+		# Get the type of path
+		my $type = shift(@{$data_stroke});
 		
-		# Only calculate path if we got previous data
-		if ((defined $x1_prev)&&(defined $y1_prev)&&(defined $x2_prev)&&(defined $y2_prev))
+		# A line stroke
+		if ($type eq "L")
 		{
-			# Endpoints of previous stroke matches with beginpoints of current stroke...
-			if (($x2_prev == $x1)&&($y2_prev == $y1))
+			# Starting coördinates
+			my $x1 = shift(@{$data_stroke});
+			my $y1 = shift(@{$data_stroke});
+			print SVG qq(\t<path $path_data d="M$x1,$y1 L);
+		
+			# Every following couple of coördinates is a path continuation
+			while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
 			{
-				# ...so continue the stroke
-				print SVG qq($x2,$y2 );
-				
-				# and log it
-				$debug_strokes++;
+				print SVG qq($xn,$yn );
 			}
-				# No match...
-			else
-			{
-				# ...so end the path
-				print SVG qq($x2_prev,$y2_prev"/>\n);
-				
-				# and start a new one
-				print SVG qq(\t<path $path_data d="M$x1,$y1 L$x2,$y2 );
-				
-				# and log it
-				$debug_strokes++;
-				$debug_paths++;
-				}
-		}
-		
-		# We got no previous data, start a new path
-		else
-		{
-			print SVG qq(\t<path $path_data d="M$x1,$y1 L$x2,$y2 );
 			
-			# and log it
-			$debug_paths++;
+			# End the path
+			print SVG qq("/>\n);
 		}
-		
-		# Shift data
-		($x1_prev, $y1_prev, $x2_prev, $y2_prev) = ($x1, $y1, $x2, $y2);
 	}
-	
-	# End the last stroke
-	print SVG qq($x2_prev,$y2_prev"/>\n);
-		
-	# Verbose log
-	&log(3, "Got $debug_paths paths, all together $debug_strokes strokes");
 
 	# Close the file
 	&log(3, "Closing output stream");
@@ -572,14 +542,199 @@ END
 	return 1;
 }
 
+
+
+
 #
-# Graphical routines
+# Data processing routines
 #
 
-# Process data points, and detect paths
-##TODO: merge the path detection from writeSVG to here
-##TODO: change the @data_points layout to a more generic format (which support paths, and could server as input for all write routines)
-##       Purpose, generic format can be preprocessed by several bezier detection routines
+# Detect multipaths
+sub processMultipath
+{
+	# Input values
+	my $data_points_ref = shift;
+	my @data_points = @$data_points_ref;
+	
+	# Output values
+	my ($type, $x1, $y1, $x2, $y2, $x1_prev, $y1_prev, $x2_prev, $y2_prev);
+	my @data_points_processed;
+	
+	# Start the calculation
+	foreach my $data_stroke (@data_points)
+	{
+		# Save current data
+		($type, $x1, $y1, $x2, $y2) = @{ $data_stroke };
+		
+		# Only calculate path if we got previous data
+		if ((defined $x1_prev)&&(defined $y1_prev)&&(defined $x2_prev)&&(defined $y2_prev))
+		{
+			# Endpoints of previous stroke matches with beginpoints of current stroke...
+			if (($x2_prev == $x1)&&($y2_prev == $y1))
+			{
+				# ...so continue the stroke
+				push @{ $data_points_processed[-1] }, $x2;
+				push @{ $data_points_processed[-1] }, $y2;
+			}
+			
+			# No match...
+			else
+			{
+				# ...so end the path
+				push @{ $data_points_processed[-1] }, $x2_prev;
+				push @{ $data_points_processed[-1] }, $y2_prev;
+				
+				# and start a new one
+				push @data_points_processed, ["L", $x1, $y1, $x2, $y2];
+			}
+		}
+		
+		# We got no previous data, start a new path
+		else
+		{
+			push @data_points_processed, ["L", $x1, $y1, $x2, $y2];
+		}
+		
+		# Shift data
+		($x1_prev, $y1_prev, $x2_prev, $y2_prev) = ($x1, $y1, $x2, $y2);
+	}
+	
+	return \@data_points_processed
+}
+
+# Rotate data points by given angle
+sub processRotate
+{
+	# Input values
+	my $data_points_ref = shift;
+	my @data_points = @$data_points_ref;
+	my $angle = shift;
+	
+	# Degree to radian conversion
+	my $pi = ( atan2(1,1) *4);
+	my $angle_rad = ($angle/180)*$pi;
+	
+	# Output values
+	my @data_points_processed;
+	
+	# Calculate new coördinates
+	foreach my $data_stroke (@data_points)
+	{
+		# Temporary array
+		my @data_stroke_processed;
+		
+		# Get the type of path
+		push @data_stroke_processed, shift(@{$data_stroke});
+
+		while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
+		{
+			push @data_stroke_processed, ($xn * cos($angle_rad) - $yn * sin($angle_rad));
+			push @data_stroke_processed, ($xn * sin($angle_rad) + $yn * cos($angle_rad));
+		}
+		
+		# Save temporary array in final array
+		push @data_points_processed, [ @data_stroke_processed ];
+	}
+	
+	return \@data_points_processed;
+}
+
+# Translate data points by given X and Y offset
+sub processTranslate
+{
+	# Input values
+	my $data_points_ref = shift;
+	my @data_points = @$data_points_ref;
+	my $x = shift;
+	my $y = shift;
+	
+	# Output values
+	my @data_points_processed;
+
+	# Calculate new coördinates
+	foreach my $data_stroke (@data_points)
+	{
+		# Temporary array
+		my @data_stroke_processed;
+		
+		# Get the type of path
+		push @data_stroke_processed, shift(@{$data_stroke});
+
+		while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
+		{
+			push @data_stroke_processed, ($xn + $x);
+			push @data_stroke_processed, ($yn + $y);
+		}
+		
+		# Save temporary array in final array
+		push @data_points_processed, [ @data_stroke_processed ];
+	}
+	
+	return \@data_points_processed;
+}
+
+# Relocate the coördinates to minize the offset from the (0,0) coördinate
+sub processRelocate
+{
+	# Input values
+	my $data_points_ref = shift;
+	
+	# Find extrema's
+	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
+	
+	# Remove the minimum extremas by translating the coördinates to the (0, 0) coördinate
+	$data_points_ref = processTranslate($data_points_ref, (-$x_min), (-$y_min));
+	
+	return $data_points_ref;
+}
+
+
+
+
+#
+# Data finding routines
+#
+
+# Find extrema's in data points
+sub findExtremas
+{
+	# Input values
+	my $data_points_ref = shift;
+	
+	my @data_points = @$data_points_ref;
+	
+	# Output values
+	my ($x_min, $y_min, $x_max, $y_max) = (999999, 9999999, -999999, -999999);
+	
+	# Find extrema's
+	foreach my $data_stroke (@data_points)
+	{
+		# Duplicate the array (through references, arrays get modified, what we don't want in here);
+		my @data_stroke_dup = @{$data_stroke};
+		
+		# Get the type of path
+		my $type = shift(@data_stroke_dup);
+		
+		# Line calculus
+		if ($type eq "L")
+		{
+			# Loop all points
+			while(((my $xn = shift(@data_stroke_dup))&&(my $yn = shift(@data_stroke_dup))))
+			{
+				$x_min = $xn if ($xn < $x_min);
+				$y_min = $yn if ($yn < $y_min);
+				$x_max = $xn if ($xn > $x_max);
+				$y_max = $yn if ($yn > $y_max);
+			}
+		}
+	}
+	
+	return ($x_min, $y_min, $x_max, $y_max);
+}
+
+
+
+
 
 #
 # Conversion wrappers
@@ -600,6 +755,9 @@ sub top2svg
 	
 	# Convert them
 	my $data_points_ref = readTop($file_top);
+	$data_points_ref = processMultipath($data_points_ref);
+	$data_points_ref = processRotate($data_points_ref, 90);
+	$data_points_ref = processRelocate($data_points_ref);
 	writeSvg($file_svg, $data_points_ref);
 	
 	return 1;
