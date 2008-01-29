@@ -383,12 +383,12 @@ sub process
 			next unless ($file =~ m/^(.+)\.top$/i);
 			
 			# Directory handling, first time we got a .top file, let's make a new subfolder!
+			my $subfolder = 0;
 			if ($directory_newfolder == 0)
 			{
-				$directory_subfolderCount++;
-				while (-d "$directory_target/$directory_subfolder - $directory_subfolderCount")
-					{ $directory_subfolderCount++; }	# In case of multiple syncs at the same day
-				mkdir "$directory_target/$directory_subfolder - $directory_subfolderCount";
+				while (-d "$directory_target/$directory_subfolder - Folder $subfolder")
+					{ $subfolder++; }	# In case of multiple syncs at the same day
+				mkdir "$directory_target/$directory_subfolder - Folder $subfolder";
 				$directory_newfolder = 1;
 			}
 			
@@ -396,7 +396,7 @@ sub process
 			convert(	"$directory/$file",
 					"TOP",
 
-					"$directory_target/$directory_subfolder - $directory_subfolderCount/$1.$Layout{'Output_format'}",
+					"$directory_target/$directory_subfolder - Folder $subfolder/$1.$Layout{'Output_format'}",
 					$Layout{'Output_format'}
 				);
 			
