@@ -14,7 +14,6 @@
 #   [ - Point coördinate Y ] x n
 
 # Copyright (c) 2008 Tim Besard <tim.besard@gmail.com>
-# Based upon top2svg v0.2, copyright (c) 2007 AngieSoft
 # All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or
