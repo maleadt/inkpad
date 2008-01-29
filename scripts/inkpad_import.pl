@@ -226,7 +226,7 @@ if ($Opt_Target)
 &log(1, "Using target directory: \"$directory_target\"");
 
 # Other values
-$Layout{'Scale'} = ($Opt_Scale / 10) if ($Opt_Scale);
+$Layout{'Scale'} = ($Opt_Scale / 100) if ($Opt_Scale);
 $Layout{'Output_format'} = $Opt_formatOut if ($Opt_formatOut);
 
 # Other debug statements
@@ -378,8 +378,11 @@ sub compress
 
 
 
+
+
+
 #
-# Reading and writing routines
+# Input engines
 #
 
 # Read data points from TOP format
@@ -463,6 +466,14 @@ sub readTop
 	
 	return \@data_points;
 }
+
+
+
+
+
+#
+# Output engines
+#
 
 # Write data points to SVGZ
 sub writeSvgz
@@ -565,8 +576,8 @@ END
 	return 1;
 }
 
-# Write data points in PNG format
-sub writePng
+# Write data points in GD supported format
+sub writeGD
 {
 	#
 	# Initialize
@@ -574,6 +585,7 @@ sub writePng
 	
 	# Input values
 	my $data_points_ref = shift;
+	my $type = shift;
 	my $file = shift;
 	
 	# Error check
@@ -581,13 +593,13 @@ sub writePng
 	
 	# Render and output the image
 	my $image = imageRender($data_points_ref);
-	imageWrite($image, "$file", "PNG");
+	imageWrite($image, $type, $file);
 	
 	return;
 }
 
-##TODO: get imageRender working!!
 # Render a GD image based on the data points
+##TODO: Problem with GDrenderer -> X offset?
 sub imageRender
 {
 	# Input values
@@ -600,14 +612,15 @@ sub imageRender
 	my $height = ( $y_max - $y_min ) * $Layout{'Scale'};
 	
 	# Create a new image
-	my $image = new GD::Image($width, $height);
+	my $image = new GD::Image($width, $height) or die($!);	
+	$image->setThickness($Layout{'Thickness'} * $Layout{'Scale'});
 
 	# Allocate some colours
 	my $colour_white = $image->colorAllocate(255,255,255);
-	my $colour_black = $image->colorAllocate(0,0,0);       
-	my $colour_red = $image->colorAllocate(255,0,0);      
-	my $colour_blue = $image->colorAllocate(0,0,255);
-
+	my $colour_black = $image->colorAllocate(  0,  0,  0);
+	my $colour_red   = $image->colorAllocate(255,  0,  0);
+	my $colour_blue  = $image->colorAllocate(  0,  0,255);
+	
 	# Build the image
 	foreach my $data_stroke (@data_points)
 	{
@@ -618,60 +631,16 @@ sub imageRender
 		if ($type eq "L")
 		{
 			# The line
-			my $line = new GD::Polyline;
+			my $polyline = new GD::Polyline;
 		
 			# Every following couple of coördinates is a path continuation
 			while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
 			{
-				$line->addPt($xn * $Layout{'Scale'}, $yn * $Layout{'Scale'});
+				$polyline->addPt($xn * $Layout{'Scale'}, $yn * $Layout{'Scale'});
 			}
 			
 			# Add the line to the image
-			$image->polydraw($line,$colour_black) or die($!);
-		}
-	}
-	
-	return $image;
-}
-
-# Render a GD image based on the data points
-sub imageRender_line
-{
-	# Input values
-	my $data_points_ref = shift;
-	my @data_points = @$data_points_ref;
-
-	# Find the extrema's
-	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
-	my $width = ( $x_max - $x_min ) * $Layout{'Scale'};
-	my $height = ( $y_max - $y_min ) * $Layout{'Scale'};
-	
-	# Create a new image
-	my $image = new GD::Image($width, $height);
-	$image->setThickness($Layout{'Thickness'});
-
-	# Allocate some colours
-	my $colour_white = $image->colorAllocate(255,255,255);
-	my $colour_black = $image->colorAllocate(0,0,0);       
-	my $colour_red = $image->colorAllocate(255,0,0);      
-	my $colour_blue = $image->colorAllocate(0,0,255);
-
-	# Build the image
-	foreach my $data_stroke (@data_points)
-	{
-		# Get the type of path
-		my $type = shift(@{$data_stroke});
-		
-		# A line stroke
-		if ($type eq "L")
-		{		
-			# Every following couple of coördinates is a path continuation
-			my ($xn_prev, $yn_prev);
-			while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
-			{
-				$image->line($xn_prev * $Layout{'Scale'}, $yn_prev * $Layout{'Scale'}, $xn * $Layout{'Scale'}, $yn * $Layout{'Scale'}, $colour_black) if ((defined $xn_prev) && (defined $yn_prev));
-				($xn_prev, $yn_prev) = ($xn, $yn);
-			}
+			$image->polydraw($polyline,$colour_black);
 		}
 	}
 	
@@ -683,8 +652,8 @@ sub imageWrite
 {
 	# Input values
 	my $image = shift;
-	my $file = shift;
 	my $type = shift;
+	my $file = shift;
 	
 	# Detect extention if not given
 	$file =~ /\.([^.]+)$/i;
@@ -702,8 +671,13 @@ sub imageWrite
 	return;
 }
 
+
+
+
+
+
 #
-# Data processing routines
+# Processing engines
 #
 
 # Detect multipaths
@@ -849,7 +823,7 @@ sub processRelocate
 
 
 #
-# Data finding routines
+# Searching engines
 #
 
 # Find extrema's in data points
@@ -916,13 +890,16 @@ sub convert
 	# Input
 	my $data_points_ref;
 	if ($typeIn =~ m/top/i) { $data_points_ref = readTop($fileIn) }
-	else { die("Unknown input file format: \"$typeIn\"") }
+	else { die("Unsupported input file format: \"$typeIn\"") }
+	
+	# Pre-processing
+	$data_points_ref = processMultipath($data_points_ref);
 	
 	# Output
 	if ($typeOut =~ m/^svg$/i) { writeSvg($data_points_ref, $fileOut) }
 	elsif ($typeOut =~ m/^svgz$/i) { writeSvgz($data_points_ref, $fileOut) }
-	elsif ($typeOut =~ m/^png$/i) {writePng($data_points_ref, $fileOut) }
-	else { die("Unknown output file format: \"$typeOut\"") }
+	elsif ($typeOut =~ m/^(png|jpg|jpeg|gif)$/i) {writeGD($data_points_ref, $typeOut, $fileOut) }
+	else { die("Unsupported output file format: \"$typeOut\"") }
 	
 	return 1;
 }
