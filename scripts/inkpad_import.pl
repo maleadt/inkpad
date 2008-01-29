@@ -48,6 +48,11 @@
 #   [ - Point coördinate X ]
 #   [ - Point coördinate Y ] x n
 #
+# Thanks to
+# ~~~~~~~~~
+#  - Uwe Henschel, with his top2svg script, on which I inspired
+#      my readTop algorithm
+#
 
 
 # Copyright (c) 2008 Tim Besard <tim.besard@gmail.com>
@@ -109,11 +114,11 @@ require 'engines/output.pm';
 require 'engines/process.pm';
 require 'engines/find.pm';
 
-# Counter variables
-my $directory_subfolderCount = 0;
 
-# LINKERHOEK = (0, 1000)
-# RECHTERHOEK = (8500, 12000)
+#
+# Shared variables
+#
+
 # Layout properties
 our %Layout = (
 	'Colour_foreground'	=>	'black',
@@ -122,8 +127,9 @@ our %Layout = (
 	'Thickness'		=>	10,
 	'Border'		=>	5,
 	
+	# Default viewbox
 	'X_min'			=>	0,
-	'Y_min'			=>	0,		# Viewbox specification
+	'Y_min'			=>	0,
 	'X_max'			=>	8500,
 	'Y_max'			=>	12000,
 	
@@ -132,49 +138,78 @@ our %Layout = (
 );
 
 # Binaries
-my $bin_compress = "gzip";
+our $bin_compress = "gzip";
 
 
 #
 # Command-line parameters
 #
 
-# Read parameters
-my ($Opt_Source, $Opt_Target, $Opt_Rotate, $Opt_Scale, $Opt_Border, $Opt_NoBorder, $Opt_formatOut, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
+# Input parameters
+my (	$Opt_Input_Folder,
+	$Opt_Input_Alternative,
+	$Opt_Input_NoDelete,
+);
+
+# Processing parameters
+my (	$Opt_Process_Rotate,
+	$Opt_Process_Scale,
+	$Opt_Process_Border,
+	$Opt_Process_NoBorder,
+);
+
+# Output parameters
+my (	$Opt_Output_Folder,
+	$Opt_Output_Format,
+);
+
+# Other parameters
+my (	$Opt_Other_Verbose,
+	$Opt_Other_Quiet,
+	$Opt_Other_ReallyQuiet,
+	$Opt_Other_Help,
+);
+
+# Read the Command Input
 my $Opt_Result = GetOptions(
-	"source=s"	=>	\$Opt_Source,
-	"target=s"	=>	\$Opt_Target,
-	"rotate=i"	=>	\$Opt_Rotate,
-	"scale=i"	=>	\$Opt_Scale,
-	"border=i"	=>	\$Opt_Border,
-	"no-border"	=>	\$Opt_NoBorder,
-	"out-format=s"	=>	\$Opt_formatOut,
-	"no-delete"	=>	\$Opt_NoDelete,
-	"verbosity=i"	=>	\$Opt_Verbose,
-	"quiet"		=>	\$Opt_Quiet,
-	"really-quiet"	=>	\$Opt_ReallyQuiet,
-	"help"		=>	\$Opt_Help,
+	"source=s"	=>	\$Opt_Input_Folder,
+	"no-delete"	=>	\$Opt_Input_NoDelete,
+	
+	"rotate=i"	=>	\$Opt_Process_Rotate,
+	"scale=i"	=>	\$Opt_Process_Scale,
+	"border=i"	=>	\$Opt_Process_Border,
+	"no-border"	=>	\$Opt_Process_NoBorder,
+	
+	"target=s"	=>	\$Opt_Output_Folder,
+	"out-format=s"	=>	\$Opt_Output_Format,
+	
+	"verbosity=i"	=>	\$Opt_Other_Verbose,
+	"quiet"		=>	\$Opt_Other_Quiet,
+	"really-quiet"	=>	\$Opt_Other_ReallyQuiet,
+	"help"		=>	\$Opt_Other_Help,
 );
 
 # Output handling
 my $output_level = 0;
-$output_level = $Opt_Verbose if ($Opt_Verbose);
-$output_level = -1 if ($Opt_Quiet);
-$output_level = -2 if ($Opt_ReallyQuiet);
+$output_level = $Opt_Other_Verbose if ($Opt_Other_Verbose);
+$output_level = -1 if ($Opt_Other_Quiet);
+$output_level = -2 if ($Opt_Other_ReallyQuiet);
 
 # Welcome message
 &log(0, "Initializing");
 
 # Display help, and exit
-if ($Opt_Help)
+if ($Opt_Other_Help)
 {
 	print <<END
 Usage: inkpad_import.pl [OPTIONS]
 Import proprietary .TOP files from a Medion MD 85276 Digital Ink Pad,
 convert them to an Gzip compressed SVG/XML format, and save them
-on a local source
+on a local source.
 
-Additional parameters:
+Examples
+
+ Input parameters:
   --source=PATH     Source directory for the .TOP files.
                       Most likely this will the mount point
                       of your MD 85276.
@@ -182,16 +217,22 @@ Additional parameters:
                       detect the mount point (will only work
                       if the UDEV rule has been activated),
                       or default to "/media/disk".
+  --no-delete       Original files and folders will not be deleted
+
+ Processing parameters:
   --rotate=ANGLE    Rotate the image over a given angle.
   --scale=PERCENT   Scale the image by a given percent (default 10)
   --border=PERCENT  Whitespace border when cropping
   --no-border       Don't apply any border when cropping
+
+ Output parameters:
   --target=PATH     Target directory for the .SVG(Z) files.
                       Subdirectories will be created based on
                       the current date and the subfolders relative
                       to the source directory.
-  --out-format=EXT  Format of output file [SVG-SVGZ-PNG-JPG-GIF]
-  --no-delete       Original files and folders will not be deleted
+  --out-format=EXT  Format of output file [SVG-SVGZ-PNG-JP(E)G-GIF]
+
+ Other parameters:
   --verbosity=LVL   Level of verbose output [1, 2, 3]
   --quiet           Be quiet (only display errors and warnings)
   --really-quiet    Be really quiet (only display errors)
@@ -205,10 +246,10 @@ END
 
 # Source directory handling
 my $directory_source = '/media/disk';	# Default value
-if ($Opt_Source)
+if ($Opt_Input_Folder)
 {
 	# We have an override value
-	$directory_source = $Opt_Source;
+	$directory_source = $Opt_Input_Folder;
 	&log(1, "Source directory has been overrided to \"$directory_source\"");
 }
 else
@@ -227,23 +268,23 @@ else
 
 # Target directory handling
 my $directory_target = '/home/tim/Afbeeldingen/Tekeningen';
-if ($Opt_Target)
+if ($Opt_Output_Folder)
 {
 	# We have an override value
-	$directory_target = $Opt_Target;
+	$directory_target = $Opt_Output_Folder;
 	&log(1, "Target directory has been overrided to \"$directory_target\"");
 }
 &log(1, "Using target directory: \"$directory_target\"");
 
 # Other values
-$Layout{'Border'} = $Opt_Border if ($Opt_Border);
-$Layout{'Border'} = 0 if ($Opt_NoBorder); 
-$Layout{'Scale'} = $Opt_Scale if ($Opt_Scale);
-$Layout{'Rotate'} = $Opt_Rotate if ($Opt_Rotate);
-$Layout{'Output_format'} = $Opt_formatOut if ($Opt_formatOut);
+$Layout{'Border'} = $Opt_Process_Border if ($Opt_Process_Border);
+$Layout{'Border'} = 0 if ($Opt_Process_NoBorder); 
+$Layout{'Scale'} = $Opt_Process_Scale if ($Opt_Process_Scale);
+$Layout{'Rotate'} = $Opt_Process_Rotate if ($Opt_Process_Rotate);
+$Layout{'Output_format'} = $Opt_Output_Format if ($Opt_Output_Format);
 
 # Other debug statements
-&log(1, "Will not delete source files") if ($Opt_NoDelete);
+&log(1, "Will not delete source files") if ($Opt_Input_NoDelete);
 
 
 ##########
@@ -333,7 +374,6 @@ sub process
 			&log(3, "Got file $file");
 			
 			# We need a .top file!
-			$directory_nonTop++ unless ($file =~ m/^(.+)\.top$/i);	# We got a non .top file, don't delete this folder!
 			next unless ($file =~ m/^(.+)\.top$/i);
 			
 			# Directory handling, first time we got a .top file, let's make a new subfolder!
@@ -355,17 +395,12 @@ sub process
 				);
 			
 			# Delete the original file
-			unlink "$directory/$file" unless ($Opt_NoDelete);
+			unlink "$directory/$file" unless ($Opt_Input_NoDelete);
 		}
 	}
 	closedir(DIR);
 	
 	&log(3, "Finished processing $directory");
-	
-	# Clean up the processed directory (only if we are allowed to!)
-	rmdir $directory if (	  ($directory_nonTop == 0)			# If we have no non-.TOP files
-				&&($Opt_NoDelete != 1)				# If the user hasn't said otherwise
-				&&($directory ne $directory_source)	);	# If the directory isn't the top directory
 }
 
 # Compress given file
