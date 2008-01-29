@@ -136,6 +136,20 @@ sub processRotate
 		push @data_points_processed, [ @data_stroke_processed ];
 	}
 	
+	# Adjust layout settings
+	my $x_min2 = ($Layout{'X_min'} * cos($angle_rad) - $Layout{'Y_min'} * sin($angle_rad));
+	my $y_min2 = ($Layout{'X_min'} * sin($angle_rad) + $Layout{'Y_min'} * cos($angle_rad));
+	my $x_max2 = ($Layout{'X_max'} * cos($angle_rad) - $Layout{'Y_max'} * sin($angle_rad));
+	my $y_max2 = ($Layout{'X_max'} * sin($angle_rad) + $Layout{'Y_max'} * cos($angle_rad));
+	if ($x_max2 < $x_min2)
+		{	my $temp = $x_min2; $x_min2 = $x_max2; $x_max2 = $temp; }
+	if ($y_max2 < $y_min2)
+		{	my $temp = $y_min2; $y_min2 = $y_max2; $y_max2 = $temp; }
+	$Layout{'X_min'} = $x_min2;
+	$Layout{'Y_min'} = $y_min2;
+	$Layout{'X_max'} = $x_max2;
+	$Layout{'Y_max'} = $y_max2;
+	
 	return \@data_points_processed;
 }
 
@@ -170,10 +184,23 @@ sub processTranslate
 		push @data_points_processed, [ @data_stroke_processed ];
 	}
 	
+	
+	# Adjust layout settings - latitude keys
+	foreach my $key (qw(X_min X_max))
+	{
+		$Layout{$key} = $Layout{$key} + $x;
+	}
+	
+	# Adjust layout settings - altitude keys
+	foreach my $key (qw(Y_min Y_max))
+	{
+		$Layout{$key} = $Layout{$key} + $y;
+	}
+	
 	return \@data_points_processed;
 }
 
-# Relocate the coördinates to minize the offset from the (0,0) coördinate
+# Relocate the coördinates to minize the offset from the (0,0) coördinate (with a 5% spacing)
 sub processRelocate
 {
 	# Input values
@@ -182,12 +209,61 @@ sub processRelocate
 	# Find extrema's
 	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
 	
+	# Calculate spacing
+	my $spacing = $Layout{'Border'} / 100;
+	my $spacing_x = int ($x_max - $x_min) * $spacing;
+	my $spacing_y = int ($y_max - $y_min) * $spacing;
+		
 	# Remove the minimum extremas by translating the coördinates to the (0, 0) coördinate
-	$data_points_ref = processTranslate($data_points_ref, (-$x_min), (-$y_min));
+	$data_points_ref = processTranslate($data_points_ref, (-$x_min) + $spacing_x, (-$y_min) + $spacing_y);
+	
+	# Reconfigure image viewbox
+	$Layout{'X_min'} = 0;
+	$Layout{'Y_min'} = 0;
+	$Layout{'X_max'} = $x_max - $x_min + (2 * $spacing_x);
+	$Layout{'Y_max'} = $y_max - $y_min + (2 * $spacing_y);
 	
 	return $data_points_ref;
 }
 
+# Scale every value which should be adjuster according to a given percent
+sub processScale
+{
+	# Input values
+	my $data_points_ref = shift;
+	my @data_points = @$data_points_ref;
+	my $scale = (shift) / 100;
+	
+	# Output values
+	my @data_points_processed;
+
+	# Calculate new coördinates
+	foreach my $data_stroke (@data_points)
+	{
+		# Temporary array
+		my @data_stroke_processed;
+		
+		# Get the type of path
+		push @data_stroke_processed, shift(@{$data_stroke});
+
+		while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
+		{
+			push @data_stroke_processed, ($xn * $scale);
+			push @data_stroke_processed, ($yn  * $scale);
+		}
+		
+		# Save temporary array in final array
+		push @data_points_processed, [ @data_stroke_processed ];
+	}
+	
+	# Adjust layout settings - common keys
+	foreach my $key (qw(X_min Y_min X_max Y_max Thickness))
+	{
+		$Layout{$key} = $Layout{$key} * $scale;
+	}
+	
+	return \@data_points_processed;
+}
 
 
 

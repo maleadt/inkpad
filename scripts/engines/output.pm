@@ -102,14 +102,13 @@ sub writeSvg
 END
 ;
 
-	# Find the extrema's
-	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
-	my $width = ( $x_max - $x_min ) * $Layout{'Scale'};
-	my $height = ( $y_max - $y_min ) * $Layout{'Scale'};
+	# Calculate the dimensions
+	my $width = $Layout{'X_max'} - $Layout{'X_min'};
+	my $height = $Layout{'Y_max'} - $Layout{'Y_min'};
 	
 	# Normal mode
-	print SVG qq(\twidth="$width" height="$height" viewBox="$x_min $y_min $x_max $y_max">\n);
-	print SVG qq(\t<rect x="$x_min" y="$y_min" width="$x_max" height="$y_max" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
+	print SVG qq(\twidth="$width" height="$height" viewBox="$Layout{'X_min'} $Layout{'Y_min'} $Layout{'X_max'} $Layout{'Y_max'}">\n);
+	print SVG qq(\t<rect x="$Layout{'X_min'}" y="$Layout{'Y_min'}" width="$Layout{'X_max'}" height="$Layout{'Y_max'}" fill="$Layout{'Colour_background'}" stroke="$Layout{'Colour_background'}" stroke-width="1px"/>\n);
 
 	# Write data points in XML format
 	my $debug_paths = 0;
@@ -173,21 +172,19 @@ sub writeGD
 }
 
 # Render a GD image based on the data points
-##TODO: Problem with GDrenderer -> X offset?
 sub imageRender
 {
 	# Input values
 	my $data_points_ref = shift;
 	my @data_points = @$data_points_ref;
 
-	# Find the extrema's
-	my ($x_min, $y_min, $x_max, $y_max) = findExtremas($data_points_ref);
-	my $width = ( $x_max - $x_min ) * $Layout{'Scale'};
-	my $height = ( $y_max - $y_min ) * $Layout{'Scale'};
+	# Calculate the dimensions
+	my $width = $Layout{'X_max'} - $Layout{'X_min'};
+	my $height = $Layout{'Y_max'} - $Layout{'Y_min'};
 	
 	# Create a new image
-	my $image = new GD::Image($width, $height) or die($!);	
-	$image->setThickness($Layout{'Thickness'} * $Layout{'Scale'});
+	my $image = new GD::Image($width, $height) or die($!);
+	$image->setThickness($Layout{'Thickness'});
 
 	# Allocate some colours
 	my $colour_white = $image->colorAllocate(255,255,255);
@@ -210,7 +207,7 @@ sub imageRender
 			# Every following couple of coördinates is a path continuation
 			while(((my $xn = shift(@{$data_stroke}))&&(my $yn = shift(@{$data_stroke}))))
 			{
-				$polyline->addPt($xn * $Layout{'Scale'}, $yn * $Layout{'Scale'});
+				$polyline->addPt($xn, $yn);
 			}
 			
 			# Add the line to the image

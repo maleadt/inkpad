@@ -90,7 +90,7 @@ sub readTop
 	read(TOP, $data_buffer, 26);
 	read(TOP, $data_buffer, 6) or &log(-1, "File is empty: \"$file_top\"");
 	my @data_begin = (unpack("C*",$data_buffer));
-	my $y1 = $Layout{'Height'} - ($data_begin[1] + $data_begin[2] * 256);
+	my $y1 = 12000 - ($data_begin[1] + $data_begin[2] * 256);
 	my $x1 = $data_begin[3] + $data_begin[4] * 256;
 	
 	# Process actual data	(Item format: 0/135 - Y coörd - 256*Y coörd - X coörd - 256*X coörd - Stroke item)
@@ -98,15 +98,15 @@ sub readTop
 	while (read(TOP, $data_buffer, 6))
 	{
 		my @data_end = (unpack("C*",$data_buffer));
-		my $y2 = $Layout{'Height'} - ($data_end[1] + $data_end[2] * 256);
-		my $x2 = $data_end[3] + $data_end[4] * 256;
+		my $y2 = 12000 - ($data_end[1] + $data_end[2] * 256);
+		my $x2 = $data_end[3] + $data_end[4] * 256;;
 		
 		# Save data points
 		push @data_points, [	"L",
-					$x1 - $Layout{'OffsetX'},
-					$y1 - $Layout{'OffsetY'},
-					$x2 - $Layout{'OffsetX'},
-					$y2 - $Layout{'OffsetY'}
+					$x1,
+					$y1,
+					$x2,
+					$y2
 					];
 		
 		if ($data_end[0] == 0)	# First bit was a zero, which means we are at the end of the file
@@ -115,11 +115,11 @@ sub readTop
 			read(TOP, $data_buffer, 6);
 			next unless $data_buffer;	# Empty buffer, skip this one
 			@data_begin = (unpack("C*",$data_buffer));
-			$y1 = $Layout{'Height'} - ($data_begin[1] + $data_begin[2] * 256);
+			$y1 = 12000 - ($data_begin[1] + $data_begin[2] * 256);
 			$x1 = $data_begin[3] + $data_begin[4] * 256;
 		} else {
 			@data_begin = @data_end;
-			$y1 = $Layout{'Height'} - ($data_begin[1] + $data_begin[2] * 256);
+			$y1 = 12000 - ($data_begin[1] + $data_begin[2] * 256);
 			$x1 = $data_begin[3] + $data_begin[4] * 256;
 		}
 	}

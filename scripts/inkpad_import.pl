@@ -115,21 +115,21 @@ my $directory_subfolderCount = 0;
 # LINKERHOEK = (0, 1000)
 # RECHTERHOEK = (8500, 12000)
 # Layout properties
-my %Layout = (
+our %Layout = (
 	'Colour_foreground'	=>	'black',
 	'Colour_background'	=>	'white',
-	'Thickness'		=>	10,		# Should be larger then 3px
-	'Width'			=>	8500,
-	'Height'		=>	12000,		# Width and height are real dimensions...
-	'OffsetX'		=>	0,		# ...they get corrected throughout the script by the offset values
-	'OffsetY'		=>	1000,
-	'Scale'			=>	0.1,
+	
+	'Thickness'		=>	10,
+	'Border'		=>	5,
+	
+	'X_min'			=>	0,
+	'Y_min'			=>	0,		# Viewbox specification
+	'X_max'			=>	8500,
+	'Y_max'			=>	12000,
+	
+	'Scale'			=>	10,
 	'Output_format'		=>	"svg",
 );
-
-# Calculate frame size
-$Layout{'HeightView'} = ( $Layout{'Height'} - $Layout{'OffsetY'} ) / 10;
-$Layout{'WidthView'} = ( $Layout{'Width'} - $Layout{'OffsetX'} ) / 10;
 
 # Binaries
 my $bin_compress = "gzip";
@@ -140,12 +140,14 @@ my $bin_compress = "gzip";
 #
 
 # Read parameters
-my ($Opt_Source, $Opt_Target, $Opt_Landscape, $Opt_Scale, $Opt_formatOut, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
+my ($Opt_Source, $Opt_Target, $Opt_Rotate, $Opt_Scale, $Opt_Border, $Opt_NoBorder, $Opt_formatOut, $Opt_NoDelete, $Opt_Verbose, $Opt_Quiet, $Opt_ReallyQuiet, $Opt_Help);
 my $Opt_Result = GetOptions(
 	"source=s"	=>	\$Opt_Source,
 	"target=s"	=>	\$Opt_Target,
-	"landscape"	=>	\$Opt_Landscape,
+	"rotate=i"	=>	\$Opt_Rotate,
 	"scale=i"	=>	\$Opt_Scale,
+	"border=i"	=>	\$Opt_Border,
+	"no-border"	=>	\$Opt_NoBorder,
 	"out-format=s"	=>	\$Opt_formatOut,
 	"no-delete"	=>	\$Opt_NoDelete,
 	"verbosity=i"	=>	\$Opt_Verbose,
@@ -180,8 +182,10 @@ Additional parameters:
                       detect the mount point (will only work
                       if the UDEV rule has been activated),
                       or default to "/media/disk".
-  --landscape       Generate SVG in landscape format
+  --rotate=ANGLE    Rotate the image over a given angle.
   --scale=PERCENT   Scale the image by a given percent (default 10)
+  --border=PERCENT  Whitespace border when cropping
+  --no-border       Don't apply any border when cropping
   --target=PATH     Target directory for the .SVG(Z) files.
                       Subdirectories will be created based on
                       the current date and the subfolders relative
@@ -232,7 +236,10 @@ if ($Opt_Target)
 &log(1, "Using target directory: \"$directory_target\"");
 
 # Other values
-$Layout{'Scale'} = ($Opt_Scale / 100) if ($Opt_Scale);
+$Layout{'Border'} = $Opt_Border if ($Opt_Border);
+$Layout{'Border'} = 0 if ($Opt_NoBorder); 
+$Layout{'Scale'} = $Opt_Scale if ($Opt_Scale);
+$Layout{'Rotate'} = $Opt_Rotate if ($Opt_Rotate);
 $Layout{'Output_format'} = $Opt_formatOut if ($Opt_formatOut);
 
 # Other debug statements
@@ -409,6 +416,9 @@ sub convert
 	
 	# Pre-processing
 	$data_points_ref = processMultipath($data_points_ref);
+	$data_points_ref = processScale($data_points_ref, $Layout{'Scale'});
+	#$data_points_ref = processRotate($data_points_ref, -90);
+	$data_points_ref = processRelocate($data_points_ref);
 	
 	# Output
 	if ($typeOut =~ m/^svg$/i) { writeSvg($data_points_ref, $fileOut) }
