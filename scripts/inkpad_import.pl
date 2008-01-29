@@ -38,19 +38,25 @@
 #   2 = Very verbose message (process launching)
 #   3 = Extremely verbose message (process internals)
 #
-# Data format descriptions
-# ~~~~~~~~~~~~~~~~~~~~~~~~
-#  @data_points
+# Developer comments
+# ~~~~~~~~~~~~~~~~~~
+#  * Data structure of vector "@data_points"
 #    Array of arrays, in which each array contains the following fields
-#     - Type of stroke (_Line)
-#     - Starting coördinate X
-#     - Starting coördinate Y
-#   [ - Point coördinate X ]
-#   [ - Point coördinate Y ] x n
+#       - Type of stroke (_Line)
+#       - Starting coördinate X
+#       - Starting coördinate Y
+#     [ - Point coördinate X ]
+#     [ - Point coördinate Y ] x n
+#  * Engine behaviour
+#    Input
+#      - Reference to @data_points
+#      - Addition parameters
+#    Output
+#      - Reference to processed @data_points
 #
 # Thanks to
 # ~~~~~~~~~
-#  - Uwe Henschel, with his top2svg script, on which I inspired
+#  * Uwe Henschel, with his top2svg script, on which I inspired
 #      my readTop algorithm
 #
 
