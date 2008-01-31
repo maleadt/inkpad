@@ -112,12 +112,21 @@ use strict;
 use warnings;
 use GD;
 use GD::Polyline;
+use Gtk2;
+use Gtk2::SimpleMenu;
 
 # Load engines
 require 'engines/input.pm';
 require 'engines/output.pm';
 require 'engines/process.pm';
 require 'engines/find.pm';
+
+# Load helper scripts
+require 'Gtk2_routines.pm';
+
+# Constants
+use constant TRUE  => 1;
+use constant FALSE => 0;
 
 
 #
@@ -144,9 +153,13 @@ our %Layout = (
 
 # Generic configuration propreties
 our %Config = (
-	'Delete'		=>	0,
+	'DeleteFiles'		=>	0,
+	'DeleteFolders'		=>	0,
 	'Verbosity'		=>	0,
 );
+
+# GUI
+my $window;
 
 # Binaries
 our $bin_compress = "gzip";
@@ -279,12 +292,44 @@ if ($Mode_Gui)
 	
 	# Welcome message
 	&log(0, "Initializing graphical user interface");
+	
+	
+	#
+	# Gtk2
+	#
+	
+	# Create main window
+	my $window = Gtk2_New_Window("Medion Digital Ink Pad Convertion and Synchronisation");
+	
+	# Main widgets
+	my %toolbar_map = (
+		"0 gtk-go-back - Back"		=>	\&GUI_Back,
+		"1 gtk-go-forward - Forward"	=>	\&GUI_Forward,
+		"2 gtk-go-up - Up"		=>	\&GUI_Up,
+		"3 space"			=>	"",
+		"4 gtk-convert - Convert"	=>	\&GUI_Convert,
+		"5 gtk-clear - Clear"		=>	\&GUI_Clear,
+		"6 space"			=>	"",
+		"7 gtk-properties - Properties"	=>	\&GUI_Properties,
+		"8 space"			=>	"",
+		"9 gtk-quit - Quit"		=>	\&GUI_Quit,
+		);
+	my $toolbar = Gtk2_New_Toolbar(\%toolbar_map);
+	my $layout =  &GUI_Layout;
+	my $statusbar = Gtk2::Statusbar->new ();
+	
+	# Apply the interface
+	my $vbox = Gtk2_New_VBox($window);
+	$vbox->pack_start ($toolbar, 0, 0, 0);
+	$vbox->add ($layout);
+	$vbox->pack_start ($statusbar, 0, 0, 0);
 
-
-
-
-
-
+	# Launch the window
+	Gtk2_Launch($window);
+	
+	
+	
+	
 	exit;
 }
 
@@ -360,7 +405,7 @@ if ($Mode_Cli)
 	$Layout{'Scale'} = $Opt_Process_Scale if ($Opt_Process_Scale);
 	$Layout{'Rotate'} = $Opt_Process_Rotate if ($Opt_Process_Rotate);
 	$Layout{'Output_format'} = $Opt_Output_Format if ($Opt_Output_Format);
-	$Config{'Delete'} = $Opt_Input_Delete;
+	$Config{'DeleteFiles'} = $Opt_Input_Delete;
 	
 	
 	
@@ -369,7 +414,7 @@ if ($Mode_Cli)
 	#
 
 	# Other debug statements
-	&log(1, "Will delete source files") if ($Config{'Delete'});
+	&log(1, "Will delete source files") if ($Config{'DeleteFiles'});
 
 	# Check required arguments
 	&log(-2, "I need at least a source and target directory (try --help for more information).") unless (($directory_input)&&($directory_output));
@@ -398,7 +443,7 @@ if ($Mode_Cli)
 	# Main
 	#
 	
-	process($directory_input,$directory_output);
+	process($directory_input, $directory_output);
 
 	# Bye-bye
 	&log(0, "Exiting");
@@ -426,6 +471,173 @@ if ($Mode_Cli)
 #                        #
 #                        #
 ##########################
+
+
+
+
+
+
+#########
+###GUI###
+#########
+
+sub GUI_Toolbar
+{
+	my $toolbar = Gtk2::Toolbar->new ();
+
+	$toolbar->insert_stock ("gtk-go-back",
+							'Back',
+							'tt private text',
+							\&GUI_Dummy,
+							'user_data',
+							0);
+
+	$toolbar->insert_stock ("gtk-go-forward",
+							'Forward',
+							'tt private text',
+							\&GUI_Dummy,
+							'user_data',
+							1);
+
+	$toolbar->insert_stock ("gtk-go-up",
+							'Up',
+							'tt private text',
+							\&GUI_Dummy,
+							'user_data',
+							2);
+
+	$toolbar->insert_space (3);
+	
+	$toolbar->insert_stock ("gtk-convert",
+							'Convert',
+							'tt private text',
+							\&GUI_Dummy,
+							'user_data',
+							4);
+							
+	$toolbar->insert_stock ("gtk-clear",
+							'Clear',
+							'tt private text',
+							\&GUI_Dummy,
+							'user_data',
+							5);
+							
+	$toolbar->insert_space (6);
+
+	$toolbar->insert_stock ("gtk-properties",
+							'Properties',
+							'tt private text',
+							\&GUI_Properties,
+							'user_data',
+							7);
+							
+	$toolbar->insert_space (8);
+	
+	$toolbar->insert_stock ("gtk-quit",
+							'Quit',
+							'tt private text',
+							\&GUI_Toolbar_Quit,
+							'user_data',
+							9);
+
+	return $toolbar;
+}
+
+sub GUI_Toolbar_Quit
+{
+	Gtk2->main_quit;
+	exit;
+}
+
+sub GUI_Dummy
+{
+	@_ = shift;
+	foreach my $i (@_)
+	{
+		print "Input: $i\n";
+	}
+}
+
+sub GUI_Properties
+{
+	# Main dialog
+	my $dialog = Gtk2::Dialog->new ('Properties', $window,
+					'destroy-with-parent',
+					'gtk-close' => 'close',
+					);
+	my $dialog_vbox = $dialog->vbox;
+					
+	# Dialog handlers
+	$dialog->signal_connect (response => \&GUI_Properties_Button );
+	$dialog->signal_connect(delete_event => \&GUI_Properties_Destroy);
+	
+	# Page 1 - Input modifiers
+	my $page1 = Gtk2::VBox->new;
+		my $page1_frame1 = Gtk2::Frame->new("Deletion option");
+		$page1_frame1->set_border_width(3);
+		$page1->add($page1_frame1);
+			my $page1_frame1_vbox = Gtk2::VBox->new(FALSE, 6);
+			$page1_frame1->add($page1_frame1_vbox);
+				my $checkbox_deleteTOP = Gtk2::CheckButton->new ("_Delete converted files");
+				$page1_frame1_vbox->add($checkbox_deleteTOP);
+				$checkbox_deleteTOP->signal_connect (clicked => sub {
+					if ($checkbox_deleteTOP->get_active)
+					{
+						$Config{'DeleteFiles'} = 1;
+					} else {
+						$Config{'DeleteFiles'} = 0;
+					} });
+				my $checkbox_deleteFolder = Gtk2::CheckButton->new ("_Delete empty folders");
+				$page1_frame1_vbox->add($checkbox_deleteFolder);
+				$checkbox_deleteFolder->signal_connect (clicked => sub {
+					if ($checkbox_deleteFolder->get_active)
+					{
+						$Config{'DeleteFolders'} = 1;
+					} else {
+						$Config{'DeleteFolders'} = 0;
+					} });
+	$dialog_vbox->add($page1);
+	
+	# Show dialog
+	$dialog->show_all();
+}
+
+sub GUI_Properties_Button
+{
+	my ($dialog, $response_id) = @_;
+	
+	if ($response_id eq "close")
+	{
+		&GUI_Properties_Destroy;
+	}
+}
+
+sub GUI_Properties_Destroy
+{
+	my $dialog = shift;
+	$dialog->destroy();
+}
+
+sub GUI_Layout()
+{
+	my $hpane = Gtk2::HPaned->new ();
+	
+	#$hpane->add1 (&create_mount_pane ());
+	$hpane->add2 (Gtk2::Viewport->new ());
+
+	return $hpane;
+}
+
+
+
+
+
+
+
+
+###########
+###LOGIC###
+###########
 
 
 #
@@ -477,7 +689,7 @@ sub process
 				);
 			
 			# Delete the original file
-			unlink "$directory_input/$file" if ($Config{'Delete'});
+			unlink "$directory_input/$file" if ($Config{'DeleteFiles'});
 		}
 	}
 	closedir(DIR);
@@ -556,7 +768,7 @@ sub log
 {
 	# Input values
 	my $log_level = shift;
-	my $log_msg = shift;
+	my $log_msg = shift||return;	# Empty log message
 	chomp $log_msg;
 	
 	# Prefix table
