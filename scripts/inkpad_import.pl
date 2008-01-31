@@ -143,69 +143,69 @@ our %Layout = (
 	'Output_format'		=>	"svg",
 );
 
+# Generic configuration propreties
+our %Config = (
+	'Delete'		=>	0,
+	'Verbosity'		=>	0,
+);
+
 # Binaries
 our $bin_compress = "gzip";
 
 
-#
-# Command-line parameters
-#
 
-# Input parameters
-my (	$Opt_Input_Folder,
-	$Opt_Input_Alternative,
-	$Opt_Input_NoDelete,
+
+
+
+
+
+
+
+
+#########################
+#                       #
+#                       #
+#     Program modes     #
+#                       #
+#                       #
+#########################
+
+
+# Program modes
+my (	$Mode_Cli,
+	$Mode_Help,
+	$Mode_Gui,
 );
 
-# Processing parameters
-my (	$Opt_Process_Rotate,
-	$Opt_Process_Scale,
-	$Opt_Process_Border,
-	$Opt_Process_NoBorder,
-);
-
-# Output parameters
-my (	$Opt_Output_Folder,
-	$Opt_Output_Format,
-);
-
-# Other parameters
-my (	$Opt_Other_Verbose,
-	$Opt_Other_Quiet,
-	$Opt_Other_ReallyQuiet,
-	$Opt_Other_Help,
+# Generic parameters
+my (	$Opt_Generic_Verbose,
+	$Opt_Generic_Quiet,
+	$Opt_Generic_ReallyQuiet,
 );
 
 # Read the Command Input
-my $Opt_Result = GetOptions(
-	"source=s"	=>	\$Opt_Input_Folder,
-	"no-delete"	=>	\$Opt_Input_NoDelete,
+my $Mode_Results = GetOptions(
+	"cli"		=>	\$Mode_Cli,
+	"gui"		=>	\$Mode_Gui,
+	"help"		=>	\$Mode_Help,
 	
-	"rotate=i"	=>	\$Opt_Process_Rotate,
-	"scale=i"	=>	\$Opt_Process_Scale,
-	"border=i"	=>	\$Opt_Process_Border,
-	"no-border"	=>	\$Opt_Process_NoBorder,
-	
-	"target=s"	=>	\$Opt_Output_Folder,
-	"out-format=s"	=>	\$Opt_Output_Format,
-	
-	"verbosity=i"	=>	\$Opt_Other_Verbose,
-	"quiet"		=>	\$Opt_Other_Quiet,
-	"really-quiet"	=>	\$Opt_Other_ReallyQuiet,
-	"help"		=>	\$Opt_Other_Help,
+	"verbosity=i"	=>	\$Opt_Generic_Verbose,
+	"quiet"		=>	\$Opt_Generic_Quiet,
+	"really-quiet"	=>	\$Opt_Generic_ReallyQuiet,
 );
 
-# Output handling
-my $output_level = 0;
-$output_level = $Opt_Other_Verbose if ($Opt_Other_Verbose);
-$output_level = -1 if ($Opt_Other_Quiet);
-$output_level = -2 if ($Opt_Other_ReallyQuiet);
+# Detect program mode
+$Mode_Gui = 1 if ((! $Mode_Help)&&(! $Mode_Cli));	# Prefer GUI if nothing specified
+if ($Mode_Help) { $Mode_Gui = 0; $Mode_Cli = 0; }	# Help mode overrides everything
+error(-2, "Cannot launch GUI as well as CLI.") if (($Mode_Gui)&&($Mode_Cli));
 
-# Welcome message
-&log(0, "Initializing");
 
-# Display help, and exit
-if ($Opt_Other_Help)
+
+##########
+###HELP###
+##########
+
+if ($Mode_Help)
 {
 	print <<END
 Usage: inkpad_import.pl [OPTIONS]
@@ -213,36 +213,43 @@ Import proprietary .TOP files from a Medion MD 85276 Digital Ink Pad,
 convert them to an Gzip compressed SVG/XML format, and save them
 on a local source.
 
-Examples
+Examples:
+    ./inkpad_import.pl
+    
+Program modes:
+    --gui             Launch a graphical user interface
+    --cli             Use a command line interface
+    --help            Display this help
 
- Input parameters:
-  --source=PATH     Source directory for the .TOP files.
-                      Most likely this will the mount point
-                      of your MD 85276.
-                    If not specified, the script will try to
-                      detect the mount point (will only work
-                      if the UDEV rule has been activated),
-                      or default to "/media/disk".
-  --no-delete       Original files and folders will not be deleted
+Graphical User Interface parameters:
 
- Processing parameters:
-  --rotate=ANGLE    Rotate the image over a given angle.
-  --scale=PERCENT   Scale the image by a given percent (default 10)
-  --border=PERCENT  Whitespace border when cropping
-  --no-border       Don't apply any border when cropping
 
- Output parameters:
-  --target=PATH     Target directory for the .SVG(Z) files.
-                      Subdirectories will be created based on
-                      the current date and the subfolders relative
-                      to the source directory.
-  --out-format=EXT  Format of output file [SVG-SVGZ-PNG-JP(E)G-GIF]
+Command Line Interface parameters:
+ * Input parameters:
+    --source=PATH     Source directory for the .TOP files.
+                        Most likely this will the mount point
+                        of your MD 85276.
+    --delete          Delete source files.
+   
+ * Output parameters:
+    --target=PATH     Target directory for the .SVG(Z) files.
+                        Subdirectories will be created based on
+                        the current date and the subfolders relative
+                        to the source directory.
+    --out-format=EXT  Format of output file [SVG-SVGZ-PNG-JP(E)G-GIF]
+ 
+ * Processing parameters:
+    --rotate=ANGLE    Rotate the image over a given angle.
+    --scale=PERCENT   Scale the image by a given percent (default 10)
+    --border=PERCENT  Whitespace border when cropping
+    --no-border       Don't apply any border when cropping
 
- Other parameters:
-  --verbosity=LVL   Level of verbose output [1, 2, 3]
-  --quiet           Be quiet (only display errors and warnings)
-  --really-quiet    Be really quiet (only display errors)
-  --help            Display this help
+
+Generic parameters:
+    --verbosity=LVL   Level of verbose output [1, 2, 3]
+    --quiet           Be quiet (only display errors and warnings)
+    --really-quiet    Be really quiet (only display errors)
+
 
 Copyright 2008, by Tim Besard (tim.besard\@gmail.com)
 END
@@ -250,89 +257,172 @@ END
 	exit;
 }
 
-# Source directory handling
-my $directory_source = '/media/disk';	# Default value
-if ($Opt_Input_Folder)
+
+
+
+
+
+
+
+
+
+#########
+###GUI###
+#########
+
+if (! $Mode_Gui)
 {
-	# We have an override value
-	$directory_source = $Opt_Input_Folder;
-	&log(1, "Source directory has been overrided to \"$directory_source\"");
+	#
+	# Command-line parameters
+	#
+	
+	# Welcome message
+	&log(0, "Initializing user interface");
+
+
+
+
+
+
+
 }
-else
+
+
+
+
+
+
+
+
+
+
+
+#########
+###CLI###
+#########
+
+if ($Mode_Cli)
 {
-	# We do not have an override value, check for UDEV rule
-	open(MOUNTS, "/bin/mount |");
-	while (<MOUNTS>)
+	#
+	# Command-line parameters
+	#
+	
+	# Welcome message
+	&log(0, "Initializing command line interface");
+
+	# Input parameters
+	my (	$Opt_Input_Folder,
+		$Opt_Input_Alternative,
+		$Opt_Input_Delete,
+	);
+
+	# Processing parameters
+	my (	$Opt_Process_Rotate,
+		$Opt_Process_Scale,
+		$Opt_Process_Border,
+		$Opt_Process_NoBorder,
+	);
+
+	# Output parameters
+	my (	$Opt_Output_Folder,
+		$Opt_Output_Format,
+	);
+
+	# Read the Command Input
+	my $Opt_Result = GetOptions(
+		"source=s"	=>	\$Opt_Input_Folder,
+		"delete"	=>	\$Opt_Input_Delete,
+	
+		"rotate=i"	=>	\$Opt_Process_Rotate,
+		"scale=i"	=>	\$Opt_Process_Scale,
+		"border=i"	=>	\$Opt_Process_Border,
+		"no-border"	=>	\$Opt_Process_NoBorder,
+	
+		"target=s"	=>	\$Opt_Output_Folder,
+		"out-format=s"	=>	\$Opt_Output_Format,
+	);
+
+	# Output handling
+	$Config{'Verbosity'} = $Opt_Generic_Verbose if ($Opt_Generic_Verbose);
+	$Config{'Verbosity'} = -1 if ($Opt_Generic_Quiet);
+	$Config{'Verbosity'} = -2 if ($Opt_Generic_ReallyQuiet);
+	
+	# Directory handling
+	my $direcory_input = $Opt_Input_Folder;
+	my $direcory_output = $Opt_Output_Folder;
+
+	# Other values
+	$Layout{'Border'} = $Opt_Process_Border if ($Opt_Process_Border);
+	$Layout{'Border'} = 0 if ($Opt_Process_NoBorder); 
+	$Layout{'Scale'} = $Opt_Process_Scale if ($Opt_Process_Scale);
+	$Layout{'Rotate'} = $Opt_Process_Rotate if ($Opt_Process_Rotate);
+	$Layout{'Output_format'} = $Opt_Output_Format if ($Opt_Output_Format);
+	$Config{'Delete'} = $Opt_Input_Delete;
+	
+	
+	
+	#
+	# Validation
+	#
+
+	# Other debug statements
+	&log(1, "Will delete source files") if ($Config{'Delete'});
+
+	# Check required arguments
+	&log(-2, "I need at least a source and target directory (try --help for more information).") unless (($direcory_input)&&($direcory_output));
+
+	# Validate target directory
+	$direcory_output =~ s/\/$//;	# Remove ending "/"
+	if (!-d $direcory_output)
 	{
-		next unless (m/PenPadStorage on ([^ ]+)/);
-		$directory_source = $1;
-		&log(1, "Source directory has been altered by UDEV rule to \"$directory_source\"");
+		&log(-2, "Target directory \"$direcory_output\" is unexistant or not accisable.");
+		exit;
 	}
-	close MOUNTS;
-}
-&log(1, "Using source directory: \"$directory_source\"");
 
-# Target directory handling
-my $directory_target = '/home/tim/Afbeeldingen/Tekeningen';
-if ($Opt_Output_Folder)
-{
-	# We have an override value
-	$directory_target = $Opt_Output_Folder;
-	&log(1, "Target directory has been overrided to \"$directory_target\"");
-}
-&log(1, "Using target directory: \"$directory_target\"");
+	# Validate source directory
+	$direcory_input =~ s/\/$//;	# Remove ending "/"
+	if (-d $direcory_input)
+	{
+		&log(0, "Scanning and converting all files in \"$direcory_input\" recursively");
+	} else {
+		&log(-2, "Source directory \"$direcory_input\" is unexistant or not accisable.");
+		exit;
+	}
+	
+	
+	
+	#
+	# Main
+	#
+	
+	process($direcory_input,$direcory_output);
 
-# Other values
-$Layout{'Border'} = $Opt_Process_Border if ($Opt_Process_Border);
-$Layout{'Border'} = 0 if ($Opt_Process_NoBorder); 
-$Layout{'Scale'} = $Opt_Process_Scale if ($Opt_Process_Scale);
-$Layout{'Rotate'} = $Opt_Process_Rotate if ($Opt_Process_Rotate);
-$Layout{'Output_format'} = $Opt_Output_Format if ($Opt_Output_Format);
-
-# Other debug statements
-&log(1, "Will not delete source files") if ($Opt_Input_NoDelete);
-
-
-##########
-###MAIN###
-##########
-
-# Generate a subfolder tag
-my @months = qw (januari februari maart april mei juni juli augustus september oktober november december);
-my @timeData = localtime(time);
-my $date_year = $timeData[5] + 1900;
-my $date_day = $timeData[3];
-my $date_month = $months[$timeData[4]];
-my $directory_subfolder = "$date_day $date_month $date_year";
-
-# Validate target directory
-$directory_target =~ s/\/$//;	# Remove ending "/"
-if (!-d $directory_target)
-{
-	&log(-2, "Target directory \"$directory_target\" is unexistant or not accisable");
+	# Bye-bye
+	&log(0, "Exiting");
 	exit;
 }
 
-# Validate source directory
-$directory_source =~ s/\/$//;	# Remove ending "/"
-if (-d $directory_source)
-{
-	&log(0, "Scanning and converting all files in \"$directory_source\" recursively");
-	process($directory_source);
-} else {
-	&log(-2, "Source directory \"$directory_source\" is unexistant or not accisable");
-	exit;
-}
-
-# Bye-bye
-&log(0, "Exiting");
-exit;
 
 
 
-############
-##ROUTINES##
-############
+
+
+
+
+
+
+
+
+
+
+
+##########################
+#                        #
+#                        #
+#        Routines        #
+#                        #
+#                        #
+##########################
 
 
 #
@@ -344,22 +434,19 @@ exit;
 sub process
 {
 	# Input values
-	my $directory = shift;
-	&log(2, "Scanning directory \"$directory\"");
-	
-	# Directory handling, did we already create a new folder?
-	my $directory_newfolder = 0;
-	my $directory_nonTop = 0;
+	my $directory_input = shift;
+	my $directory_output = shift;
+	&log(2, "Scanning directory \"$directory_input\"");
 
 	# Open the directory
 	local *DIR;
-	opendir(DIR, $directory) or die "cannot open directory ($!)";
+	opendir(DIR, $directory_input) or die "cannot open directory ($!)";
 	
 	# List all files in the directory
 	while (defined(my $file = readdir(DIR)))
 	{
 		# We got a directory
-		if (-d "$directory/$file")
+		if (-d "$directory_input/$file")
 		{
 			&log(3, "Got directory $file");
 			
@@ -367,46 +454,32 @@ sub process
 			next if ($file =~ m/^\.{1,2}$/);
 			
 			# Recursive call
-			process("$directory/$file");
-			
-			# Our recursive process did not delete the folder, which means
-			#  that there is a non .top file in there, don't delete this folder!
-			$directory_nonTop++ if (-d "$directory/$file");
+			process("$directory_input/$file");
 		}
 		
 		# We got a file
-		elsif (-e "$directory/$file")
+		elsif (-e "$directory_input/$file")
 		{
 			&log(3, "Got file $file");
 			
 			# We need a .top file!
 			next unless ($file =~ m/^(.+)\.top$/i);
 			
-			# Directory handling, first time we got a .top file, let's make a new subfolder!
-			my $subfolder = 0;
-			if ($directory_newfolder == 0)
-			{
-				while (-d "$directory_target/$directory_subfolder - Folder $subfolder")
-					{ $subfolder++; }	# In case of multiple syncs at the same day
-				mkdir "$directory_target/$directory_subfolder - Folder $subfolder";
-				$directory_newfolder = 1;
-			}
-			
 			# Start the conversion to the requested file format
-			convert(	"$directory/$file",
+			convert(	"$directory_input/$file",
 					"TOP",
 
-					"$directory_target/$directory_subfolder - Folder $subfolder/$1.$Layout{'Output_format'}",
+					"$directory_output",
 					$Layout{'Output_format'}
 				);
 			
 			# Delete the original file
-			unlink "$directory/$file" unless ($Opt_Input_NoDelete);
+			unlink "$directory_input/$file" if ($Config{'Delete'});
 		}
 	}
 	closedir(DIR);
 	
-	&log(3, "Finished processing $directory");
+	&log(3, "Finished processing $directory_input");
 }
 
 # Compress given file
@@ -486,10 +559,13 @@ sub log
 	my @prefix = ("!", "!", "!", "*" , "\t-", "\t\t-", "\t\t~");
 	
 	# Print the message; if we want to see it
-	if ($log_level <= $output_level)	# $output_level is the maximum level we want to see
+	if ($log_level <= $Config{'Verbosity'})		# The maximum level we want to see
 	{
 		print $prefix[$log_level + 3], " ", $log_msg, "\n";
 	}
+	
+	# Exit on critical error
+	exit if ($log_level <= -2);
 	
 	return;
 }
