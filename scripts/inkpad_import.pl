@@ -110,7 +110,6 @@
 # Needed modules
 use strict;
 use warnings;
-use Getopt::Long;
 use GD;
 use GD::Polyline;
 
@@ -152,6 +151,9 @@ our %Config = (
 # Binaries
 our $bin_compress = "gzip";
 
+# Redirect some handlers
+$SIG{__WARN__} = sub { $_[0] =~ m/^(.+) at /; &log(-2, $1) };
+
 
 
 
@@ -184,22 +186,21 @@ my (	$Opt_Generic_Verbose,
 );
 
 # Read the Command Input
-my $Mode_Results = GetOptions(
+my %Opt_Generic = (
 	"cli"		=>	\$Mode_Cli,
 	"gui"		=>	\$Mode_Gui,
 	"help"		=>	\$Mode_Help,
 	
-	"verbosity=i"	=>	\$Opt_Generic_Verbose,
+	"verbosity"	=>	\$Opt_Generic_Verbose,
 	"quiet"		=>	\$Opt_Generic_Quiet,
-	"really-quiet"	=>	\$Opt_Generic_ReallyQuiet,
+	"really-quiet"	=>	\$Opt_Generic_ReallyQuiet
 );
+parseParameters(\%Opt_Generic, 1);
 
 # Detect program mode
 $Mode_Gui = 1 if ((! $Mode_Help)&&(! $Mode_Cli));	# Prefer GUI if nothing specified
 if ($Mode_Help) { $Mode_Gui = 0; $Mode_Cli = 0; }	# Help mode overrides everything
 error(-2, "Cannot launch GUI as well as CLI.") if (($Mode_Gui)&&($Mode_Cli));
-
-
 
 ##########
 ###HELP###
@@ -270,21 +271,21 @@ END
 ###GUI###
 #########
 
-if (! $Mode_Gui)
+if ($Mode_Gui)
 {
 	#
 	# Command-line parameters
 	#
 	
 	# Welcome message
-	&log(0, "Initializing user interface");
+	&log(0, "Initializing graphical user interface");
 
 
 
 
 
 
-
+	exit;
 }
 
 
@@ -329,18 +330,20 @@ if ($Mode_Cli)
 	);
 
 	# Read the Command Input
-	my $Opt_Result = GetOptions(
-		"source=s"	=>	\$Opt_Input_Folder,
+	my %Opt_Specific = (
+		%Opt_Generic,					# Avoid complaints for program mode parameters
+		"source"	=>	\$Opt_Input_Folder,
 		"delete"	=>	\$Opt_Input_Delete,
 	
-		"rotate=i"	=>	\$Opt_Process_Rotate,
-		"scale=i"	=>	\$Opt_Process_Scale,
-		"border=i"	=>	\$Opt_Process_Border,
+		"rotate"	=>	\$Opt_Process_Rotate,
+		"scale"		=>	\$Opt_Process_Scale,
+		"border"	=>	\$Opt_Process_Border,
 		"no-border"	=>	\$Opt_Process_NoBorder,
 	
-		"target=s"	=>	\$Opt_Output_Folder,
-		"out-format=s"	=>	\$Opt_Output_Format,
+		"target"	=>	\$Opt_Output_Folder,
+		"out-format"	=>	\$Opt_Output_Format,
 	);
+	parseParameters(\%Opt_Specific);
 
 	# Output handling
 	$Config{'Verbosity'} = $Opt_Generic_Verbose if ($Opt_Generic_Verbose);
@@ -348,8 +351,8 @@ if ($Mode_Cli)
 	$Config{'Verbosity'} = -2 if ($Opt_Generic_ReallyQuiet);
 	
 	# Directory handling
-	my $direcory_input = $Opt_Input_Folder;
-	my $direcory_output = $Opt_Output_Folder;
+	my $directory_input = $Opt_Input_Folder;
+	my $directory_output = $Opt_Output_Folder;
 
 	# Other values
 	$Layout{'Border'} = $Opt_Process_Border if ($Opt_Process_Border);
@@ -369,23 +372,23 @@ if ($Mode_Cli)
 	&log(1, "Will delete source files") if ($Config{'Delete'});
 
 	# Check required arguments
-	&log(-2, "I need at least a source and target directory (try --help for more information).") unless (($direcory_input)&&($direcory_output));
+	&log(-2, "I need at least a source and target directory (try --help for more information).") unless (($directory_input)&&($directory_output));
 
 	# Validate target directory
-	$direcory_output =~ s/\/$//;	# Remove ending "/"
-	if (!-d $direcory_output)
+	$directory_output =~ s/\/$//;	# Remove ending "/"
+	if (!-d $directory_output)
 	{
-		&log(-2, "Target directory \"$direcory_output\" is unexistant or not accisable.");
+		&log(-2, "Target directory \"$directory_output\" is unexistant or not accisable.");
 		exit;
 	}
 
 	# Validate source directory
-	$direcory_input =~ s/\/$//;	# Remove ending "/"
-	if (-d $direcory_input)
+	$directory_input =~ s/\/$//;	# Remove ending "/"
+	if (-d $directory_input)
 	{
-		&log(0, "Scanning and converting all files in \"$direcory_input\" recursively");
+		&log(0, "Scanning and converting all files in \"$directory_input\" recursively");
 	} else {
-		&log(-2, "Source directory \"$direcory_input\" is unexistant or not accisable.");
+		&log(-2, "Source directory \"$directory_input\" is unexistant or not accisable.");
 		exit;
 	}
 	
@@ -395,7 +398,7 @@ if ($Mode_Cli)
 	# Main
 	#
 	
-	process($direcory_input,$direcory_output);
+	process($directory_input,$directory_output);
 
 	# Bye-bye
 	&log(0, "Exiting");
@@ -554,6 +557,7 @@ sub log
 	# Input values
 	my $log_level = shift;
 	my $log_msg = shift;
+	chomp $log_msg;
 	
 	# Prefix table
 	my @prefix = ("!", "!", "!", "*" , "\t-", "\t\t-", "\t\t~");
@@ -568,6 +572,34 @@ sub log
 	exit if ($log_level <= -2);
 	
 	return;
+}
+
+# Command-line parameters parsing routine
+sub parseParameters
+{
+	# Input values
+	my $Map_ref = shift;
+	my %Map = %$Map_ref;
+	my $noWarn = shift;
+	
+	# Loop values
+	for my $i (0 ... $#ARGV)
+	{
+		if ($ARGV[$i] =~ m/^--([^=]+)(=(.+)$|$)/)
+		{
+			my $Parameter = $1;
+			my $Option = $3||1;
+			
+			my $Key_ref = $Map{$Parameter};
+			
+			if ($Key_ref)
+			{
+				${ $Key_ref } = $Option;
+			} else {
+				&log(-2, "Unknown command-line parameter: $Parameter.") unless ($noWarn);		
+			}
+		}	
+	}
 }
 
 __END__
