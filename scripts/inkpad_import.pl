@@ -650,7 +650,7 @@ sub process
 			next if ($file =~ m/^\.{1,2}$/);
 			
 			# Recursive call
-			process("$directory_input/$file");
+			process("$directory_input/$file", $directory_output);
 		}
 		
 		# We got a file
@@ -665,7 +665,7 @@ sub process
 			convert(	"$directory_input/$file",
 					"TOP",
 
-					"$directory_output",
+					"$directory_output/$1.$Layout{'Output_format'}",
 					$Layout{'Output_format'}
 				);
 			
