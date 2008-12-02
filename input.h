@@ -35,12 +35,47 @@
 
 // Headers
 #include <iostream>
+#include <fstream>
+#include <string.h>
+#include "data.h"
 
+
+//
+// Inline functions
+//
+
+#define bitwise_tow(h,l) ((((unsigned char)h)<<8)|((unsigned char)l))
 
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
 
+class Input
+{
+	public:
+		// Construction and destruction
+		Input(const std::string &inputFile);
+
+		// Class member routines
+		void read();
+		Data* getdata();
+
+	private:
+		// File handling
+		void file_open();
+		void file_close();
+
+		// Data processing
+		void data_input();
+		void data_input_top();
+		bool data_type();
+
+		// Data
+		std::string type;
+		std::string file;
+		std::ifstream stream;
+		Data data;
+};
 
 
 

@@ -40,4 +40,24 @@
 // Construction and destruction
 //
 
+Data::Data()
+{
+}
+
+
+//
+// Input routines
+//
+
+// Add a single point
+void Data::addPoint(Point &inputPoint)
+{
+	points.push_back(inputPoint);
+}
+
+// Add a new line
+void Data::addLine(Line &inputLine)
+{
+	lines.push_back(inputLine);
+}
 

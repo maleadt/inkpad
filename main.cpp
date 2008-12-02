@@ -40,7 +40,23 @@
 
 int main()
 {
-    std::cout << "* Application initializing" << std::endl;
+	std::cout << "* Application initializing" << std::endl;
 
-    return 0;
+	// Scan given folder for specific folder structure
+	try
+	{
+		Input tempInput("../../testfile.top");
+		tempInput.read();
+	}
+	catch (std::string error)
+	{
+		std::cout << "Caught error: " << error << std::endl;
+	}
+
+	// For all files:
+		// Input all data
+		// Process all data
+		// Output all data
+
+	return 0;
 }

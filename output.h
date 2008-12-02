@@ -35,12 +35,39 @@
 
 // Headers
 #include <iostream>
-
+#include <string>
+#include <fstream>
+#include "data.h"
 
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
 
+class Output
+{
+	public:
+		// Construction and destruction
+		Output(const Data& inputData, const std::string& inputFile, const std::string& inputType);
+
+		// Class member routines
+		void write();
+
+	private:
+		// File handling
+		void file_open();
+		void file_close();
+
+		// Data processing
+		void data_output();
+		void data_output_svg();
+
+
+		// Data
+		std::string type;
+		std::string file;
+		std::ofstream stream;
+		const Data* data;
+};
 
 
 

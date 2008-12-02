@@ -35,13 +35,48 @@
 
 // Headers
 #include <iostream>
+#include <vector>
+
+
+////////////////
+// DATA TYPES //
+////////////////
+
+// A single point
+struct Point
+{
+	int x;
+	int y;
+};
+
+// A straight line
+struct Line
+{
+	int start_x;
+	int start_y;
+	int end_x;
+	int end_y;
+};
 
 
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
 
+class Data
+{
+	public:
+		// Construction and destruction
+		Data();
 
+		// Input routines
+		void addPoint(Point&);
+		void addLine(Line&);
+
+	private:
+	std::vector<Point> points;
+		std::vector<Line> lines;
+};
 
 
 
