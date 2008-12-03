@@ -74,6 +74,7 @@ class Data
 	public:
 		// Construction and destruction
 		Data();
+		void clear();
 
 		// Element configuration
 		void setWidth(int);

@@ -45,13 +45,19 @@ int main()
 	// Scan given folder for specific folder structure
 	try
 	{
-		std::cout << "* Reading data" << std::endl;
-		Input tempInput("testfile.top");
-		tempInput.read();
+		// Initialise objects
+		std::cout << "* Initialising" << std::endl;
+		Input engineInput;
+		Output engineOutput;
 
+		// Read the file
+		std::cout << "* Reading data" << std::endl;
+		engineInput.read("testfile.top");
+		Data* engineData = engineInput.getdata();
+
+		// Output the file
 		std::cout << "* Writing data" << std::endl;
-		Output tempOutput(tempInput.getdata(), "testfile.svg", "svg");
-		tempOutput.write();
+		engineOutput.write(engineData, "testfile.svg", "svg");
 	}
 	catch (std::string error)
 	{

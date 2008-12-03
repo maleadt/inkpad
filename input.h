@@ -54,10 +54,11 @@ class Input
 {
 	public:
 		// Construction and destruction
-		Input(const std::string &inputFile);
+		Input();
 
 		// Class member routines
-		void read();
+		void read(const std::string &inputFile);
+		void clear();
 		Data* getdata();
 
 	private:

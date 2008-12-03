@@ -40,14 +40,8 @@
 // Construction and destruction
 //
 
-Output::Output(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType)
+Output::Output()
 {
-	// Don't copy the object, it's the user's responsibility the pointer will still be alive later on
-	data = inputDataPointer;
-
-	// Copying two string won't incude heavy memory usage
-	file = inputFile;
-	type = inputType;
 }
 
 
@@ -56,8 +50,13 @@ Output::Output(const Data* inputDataPointer, const std::string& inputFile, const
 //
 
 // Write the data to a given file (in a given format)
-void Output::write()
+void Output::write(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType)
 {
+	// Save the given data
+	data = inputDataPointer;
+	file = inputFile;
+	type = inputType;
+
 	// Check and open the file
 	file_open();
 

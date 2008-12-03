@@ -42,10 +42,18 @@
 
 Data::Data()
 {
+	clear();
+}
+
+void Data::clear()
+{
 	// Default values
 	setColourBg("white");
 	setColourFg("black");
 	setWidth(10);
+
+	// Delete elements
+	elements.clear();
 }
 
 

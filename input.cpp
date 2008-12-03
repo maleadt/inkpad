@@ -40,9 +40,10 @@
 // Construction and destruction
 //
 
-Input::Input(const std::string& inputFile)
+Input::Input()
 {
-	file = inputFile;
+	// Reset everything
+	clear();
 }
 
 
@@ -51,8 +52,11 @@ Input::Input(const std::string& inputFile)
 //
 
 // Read from the file
-void Input::read()
+void Input::read(const std::string &inputFile)
 {
+	// Save the requested filename
+	file = inputFile;
+
 	// Open the file
 	file_open();
 
@@ -61,6 +65,14 @@ void Input::read()
 
 	// Close the file
 	file_close();
+}
+
+// Reset the object's data
+void Input::clear()
+{
+	type.clear();
+	file.clear();
+	data.clear();
 }
 
 // Export all read data

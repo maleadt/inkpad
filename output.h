@@ -48,10 +48,11 @@ class Output
 {
 	public:
 		// Construction and destruction
-		Output(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType);
+		Output();
 
 		// Class member routines
-		void write();
+		void write(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType);
+		void clear();
 
 	private:
 		// File handling
