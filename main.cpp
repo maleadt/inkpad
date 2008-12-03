@@ -57,17 +57,12 @@ int main()
 
 		// Output the file
 		std::cout << "* Writing data" << std::endl;
-		engineOutput.write(engineData, "testfile.svg", "svg");
+		engineOutput.write(engineData, "testfile.svg");
 	}
 	catch (std::string error)
 	{
 		std::cout << "Caught error: " << error << std::endl;
 	}
-
-	// For all files:
-		// Input all data
-		// Process all data
-		// Output all data
 
 	return 0;
 }

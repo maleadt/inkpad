@@ -67,6 +67,23 @@ void Output::write(const Data* inputDataPointer, const std::string& inputFile, c
 	file_close();
 }
 
+// Write the data to a given file (but detect the format)
+void Output::write(const Data* inputDataPointer, const std::string& inputFile)
+{
+	// Save the filename
+	file = inputFile;
+
+	// Detect the type
+	if (!data_type())
+	{
+		throw std::string("unsupported output file type");
+		return;
+	}
+
+	// Write the vile
+	write(inputDataPointer, inputFile, type);
+}
+
 
 //
 // File handling
@@ -101,6 +118,20 @@ void Output::file_close()
 //
 // Data processing
 //
+
+// Guess the data type
+bool Output::data_type()
+{
+	// Extension check
+	unsigned int position = file.find_last_of(".");
+	if (position < file.length())
+	{
+		std::string extension = file.substr(position+1);
+		type = extension;
+		return true;
+	}
+	return false;
+}
 
 // Output data (wrapper around different data types)
 void Output::data_output()

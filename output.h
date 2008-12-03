@@ -52,6 +52,7 @@ class Output
 
 		// Class member routines
 		void write(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType);
+		void write(const Data* inputDataPointer, const std::string& inputFile);
 		void clear();
 
 	private:
@@ -60,6 +61,7 @@ class Output
 		void file_close();
 
 		// Data processing
+		bool data_type();
 		void data_output();
 		void data_output_svg();
 

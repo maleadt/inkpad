@@ -138,7 +138,7 @@ void Input::data_input()
 	}
 	else
 	{
-		throw std::string("unknown input file type");
+		throw std::string("unsupported input file type");
 		return;
 	}
 }
