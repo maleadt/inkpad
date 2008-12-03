@@ -163,6 +163,7 @@ void Input::data_input_top()
 	int y1 = 12000 - bitwise_tow(buffer[2], buffer[1]);
 
 	// Read untill at end of file
+	bool end_of_stroke = false;
 	while (!stream.eof())
 	{
 		// Initialise and read end coördinates
@@ -170,23 +171,23 @@ void Input::data_input_top()
 		int x2 = bitwise_tow(buffer[4], buffer[3]);
 		int y2 = 12000 - bitwise_tow(buffer[2], buffer[1]);
 
-
-		if (buffer[0] == 0)
+		// Create a new line (if we haven't started a new stroke
+		if (!end_of_stroke)
 		{
-			// End of a stroke, no need to save it
-			// TODO: can we get a point here? (twice a "end of stroke")?
-			//       if so, detect it!
-		}
-		else
-		{
-			// Create a new line
 			data.addLine(x1, y1, x2, y2);
+		} else {
+			end_of_stroke = false;
 		}
-
 
 		// Switch the coördinates
 		x1 = x2;
 		y1 = y2;
+
+		// Check if we should later on draw a line from these endpoints
+		if (buffer[0] == 0)
+		{
+			end_of_stroke = true;
+		}
 	}
 
 	// Clear the buffer
