@@ -37,6 +37,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <vector>
 #include "data.h"
 
 //////////////////////
@@ -47,7 +48,7 @@ class Output
 {
 	public:
 		// Construction and destruction
-		Output(const Data& inputData, const std::string& inputFile, const std::string& inputType);
+		Output(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType);
 
 		// Class member routines
 		void write();
@@ -68,8 +69,6 @@ class Output
 		std::ofstream stream;
 		const Data* data;
 };
-
-
 
 
 // Include guard

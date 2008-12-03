@@ -45,8 +45,13 @@ int main()
 	// Scan given folder for specific folder structure
 	try
 	{
-		Input tempInput("../../testfile.top");
+		std::cout << "* Reading data" << std::endl;
+		Input tempInput("testfile.top");
 		tempInput.read();
+
+		std::cout << "* Writing data" << std::endl;
+		Output tempOutput(tempInput.getdata(), "testfile.svg", "svg");
+		tempOutput.write();
 	}
 	catch (std::string error)
 	{

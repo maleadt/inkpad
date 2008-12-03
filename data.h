@@ -42,21 +42,27 @@
 // DATA TYPES //
 ////////////////
 
-// A single point
-struct Point
+// The structure
+struct Element
 {
-	int x;
-	int y;
+	// Data
+	int identifier;
+	std::vector<double> parameters;
+	std::string foreground;
+	std::string background;
+	int width;
 };
 
-// A straight line
-struct Line
-{
-	int start_x;
-	int start_y;
-	int end_x;
-	int end_y;
-};
+/*
+ * Possible elements
+ *
+ * - ID 1: a point
+ *   params: x value, y value
+ *
+ * - ID 2: a line
+ *   params: x start value, y start value, x end value, y end value
+ *
+ */
 
 
 //////////////////////
@@ -69,13 +75,32 @@ class Data
 		// Construction and destruction
 		Data();
 
-		// Input routines
-		void addPoint(Point&);
-		void addLine(Line&);
+		// Element configuration
+		void setWidth(int);
+		void setColourBg(const std::string&);
+		void setColourFg(const std::string&);
+
+		// Element input
+		void addPoint(int, int);
+		void addLine(int, int, int, int);
+
+		// Element output
+		std::string getColourBg() const;
+
+		// Iterators
+		typedef std::vector<Element>::const_iterator const_iterator;
+		const_iterator begin() const { return elements.begin(); }
+		const_iterator end() const { return elements.end(); }
 
 	private:
-	std::vector<Point> points;
-		std::vector<Line> lines;
+		// Element configuration data
+		std::string colour_bg;	// TODO: distinguish image background from element background, the same atm
+		std::string colour_fg;
+		int width;
+
+		// Element containers
+		void addElement(Element&);
+		std::vector<Element> elements;
 };
 
 

@@ -180,14 +180,7 @@ void Input::data_input_top()
 		else
 		{
 			// Create a new line
-			Line tempLine;
-			tempLine.start_x = x1;
-			tempLine.start_y = y1;
-			tempLine.end_x = x2;
-			tempLine.end_y = x2;
-
-			// Save the line
-			data.addLine(tempLine);
+			data.addLine(x1, y1, x2, y2);
 		}
 
 

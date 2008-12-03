@@ -40,10 +40,10 @@
 // Construction and destruction
 //
 
-Output::Output(const Data& inputData, const std::string& inputFile, const std::string& inputType)
+Output::Output(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType)
 {
 	// Don't copy the object, it's the user's responsibility the pointer will still be alive later on
-	data = &inputData;
+	data = inputDataPointer;
 
 	// Copying two string won't incude heavy memory usage
 	file = inputFile;
@@ -127,4 +127,44 @@ void Output::data_output()
 // Output data in SVG format
 void Output::data_output_svg()
 {
+	// Get the maximal size
+	int x_max = 8800;
+	int y_max = 12000;
+
+	// Print the SVG header
+	stream	<< "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+			<< "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
+			<< "	xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
+			<< "	xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
+			<< "	version=\"1.1\" baseProfile=\"full\"\n"
+			<< "	width=\"" << x_max << "\" height=\"" << y_max << "\" viewBox=\"0 0 " << x_max << " " << y_max << "\">\n";
+
+	// Add a background rectangle
+	stream << "<rect x=\"0\" y=\"0\" width=\"" << x_max << "\" height=\"" << y_max << "\" fill=\"" << data->getColourBg() << "\" stroke=\"" << data->getColourBg() << "\" stroke-width=\"1px\" />\n";
+
+	// Process all elements
+	std::vector<Element>::const_iterator tempIterator = data->begin();
+	while (tempIterator != data->end())
+	{
+		switch (tempIterator->identifier)
+		{
+			// A point
+			case 1:
+				break;
+
+			// A line
+			case 2:
+				stream << "<line x1=\"" << tempIterator->parameters[0] << "\" y1=\"" << tempIterator->parameters[1] << "\" x2=\""
+					 << tempIterator->parameters[2] << "\" y2=\"" << tempIterator->parameters[3] << "\" fill=\"none\" stroke=\"" << tempIterator->foreground << "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
+				break;
+
+			// Unsupported type
+			default:
+				throw std::string("unsupported element during svg output");
+		}
+		++tempIterator;
+	}
+
+	// Print the SVG footer
+	stream << "</svg>\n";
 }
