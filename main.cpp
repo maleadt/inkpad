@@ -339,13 +339,44 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 	// Have we saved before?
 	if (parent->filename.length() > 0)
 	{
-		parent->engineOutput->write(parent->filename);
+		try
+		{
+			parent->engineOutput->write(parent->filename);
+		}
+
+		catch (std::string error)
+		{
+			wxString WXerror(error.c_str(), wxConvUTF8);
+			wxMessageBox(_T("Error while saving: ") + WXerror + _T("."),
+				_T("Error"), wxOK | wxICON_ERROR, this);
+		}
 	}
 
 	// If not, present the "save as" dialog
 	else
 	{
-		//OnMenuSaveAs(event);
+		wxFileDialog *SaveDialog = new wxFileDialog(
+			this, _("Save file"), wxEmptyString, wxEmptyString,
+			wxT("SVG vector image (*.svg)|*.svg|"),
+			wxFD_SAVE|wxOVERWRITE_PROMPT, wxDefaultPosition);
+
+		// Creates a "open file" dialog
+		if (SaveDialog->ShowModal() == wxID_OK)
+		{
+			try
+			{
+				// Give the input engine the file we selected
+				parent->engineOutput->write(std::string(SaveDialog->GetPath().mb_str()));
+				parent->filename = SaveDialog->GetPath().mb_str();
+			}
+
+			catch (std::string error)
+			{
+				wxString WXerror(error.c_str(), wxConvUTF8);
+				wxMessageBox(_T("Error while saving: ") + WXerror + _T("."),
+					_T("Error"), wxOK | wxICON_ERROR, this);
+			}
+		}
 	}
 }
 

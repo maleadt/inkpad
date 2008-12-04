@@ -198,10 +198,7 @@ void Output::data_output_dc(wxDC& dc)
 {
 	// Clear the dc
 	dc.SetBackground(*wxWHITE_BRUSH);
-	//dc.Clear();
-	int w, h;
-	data->getSize(w, h);
-	dc.DrawRectangle(0, 0, w, h);
+	dc.Clear();
 
 	// Process all elements
 	std::vector<Element>::const_iterator tempIterator = data->begin();
