@@ -36,7 +36,11 @@
 
 // Default headers
 #include <iostream>
-#include <wx/wx.h>
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+  #include <wx/wx.h>
+#endif
+
 #include <wx/sizer.h>
 
 
@@ -51,22 +55,22 @@
 
 enum
 {
-	ID_Open = 1,
-	ID_Save,
-	ID_SaveAs,
-	ID_Quit,
+	MENU_Open = 1,
+	MENU_Save,
+	MENU_SaveAs,
+	MENU_Quit,
 
-	ID_Undo,
-	ID_Redo,
-	ID_Rotate,
+	MENU_Undo,
+	MENU_Redo,
+	MENU_Rotate,
 
-	ID_ZoomIn,
-	ID_ZoomOut,
-	ID_Fullscreen,
+	MENU_ZoomIn,
+	MENU_ZoomOut,
+	MENU_Fullscreen,
 
-	ID_Settings,
+	MENU_Settings,
 
-	ID_About
+	MENU_About
 };
 
 
@@ -86,13 +90,18 @@ class DrawPane;
 // Derive a new class
 class Inkpad: public wxApp
 {
-	virtual bool OnInit();
+	public:
+		// Elements
+		FrameMain *frame;
+		DrawPane * drawPane;
 
-	// Frame
-	FrameMain *frame;
+		// Data
+		Input* engineInput;
+		Output* engineOutput;
+		Data* engineData;	// Only a pointer, no actual engine
 
-	// Draw pane
-	DrawPane * drawPane;
+	private:
+		virtual bool OnInit();
 };
 
 // Implement it
@@ -108,6 +117,7 @@ class FrameMain: public wxFrame
 {
 	public:
 		FrameMain(const wxString& title, const wxPoint& pos, const wxSize& size);
+		Inkpad* parent;
 
 		// File menu
 		void OnMenuOpen(wxCommandEvent& event);
@@ -134,71 +144,24 @@ class FrameMain: public wxFrame
 		DECLARE_EVENT_TABLE()
 };
 
-// Frame events
-FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& size)
-: wxFrame((wxFrame *)NULL, -1, title, pos, size)
-{
-	// File menu
-	wxMenu *menuFile = new wxMenu;
-	menuFile->Append( ID_Open, _T("&Open") );
-	menuFile->Append( ID_Save, _T("&Save") );
-	menuFile->Append( ID_SaveAs, _T("Save &as") );
-	menuFile->AppendSeparator();
-	menuFile->Append( ID_Quit, _T("&Quit") );
-
-	// Edit menu
-	wxMenu *menuEdit = new wxMenu;
-	menuEdit->Append( ID_Undo, _T("&Undo") );
-	menuEdit->Append( ID_Redo, _T("&Redo") );
-	menuEdit->AppendSeparator();
-	menuEdit->Append( ID_Rotate, _T("&Rotate") );
-
-	// View menu
-	wxMenu *menuView = new wxMenu;
-	menuView->Append( ID_ZoomIn, _T("Zoom &in") );
-	menuView->Append( ID_ZoomOut, _T("Zoom &out") );
-	menuView->AppendSeparator();
-	menuView->Append( ID_Fullscreen, _T("&Fullscreen") );
-
-	// Tools menu
-	wxMenu *menuTools = new wxMenu;
-	menuTools->Append( ID_Settings, _T("&Settings") );
-
-	// Help menu
-	wxMenu *menuHelp = new wxMenu;
-	menuHelp->Append( ID_About, _T("&About...") );
-
-	wxMenuBar *menuBar = new wxMenuBar;
-	menuBar->Append( menuFile, _T("&File") );
-	menuBar->Append( menuEdit, _T("&Edit") );
-	menuBar->Append( menuView, _T("&View") );
-	menuBar->Append( menuTools, _T("&Tools") );
-	menuBar->Append( menuHelp, _T("&Help") );
-
-	SetMenuBar( menuBar );
-
-	CreateStatusBar();
-	SetStatusText( _T("Inkpad initialised") );
-}
-
 // Menu event table
 BEGIN_EVENT_TABLE(FrameMain, wxFrame)
-	EVT_MENU(ID_Open, FrameMain::OnMenuOpen)
-	EVT_MENU(ID_Save, FrameMain::OnMenuSave)
-	EVT_MENU(ID_SaveAs, FrameMain::OnMenuSaveAs)
-	EVT_MENU(ID_Quit, FrameMain::OnMenuQuit)
+	EVT_MENU(MENU_Open, FrameMain::OnMenuOpen)
+	EVT_MENU(MENU_Save, FrameMain::OnMenuSave)
+	EVT_MENU(MENU_SaveAs, FrameMain::OnMenuSaveAs)
+	EVT_MENU(MENU_Quit, FrameMain::OnMenuQuit)
 
-	EVT_MENU(ID_Undo, FrameMain::OnMenuUndo)
-	EVT_MENU(ID_Redo, FrameMain::OnMenuRedo)
-	EVT_MENU(ID_Rotate, FrameMain::OnMenuRotate)
+	EVT_MENU(MENU_Undo, FrameMain::OnMenuUndo)
+	EVT_MENU(MENU_Redo, FrameMain::OnMenuRedo)
+	EVT_MENU(MENU_Rotate, FrameMain::OnMenuRotate)
 
-	EVT_MENU(ID_ZoomIn, FrameMain::OnMenuZoomIn)
-	EVT_MENU(ID_ZoomOut, FrameMain::OnMenuZoomOut)
-	EVT_MENU(ID_Fullscreen, FrameMain::OnMenuFullscreen)
+	EVT_MENU(MENU_ZoomIn, FrameMain::OnMenuZoomIn)
+	EVT_MENU(MENU_ZoomOut, FrameMain::OnMenuZoomOut)
+	EVT_MENU(MENU_Fullscreen, FrameMain::OnMenuFullscreen)
 
-	EVT_MENU(ID_Settings, FrameMain::OnMenuSettings)
+	EVT_MENU(MENU_Settings, FrameMain::OnMenuSettings)
 
-	EVT_MENU(ID_About, FrameMain::OnMenuAbout)
+	EVT_MENU(MENU_About, FrameMain::OnMenuAbout)
 END_EVENT_TABLE()
 
 
@@ -212,7 +175,8 @@ END_EVENT_TABLE()
 class DrawPane : public wxPanel
 {
 	public:
-		DrawPane(wxFrame* parent);
+		DrawPane(wxFrame* _parent);
+		Inkpad* parent;
 
 		void paintEvent(wxPaintEvent& evt);
 		void paintNow();
@@ -220,6 +184,7 @@ class DrawPane : public wxPanel
 		void render(wxDC& dc);
 
 		DECLARE_EVENT_TABLE()
+
 };
 
 // Link events
@@ -242,15 +207,23 @@ END_EVENT_TABLE()
 
 bool Inkpad::OnInit()
 {
-	frame = new FrameMain( _T("Hello World"), wxPoint(50,50), wxSize(440,600) );
+	// Set title and size
+	frame = new FrameMain( _T("Inkpad"), wxPoint(50,50), wxSize(440,600));
+	frame->parent = this;
 
 	drawPane = new DrawPane( (wxFrame*) frame );
+	drawPane->parent = this;
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(drawPane, 1, wxEXPAND);
 
 	frame->SetSizer(sizer);
 	frame->SetAutoLayout(true);
 
+	// Spawn all engines
+	engineInput = new Input;
+	engineOutput = new Output;
+
+	// Show the frame
 	frame->Show(TRUE);
 	SetTopWindow(frame);
 	return TRUE;
@@ -261,6 +234,57 @@ bool Inkpad::OnInit()
 // Frame //
 ///////////
 
+
+//
+// Construction
+//
+
+FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& size)
+: wxFrame((wxFrame *)NULL, -1, title, pos, size)
+{
+	// File menu
+	wxMenu *menuFile = new wxMenu;
+	menuFile->Append( MENU_Open, _T("&Open") );
+	menuFile->Append( MENU_Save, _T("&Save") );
+	menuFile->Append( MENU_SaveAs, _T("Save &as") );
+	menuFile->AppendSeparator();
+	menuFile->Append( MENU_Quit, _T("&Quit") );
+
+	// Edit menu
+	wxMenu *menuEdit = new wxMenu;
+	menuEdit->Append( MENU_Undo, _T("&Undo") );
+	menuEdit->Append( MENU_Redo, _T("&Redo") );
+	menuEdit->AppendSeparator();
+	menuEdit->Append( MENU_Rotate, _T("&Rotate") );
+
+	// View menu
+	wxMenu *menuView = new wxMenu;
+	menuView->Append( MENU_ZoomIn, _T("Zoom &in") );
+	menuView->Append( MENU_ZoomOut, _T("Zoom &out") );
+	menuView->AppendSeparator();
+	menuView->Append( MENU_Fullscreen, _T("&Fullscreen") );
+
+	// Tools menu
+	wxMenu *menuTools = new wxMenu;
+	menuTools->Append( MENU_Settings, _T("&Settings") );
+
+	// Help menu
+	wxMenu *menuHelp = new wxMenu;
+	menuHelp->Append( MENU_About, _T("&About...") );
+
+	wxMenuBar *menuBar = new wxMenuBar;
+	menuBar->Append( menuFile, _T("&File") );
+	menuBar->Append( menuEdit, _T("&Edit") );
+	menuBar->Append( menuView, _T("&View") );
+	menuBar->Append( menuTools, _T("&Tools") );
+	menuBar->Append( menuHelp, _T("&Help") );
+
+	SetMenuBar( menuBar );
+
+	CreateStatusBar();
+	SetStatusText( _T("Inkpad initialised") );
+}
+
 //
 // File-menu
 //
@@ -268,7 +292,32 @@ bool Inkpad::OnInit()
 // Open a file
 void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 {
+	wxFileDialog *OpenDialog = new wxFileDialog(
+		this, _("Choose a file to open"), wxEmptyString, wxEmptyString,
+		wxT("TOP image files (*.top)|*.top|"),
+		wxFD_OPEN, wxDefaultPosition);
+
+	// Creates a "open file" dialog with 4 file types
+	if (OpenDialog->ShowModal() == wxID_OK) // if the user click "Open" instead of "cancel"
+	{
+		try
+		{
+			// Give the input engine the file we selected
+			parent->engineInput->read(std::string(OpenDialog->GetPath().mb_str()));
+
+			// Change the window's title
+			SetTitle(_T("Inkpad - ") + OpenDialog->GetFilename());
+		}
+
+		catch (std::string error)
+		{
+			wxString WXerror(error.c_str(), wxConvUTF8);
+			wxMessageBox(_T("An error happened while reading this file: ") + WXerror + _T("."),
+				_T("Error"), wxOK | wxICON_ERROR, this);
+		}
+	}
 }
+
 
 // Save a file
 void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
@@ -361,8 +410,7 @@ void FrameMain::OnMenuAbout(wxCommandEvent& WXUNUSED(event))
 //
 
 // Constructor
-DrawPane::DrawPane(wxFrame* parent) :
-wxPanel(parent)
+DrawPane::DrawPane(wxFrame* _parent) : wxPanel(_parent)
 {
 }
 
