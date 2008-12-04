@@ -48,8 +48,8 @@ Data::Data()
 void Data::clear()
 {
 	// Default values
-	setColourBg("white");
-	setColourFg("black");
+	setColourBg(WHITE);
+	setColourFg(BLACK);
 	setWidth(10);
 
 	// Delete elements
@@ -68,13 +68,13 @@ void Data::setWidth(int inputWidth)
 }
 
 // Set the background colour
-void Data::setColourBg(const std::string& inputColour)
+void Data::setColourBg(const Colour& inputColour)
 {
 	colour_bg = inputColour;
 }
 
 // Set the foreground colour
-void Data::setColourFg(const std::string& inputColour)
+void Data::setColourFg(const Colour& inputColour)
 {
 	colour_fg = inputColour;
 }
@@ -130,7 +130,7 @@ void Data::addElement(Element& inputElement)
 //
 
 // Give the background colour
-std::string Data::getColourBg() const
+Colour Data::getColourBg() const
 {
 	return colour_bg;
 }

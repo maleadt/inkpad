@@ -164,7 +164,7 @@ void Output::data_output_svg(std::ofstream& stream)
 			<< "	width=\"" << x_max << "\" height=\"" << y_max << "\" viewBox=\"0 0 " << x_max << " " << y_max << "\">\n";
 
 	// Add a background rectangle
-	stream << "<rect x=\"0\" y=\"0\" width=\"" << x_max << "\" height=\"" << y_max << "\" fill=\"" << data->getColourBg() << "\" stroke=\"" << data->getColourBg() << "\" stroke-width=\"1px\" />\n";
+	stream << "<rect x=\"0\" y=\"0\" width=\"" << x_max << "\" height=\"" << y_max << "\" fill=\"" << data->getColourBg().rgb_hex() << "\" stroke=\"" << data->getColourBg().rgb_hex() << "\" stroke-width=\"1px\" />\n";
 
 	// Process all elements
 	std::vector<Element>::const_iterator tempIterator = data->begin();
@@ -179,7 +179,7 @@ void Output::data_output_svg(std::ofstream& stream)
 			// A line
 			case 2:
 				stream << "<line x1=\"" << tempIterator->parameters[0] << "\" y1=\"" << tempIterator->parameters[1] << "\" x2=\""
-					 << tempIterator->parameters[2] << "\" y2=\"" << tempIterator->parameters[3] << "\" fill=\"none\" stroke=\"" << tempIterator->foreground << "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
+					 << tempIterator->parameters[2] << "\" y2=\"" << tempIterator->parameters[3] << "\" fill=\"none\" stroke=\"" << tempIterator->foreground .rgb_hex()<< "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
 				break;
 
 			// Unsupported type
@@ -197,7 +197,9 @@ void Output::data_output_svg(std::ofstream& stream)
 void Output::data_output_dc(wxDC& dc)
 {
 	// Clear the dc
-	dc.SetBackground(*wxWHITE_BRUSH);
+	wxBrush brush;
+	brush.SetColour( data->getColourBg().rgb_wxColor() );
+	dc.SetBackground(brush);
 	dc.Clear();
 
 	// Process all elements
@@ -208,13 +210,13 @@ void Output::data_output_dc(wxDC& dc)
 		{
 			// A point
 			case 1:
-				dc.SetPen( wxPen( wxColor(0,0,0), tempIterator->width ) );
+				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
 				dc.DrawPoint( tempIterator->parameters[0], tempIterator->parameters[1] );
 				break;
 
 			// A line
 			case 2:
-				dc.SetPen( wxPen( wxColor(0,0,0), tempIterator->width ) );
+				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
 				dc.DrawLine( tempIterator->parameters[0], tempIterator->parameters[1], tempIterator->parameters[2], tempIterator->parameters[3] );
 				break;
 

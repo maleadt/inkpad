@@ -36,11 +36,50 @@
 // Headers
 #include <iostream>
 #include <vector>
+#include <string.h>
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+  #include <wx/wx.h>
+#endif
 
 
 ////////////////
 // DATA TYPES //
 ////////////////
+
+// A colour
+struct Colour
+{
+	Colour()
+	{
+	}
+	Colour(int _r, int _g, int _b) : r(_r), g(_g), b(_b)
+	{
+	}
+
+	std::string rgb_hex() const
+	{
+		std::string hex = "#";
+		char buffer[3];
+		sprintf(buffer, "%.2X", r);
+		hex += buffer;
+		sprintf(buffer, "%.2X", g);
+		hex += buffer;
+		sprintf(buffer, "%.2X", b);
+		hex += buffer;
+		return hex;
+	}
+
+	wxColor rgb_wxColor() const
+	{
+		wxColor wx(r, g, b);
+		return wx;
+	}
+
+	int r;
+	int g;
+	int b;
+};
 
 // The structure
 struct Element
@@ -48,8 +87,8 @@ struct Element
 	// Data
 	int identifier;
 	std::vector<double> parameters;
-	std::string foreground;
-	std::string background;
+	Colour foreground;
+	Colour background;
 	int width;
 };
 
@@ -69,15 +108,9 @@ struct Element
 // CLASS DEFINITION //
 //////////////////////
 
-//TODO: move hasdata from main to here
+// TODO: move hasdata from main to here
 // TODO: cache control in getSize function
-
-struct Colour
-{
-	int r;
-	int g;
-	int b;
-};
+// TODO: improve the background colour situation in the main data class
 
 class Data
 {
@@ -88,15 +121,15 @@ class Data
 
 		// Element appearance
 		void setWidth(int);
-		void setColourBg(const std::string&);
-		void setColourFg(const std::string&);
+		void setColourBg(const Colour&);
+		void setColourFg(const Colour&);
 
 		// Element input
 		void addPoint(int, int);
 		void addLine(int, int, int, int);
 
 		// Element output
-		std::string getColourBg() const;
+		Colour getColourBg() const;
 		void getSize(int&, int&, int&, int&) const;
 
 		// Iterators
@@ -106,14 +139,26 @@ class Data
 
 	private:
 		// Element configuration data
-		std::string colour_bg;	// TODO: distinguish image background from element background, the same atm
-		std::string colour_fg;
+		Colour colour_bg;
+		Colour colour_fg;
 		int width;
 
 		// Element containers
 		void addElement(Element&);
 		std::vector<Element> elements;
 };
+
+
+///////////////
+// CONSTANTS //
+///////////////
+
+//
+// Colours
+//
+
+static Colour BLACK(0, 0, 0);
+static Colour WHITE(255, 255, 255);
 
 
 
