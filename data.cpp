@@ -132,4 +132,12 @@ void Data::addElement(Element& inputElement)
 // Give the background colour
 std::string Data::getColourBg() const
 {
-	return colour_bg;}
+	return colour_bg;
+}
+
+// Get the maximum size
+void Data::getSize(int &w, int &h)
+{
+	w = 8800;
+	h = 12000;
+}

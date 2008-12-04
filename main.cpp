@@ -96,6 +96,7 @@ class Inkpad: public wxApp
 		DrawPane * drawPane;
 
 		// Data
+		bool hasData;
 		Input* engineInput;
 		Output* engineOutput;
 		Data* engineData;	// Only a pointer, no actual engine
@@ -211,6 +212,7 @@ bool Inkpad::OnInit()
 	frame = new FrameMain( _T("Inkpad"), wxPoint(50,50), wxSize(440,600));
 	frame->parent = this;
 
+	// Add a new drawpane
 	drawPane = new DrawPane( (wxFrame*) frame );
 	drawPane->parent = this;
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -222,6 +224,7 @@ bool Inkpad::OnInit()
 	// Spawn all engines
 	engineInput = new Input;
 	engineOutput = new Output;
+	hasData = false;
 
 	// Show the frame
 	frame->Show(TRUE);
@@ -240,7 +243,7 @@ bool Inkpad::OnInit()
 //
 
 FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& size)
-: wxFrame((wxFrame *)NULL, -1, title, pos, size)
+: wxFrame((wxFrame *)NULL, -1, title, pos, size, wxDEFAULT_FRAME_STYLE | wxFULL_REPAINT_ON_RESIZE)
 {
 	// File menu
 	wxMenu *menuFile = new wxMenu;
@@ -297,16 +300,22 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 		wxT("TOP image files (*.top)|*.top|"),
 		wxFD_OPEN, wxDefaultPosition);
 
-	// Creates a "open file" dialog with 4 file types
-	if (OpenDialog->ShowModal() == wxID_OK) // if the user click "Open" instead of "cancel"
+	// Creates a "open file" dialog
+	if (OpenDialog->ShowModal() == wxID_OK)
 	{
 		try
 		{
 			// Give the input engine the file we selected
 			parent->engineInput->read(std::string(OpenDialog->GetPath().mb_str()));
+			parent->engineData = parent->engineInput->getdata();
+			parent->hasData = true;
 
 			// Change the window's title
 			SetTitle(_T("Inkpad - ") + OpenDialog->GetFilename());
+
+			// Force a redraw
+			wxPaintDC dc(parent->drawPane);
+			parent->drawPane->render(dc);
 		}
 
 		catch (std::string error)
@@ -434,24 +443,65 @@ void DrawPane::paintEvent(wxPaintEvent& evt)
 // The actual rendering
 void DrawPane::render(wxDC& dc)
 {
-	// draw some text
-	dc.DrawText(wxT("Testing"), 40, 60);
+	// Only draw if we have data
+	if (parent->hasData)
+	{
+		// Get the current image's size
+		std::cout << "Redrawing" << std::endl;
+		int maxX, maxY;
+		parent->engineData->getSize(maxX, maxY);
 
-	// draw a circle
-	dc.SetBrush(*wxGREEN_BRUSH); // green filling
-	dc.SetPen( wxPen( wxColor(255,0,0), 5 ) ); // 5-pixels-thick red outline
-	dc.DrawCircle( wxPoint(200,100), 25 /* radius */ );
+		// Let's have at least 50 device units margin
+		float marginX = 50;
+		float marginY = 50;
 
-	// draw a rectangle
-	dc.SetBrush(*wxBLUE_BRUSH); // blue filling
-	dc.SetPen( wxPen( wxColor(255,175,175), 10 ) ); // 10-pixels-thick pink outline
-	dc.DrawRectangle( 300, 100, 400, 200 );
+		// Add the margin to the graphic size
+		maxX += (2*marginX);
+		maxY += (2*marginY);
 
-	// draw a line
-	dc.SetPen( wxPen( wxColor(0,0,0), 3 ) ); // black line, 3 pixels thick
-	dc.DrawLine( 300, 100, 700, 300 ); // draw line across the rectangle
+		// Get the size of the DC in pixels
+		int w, h;
+		dc.GetSize(&w, &h);
 
-	// Look at the wxDC docs to learn how to draw other stuff
+		// Calculate a suitable scaling factor
+		float scaleX=(float)(w/maxX);
+		float scaleY=(float)(h/maxY);
+
+		// Use x or y scaling factor, whichever fits on the DC
+		float actualScale = wxMin(scaleX,scaleY);
+
+		// Calculate the position on the DC for centring the graphic
+		float posX = (float)((w - (200*actualScale))/2.0);
+		float posY = (float)((h - (200*actualScale))/2.0);
+
+		// Set the scale and origin
+		dc.SetUserScale(actualScale, actualScale);
+		dc.SetDeviceOrigin( (long)posX, (long)posY );
+
+		// Clear the dc
+		dc.SetBackground(*wxWHITE_BRUSH);
+		dc.Clear();
+
+
+		// draw some text
+		dc.DrawText(wxT("Testing"), 40, 60);
+
+		// draw a circle
+		dc.SetBrush(*wxGREEN_BRUSH); // green filling
+		dc.SetPen( wxPen( wxColor(255,0,0), 5 ) ); // 5-pixels-thick red outline
+		dc.DrawCircle( wxPoint(200,100), 25 /* radius */ );
+
+		// draw a rectangle
+		dc.SetBrush(*wxBLUE_BRUSH); // blue filling
+		dc.SetPen( wxPen( wxColor(255,175,175), 10 ) ); // 10-pixels-thick pink outline
+		dc.DrawRectangle( 300, 100, 400, 200 );
+
+		// draw a line
+		dc.SetPen( wxPen( wxColor(0,0,0), 3 ) ); // black line, 3 pixels thick
+		dc.DrawLine( 300, 100, 700, 300 ); // draw line across the rectangle
+
+		// Look at the wxDC docs to learn how to draw other stuff
+	}
 }
 
 
