@@ -18,6 +18,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Comments:
+ *  - SVG implemented by http://www.w3.org/TR/SVG/
+ *
  */
 
 ///////////////////
