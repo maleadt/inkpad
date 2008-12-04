@@ -30,8 +30,11 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="`libpng-config --ldflags`" />
+			<Add option="`wx-config --cxxflags`" />
 		</Compiler>
+		<Linker>
+			<Add option="`wx-config --libs`" />
+		</Linker>
 		<Unit filename="data.cpp" />
 		<Unit filename="data.h" />
 		<Unit filename="input.cpp" />
