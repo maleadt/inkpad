@@ -37,11 +37,47 @@
 // Default headers
 #include <iostream>
 #include <wx/wx.h>
+#include <wx/sizer.h>
 
 
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
+
+
+//
+// Unique identifiers
+//
+
+enum
+{
+	ID_Open = 1,
+	ID_Save,
+	ID_SaveAs,
+	ID_Quit,
+
+	ID_Undo,
+	ID_Redo,
+	ID_Rotate,
+
+	ID_ZoomIn,
+	ID_ZoomOut,
+	ID_Fullscreen,
+
+	ID_Settings,
+
+	ID_About
+};
+
+
+//
+// Forward declarations
+//
+
+// Classes
+class Inkpad;
+class FrameMain;
+class DrawPane;
 
 //
 // The application itself
@@ -51,7 +87,16 @@
 class Inkpad: public wxApp
 {
 	virtual bool OnInit();
+
+	// Frame
+	FrameMain *frame;
+
+	// Draw pane
+	DrawPane * drawPane;
 };
+
+// Implement it
+IMPLEMENT_APP(Inkpad)
 
 
 //
@@ -89,75 +134,7 @@ class FrameMain: public wxFrame
 		DECLARE_EVENT_TABLE()
 };
 
-
-//
-// Menu identifiers
-//
-
-enum
-{
-	ID_Open = 1,
-	ID_Save,
-	ID_SaveAs,
-	ID_Quit,
-
-	ID_Undo,
-	ID_Redo,
-	ID_Rotate,
-
-	ID_ZoomIn,
-	ID_ZoomOut,
-	ID_Fullscreen,
-
-	ID_Settings,
-
-	ID_About
-};
-
-// Menu event table
-BEGIN_EVENT_TABLE(FrameMain, wxFrame)
-	EVT_MENU(ID_Open, FrameMain::OnMenuOpen)
-	EVT_MENU(ID_Save, FrameMain::OnMenuSave)
-	EVT_MENU(ID_SaveAs, FrameMain::OnMenuSaveAs)
-	EVT_MENU(ID_Quit, FrameMain::OnMenuQuit)
-
-	EVT_MENU(ID_Undo, FrameMain::OnMenuUndo)
-	EVT_MENU(ID_Redo, FrameMain::OnMenuRedo)
-	EVT_MENU(ID_Rotate, FrameMain::OnMenuRotate)
-
-	EVT_MENU(ID_ZoomIn, FrameMain::OnMenuZoomIn)
-	EVT_MENU(ID_ZoomOut, FrameMain::OnMenuZoomOut)
-	EVT_MENU(ID_Fullscreen, FrameMain::OnMenuFullscreen)
-
-	EVT_MENU(ID_Settings, FrameMain::OnMenuSettings)
-
-	EVT_MENU(ID_About, FrameMain::OnMenuAbout)
-END_EVENT_TABLE()
-
-
-
-////////////////////
-// CLASS ROUTINES //
-////////////////////
-
-
-//
-// Application functions
-//
-
-bool Inkpad::OnInit()
-{
-	FrameMain *frame = new FrameMain( _T("Hello World"), wxPoint(50,50), wxSize(440,600) );
-	frame->Show(TRUE);
-	SetTopWindow(frame);
-	return TRUE;
-}
-
-
-//
-// Main window functions
-//
-
+// Frame events
 FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& size)
 : wxFrame((wxFrame *)NULL, -1, title, pos, size)
 {
@@ -204,11 +181,85 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 	SetStatusText( _T("Inkpad initialised") );
 }
 
+// Menu event table
+BEGIN_EVENT_TABLE(FrameMain, wxFrame)
+	EVT_MENU(ID_Open, FrameMain::OnMenuOpen)
+	EVT_MENU(ID_Save, FrameMain::OnMenuSave)
+	EVT_MENU(ID_SaveAs, FrameMain::OnMenuSaveAs)
+	EVT_MENU(ID_Quit, FrameMain::OnMenuQuit)
+
+	EVT_MENU(ID_Undo, FrameMain::OnMenuUndo)
+	EVT_MENU(ID_Redo, FrameMain::OnMenuRedo)
+	EVT_MENU(ID_Rotate, FrameMain::OnMenuRotate)
+
+	EVT_MENU(ID_ZoomIn, FrameMain::OnMenuZoomIn)
+	EVT_MENU(ID_ZoomOut, FrameMain::OnMenuZoomOut)
+	EVT_MENU(ID_Fullscreen, FrameMain::OnMenuFullscreen)
+
+	EVT_MENU(ID_Settings, FrameMain::OnMenuSettings)
+
+	EVT_MENU(ID_About, FrameMain::OnMenuAbout)
+END_EVENT_TABLE()
 
 
-//////////
-// MENU //
-//////////
+
+//
+// The draw pane
+//
+
+
+// Derive a new panel
+class DrawPane : public wxPanel
+{
+	public:
+		DrawPane(wxFrame* parent);
+
+		void paintEvent(wxPaintEvent& evt);
+		void paintNow();
+
+		void render(wxDC& dc);
+
+		DECLARE_EVENT_TABLE()
+};
+
+// Link events
+BEGIN_EVENT_TABLE(DrawPane, wxPanel)
+	// catch paint events
+	EVT_PAINT(DrawPane::paintEvent)
+END_EVENT_TABLE()
+
+
+
+
+/////////////////
+// APPLICATION //
+/////////////////
+
+
+//
+// General
+//
+
+bool Inkpad::OnInit()
+{
+	frame = new FrameMain( _T("Hello World"), wxPoint(50,50), wxSize(440,600) );
+
+	drawPane = new DrawPane( (wxFrame*) frame );
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add(drawPane, 1, wxEXPAND);
+
+	frame->SetSizer(sizer);
+	frame->SetAutoLayout(true);
+
+	frame->Show(TRUE);
+	SetTopWindow(frame);
+	return TRUE;
+}
+
+
+///////////
+// Frame //
+///////////
 
 //
 // File-menu
@@ -300,12 +351,60 @@ void FrameMain::OnMenuAbout(wxCommandEvent& WXUNUSED(event))
 
 
 
+//////////////
+// DRAWPANE //
+//////////////
+
+
 //
-// Main application
+// Construction and destruction
 //
 
-// Start the application
-IMPLEMENT_APP(Inkpad)
+// Constructor
+DrawPane::DrawPane(wxFrame* parent) :
+wxPanel(parent)
+{
+}
+
+
+//
+// Event handling
+//
+
+// Panel needs to be redrawn
+void DrawPane::paintEvent(wxPaintEvent& evt)
+{
+	wxPaintDC dc(this);
+	render(dc);
+}
+
+
+//
+// Rendering functions
+//
+
+// The actual rendering
+void DrawPane::render(wxDC& dc)
+{
+	// draw some text
+	dc.DrawText(wxT("Testing"), 40, 60);
+
+	// draw a circle
+	dc.SetBrush(*wxGREEN_BRUSH); // green filling
+	dc.SetPen( wxPen( wxColor(255,0,0), 5 ) ); // 5-pixels-thick red outline
+	dc.DrawCircle( wxPoint(200,100), 25 /* radius */ );
+
+	// draw a rectangle
+	dc.SetBrush(*wxBLUE_BRUSH); // blue filling
+	dc.SetPen( wxPen( wxColor(255,175,175), 10 ) ); // 10-pixels-thick pink outline
+	dc.DrawRectangle( 300, 100, 400, 200 );
+
+	// draw a line
+	dc.SetPen( wxPen( wxColor(0,0,0), 3 ) ); // black line, 3 pixels thick
+	dc.DrawLine( 300, 100, 700, 300 ); // draw line across the rectangle
+
+	// Look at the wxDC docs to learn how to draw other stuff
+}
 
 
 
