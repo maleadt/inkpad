@@ -152,8 +152,8 @@ bool Output::data_type(const std::string& inputFile, std::string& type)
 void Output::data_output_svg(std::ofstream& stream)
 {
 	// Get the maximal size
-	int x_max, y_max;
-	data->getSize(x_max, y_max);
+	int x_max, y_max, dummy;
+	data->getSize(dummy, dummy, x_max, y_max);
 
 	// Print the SVG header
 	stream	<< "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

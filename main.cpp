@@ -36,11 +36,11 @@
 
 // Default headers
 #include <iostream>
+#include <ctime>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
   #include <wx/wx.h>
 #endif
-
 #include <wx/sizer.h>
 
 
@@ -312,6 +312,7 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 		try
 		{
 			// Give the input engine the file we selected
+			parent->engineData->clear();
 			parent->engineInput->read(std::string(OpenDialog->GetPath().mb_str()));
 			parent->hasData = true;
 
@@ -518,8 +519,8 @@ void DrawPane::render(wxDC& dc)
 	{
 		// Get the current image's size
 		std::cout << "Redrawing" << std::endl;
-		int maxXi, maxYi;
-		parent->engineData->getSize(maxXi, maxYi);
+		int maxXi, maxYi, dummy;
+		parent->engineData->getSize(dummy, dummy, maxXi, maxYi);
 		float maxX = (float)maxXi;
 		float maxY = (float)maxYi;
 

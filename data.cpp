@@ -58,7 +58,7 @@ void Data::clear()
 
 
 //
-// Element configuration
+// Element appearance
 //
 
 // Set the line width
@@ -81,7 +81,7 @@ void Data::setColourFg(const std::string& inputColour)
 
 
 //
-// Elemens input
+// Element input
 //
 
 // Add a single point
@@ -135,9 +135,51 @@ std::string Data::getColourBg() const
 	return colour_bg;
 }
 
-// Get the maximum size
-void Data::getSize(int &w, int &h) const
+void check_range(int& low, int& high, const int& value)
 {
-	w = 8800;
-	h = 12000;
+	if (value < low || low == -1)
+	{
+		low = value;
+	}
+	else if (value > high)	// WARNING: this could trigger a corned case where values only go down
+	{
+		high = value;
+	}
+}
+
+// Get the maximum size
+void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
+{
+	// Starting value
+	x0 = -1;
+	y0 = -1;
+	x1 = 0;
+	y1 = 0;
+
+	// Loop elements
+	std::vector<Element>::const_iterator it = elements.begin();
+	int count = 0;
+	while (it != elements.end())
+	{
+		count++;
+		switch (it->identifier)
+		{
+			// Point
+			case 1:
+				check_range(x0, x1, it->parameters[0]);
+				check_range(y0, y1, it->parameters[1]);
+				break;
+
+			// Line
+			case 2:
+				check_range(x0, x1, it->parameters[0]);
+				check_range(y0, y1, it->parameters[1]);
+				check_range(x0, x1, it->parameters[2]);
+				check_range(y0, y1, it->parameters[3]);
+				break;
+			default:
+				throw std::string("unsupported element during size check");
+		}
+		++it;
+	}
 }

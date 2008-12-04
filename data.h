@@ -70,6 +70,14 @@ struct Element
 //////////////////////
 
 //TODO: move hasdata from main to here
+// TODO: cache control in getSize function
+
+struct Colour
+{
+	int r;
+	int g;
+	int b;
+};
 
 class Data
 {
@@ -78,7 +86,7 @@ class Data
 		Data();
 		void clear();
 
-		// Element configuration
+		// Element appearance
 		void setWidth(int);
 		void setColourBg(const std::string&);
 		void setColourFg(const std::string&);
@@ -89,7 +97,7 @@ class Data
 
 		// Element output
 		std::string getColourBg() const;
-		void getSize(int &w, int &h) const;
+		void getSize(int&, int&, int&, int&) const;
 
 		// Iterators
 		typedef std::vector<Element>::const_iterator const_iterator;
