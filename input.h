@@ -58,8 +58,7 @@ class Input
 
 		// Class member routines
 		void read(const std::string &inputFile);
-		Data* getdata();
-		// TODO: data mag niet geinstantieerd worden door input, naar main! en zo ook klassen "linken"
+		void setData(Data*);
 
 	private:
 		// File handling
@@ -71,7 +70,7 @@ class Input
 		void data_input_top(std::ifstream&);
 
 		// Data
-		Data data;
+		Data* data;
 };
 
 

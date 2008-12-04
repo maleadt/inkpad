@@ -99,7 +99,7 @@ class Inkpad: public wxApp
 		bool hasData;
 		Input* engineInput;
 		Output* engineOutput;
-		Data* engineData;	// Only a pointer, no actual engine
+		Data* engineData;
 
 	private:
 		virtual bool OnInit();
@@ -224,7 +224,12 @@ bool Inkpad::OnInit()
 	// Spawn all engines
 	engineInput = new Input;
 	engineOutput = new Output;
+	engineData = new Data;
 	hasData = false;
+
+	// Link input and output engines to data engine
+	engineInput->setData(engineData);
+	engineOutput->setData(engineData);
 
 	// Show the frame
 	frame->Show(TRUE);
@@ -307,14 +312,13 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 		{
 			// Give the input engine the file we selected
 			parent->engineInput->read(std::string(OpenDialog->GetPath().mb_str()));
-			parent->engineData = parent->engineInput->getdata();
 			parent->hasData = true;
 
 			// Change the window's title
 			SetTitle(_T("Inkpad - ") + OpenDialog->GetFilename());
 
 			// Force a redraw
-			wxPaintDC dc(parent->drawPane);
+			wxClientDC dc(parent->drawPane);
 			parent->drawPane->render(dc);
 		}
 
@@ -431,6 +435,7 @@ DrawPane::DrawPane(wxFrame* _parent) : wxPanel(_parent)
 // Panel needs to be redrawn
 void DrawPane::paintEvent(wxPaintEvent& evt)
 {
+	// Force a redraw
 	wxPaintDC dc(this);
 	render(dc);
 }
@@ -453,14 +458,6 @@ void DrawPane::render(wxDC& dc)
 		float maxX = (float)maxXi;
 		float maxY = (float)maxYi;
 
-		// Let's have at least 50 device units margin
-		float marginX = 50;
-		float marginY = 50;
-
-		// Add the margin to the graphic size
-		maxX += (2*marginX);
-		maxY += (2*marginY);
-
 		// Get the size of the DC in pixels
 		int w, h;
 		dc.GetSize(&w, &h);
@@ -473,15 +470,15 @@ void DrawPane::render(wxDC& dc)
 		float actualScale = wxMin(scaleX,scaleY);
 
 		// Calculate the position on the DC for centring the graphic
-		float posX = (float)((w - (200*actualScale))/2.0);
-		float posY = (float)((h - (200*actualScale))/2.0);
+		float posX = (float)((w - (maxX*actualScale))/2.0);
+		float posY = (float)((h - (maxY*actualScale))/2.0);
 
 		// Set the scale and origin
 		dc.SetUserScale(actualScale, actualScale);
 		dc.SetDeviceOrigin( (long)posX, (long)posY );
 
 		// Output elements
-		parent->engineOutput->write( parent->engineData, dc);
+		parent->engineOutput->write(dc);
 	}
 }
 

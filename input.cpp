@@ -53,6 +53,12 @@ Input::Input()
 // Class member routines
 //
 
+// Set the data pointer
+void Input::setData(Data* inputDataPointer)
+{
+	data = inputDataPointer;
+}
+
 // Read from the file
 void Input::read(const std::string &inputFile)
 {
@@ -81,13 +87,6 @@ void Input::read(const std::string &inputFile)
 		throw std::string("unsupported input file type");
 		return;
 	}
-}
-
-// Export all read data
-Data* Input::getdata()
-{
-	// Return a pointer to the processed data
-	return &data;
 }
 
 
@@ -163,7 +162,7 @@ void Input::data_input_top(std::ifstream& stream)
 		// Create a new line (if we haven't started a new stroke
 		if (!end_of_stroke)
 		{
-			data.addLine(x1, y1, x2, y2);
+			data->addLine(x1, y1, x2, y2);
 		} else {
 			end_of_stroke = false;
 		}

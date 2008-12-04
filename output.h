@@ -55,9 +55,10 @@ class Output
 		Output();
 
 		// Class member routines
-		void write(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType);
-		void write(const Data* inputDataPointer, const std::string& inputFile);
-		void write(const Data* inputDataPointer, wxDC& dc);
+		void setData(Data*);
+		void write(const std::string& inputFile, const std::string& inputType);
+		void write(const std::string& inputFile);
+		void write(wxDC& dc);
 
 	private:
 		// File handling

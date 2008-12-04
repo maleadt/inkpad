@@ -52,12 +52,15 @@ Output::Output()
 // Class member routines
 //
 
-// Write the data to a given file (in a given format)
-void Output::write(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType)
+// Set the data-container pointer
+void Output::setData(Data* inputDataPointer)
 {
-	// Save the given data
 	data = inputDataPointer;
+}
 
+// Write the data to a given file (in a given format)
+void Output::write(const std::string& inputFile, const std::string& inputType)
+{
 	// Decapitalize given type
 	std::string typeLC;
 	typeLC.resize(inputType.length());
@@ -82,7 +85,7 @@ void Output::write(const Data* inputDataPointer, const std::string& inputFile, c
 }
 
 // Write the data to a given file (but detect the format)
-void Output::write(const Data* inputDataPointer, const std::string& inputFile)
+void Output::write(const std::string& inputFile)
 {
 	// Detect the type
 	std::string type;
@@ -93,11 +96,11 @@ void Output::write(const Data* inputDataPointer, const std::string& inputFile)
 	}
 
 	// Write the vile
-	write(inputDataPointer, inputFile, type);
+	write(inputFile, type);
 }
 
 // Write the data to a given wxWidgets draw container
-void Output::write(const Data* inputDataPointer, wxDC& dc)
+void Output::write(wxDC& dc)
 {
 	data_output_dc(dc);
 }
@@ -193,24 +196,35 @@ void Output::data_output_svg(std::ofstream& stream)
 // Output data to wxWidgets draw container
 void Output::data_output_dc(wxDC& dc)
 {
-		// Clear the dc
-		dc.SetBackground(*wxWHITE_BRUSH);
-		dc.Clear();
+	// Clear the dc
+	dc.SetBackground(*wxWHITE_BRUSH);
+	//dc.Clear();
+	int w, h;
+	data->getSize(w, h);
+	dc.DrawRectangle(0, 0, w, h);
 
-		// draw some text
-		dc.DrawText(wxT("Testing"), 40, 60);
+	// Process all elements
+	std::vector<Element>::const_iterator tempIterator = data->begin();
+	while (tempIterator != data->end())
+	{
+		switch (tempIterator->identifier)
+		{
+			// A point
+			case 1:
+				dc.SetPen( wxPen( wxColor(0,0,0), tempIterator->width ) );
+				dc.DrawPoint( tempIterator->parameters[0], tempIterator->parameters[1] );
+				break;
 
-		// draw a circle
-		dc.SetBrush(*wxGREEN_BRUSH); // green filling
-		dc.SetPen( wxPen( wxColor(255,0,0), 5 ) ); // 5-pixels-thick red outline
-		dc.DrawCircle( wxPoint(2000,3000), 200 /* radius */ );
+			// A line
+			case 2:
+				dc.SetPen( wxPen( wxColor(0,0,0), tempIterator->width ) );
+				dc.DrawLine( tempIterator->parameters[0], tempIterator->parameters[1], tempIterator->parameters[2], tempIterator->parameters[3] );
+				break;
 
-		// draw a rectangle
-		dc.SetBrush(*wxBLUE_BRUSH); // blue filling
-		dc.SetPen( wxPen( wxColor(255,175,175), 10 ) ); // 10-pixels-thick pink outline
-		dc.DrawRectangle( 300, 100, 400, 200 );
-
-		// draw a line
-		dc.SetPen( wxPen( wxColor(0,0,0), 3 ) ); // black line, 3 pixels thick
-		dc.DrawLine( 300, 100, 700, 300 ); // draw line across the rectangle
+			// Unsupported type
+			default:
+				throw std::string("unsupported element during dc output");
+		}
+		++tempIterator;
+	}
 }

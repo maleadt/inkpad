@@ -69,6 +69,8 @@ struct Element
 // CLASS DEFINITION //
 //////////////////////
 
+//TODO: move hasdata from main to here
+
 class Data
 {
 	public:
