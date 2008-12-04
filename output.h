@@ -39,6 +39,10 @@
 #include <fstream>
 #include <vector>
 #include "data.h"
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+  #include <wx/wx.h>
+#endif
 
 //////////////////////
 // CLASS DEFINITION //
@@ -53,23 +57,20 @@ class Output
 		// Class member routines
 		void write(const Data* inputDataPointer, const std::string& inputFile, const std::string& inputType);
 		void write(const Data* inputDataPointer, const std::string& inputFile);
-		void clear();
+		void write(const Data* inputDataPointer, wxDC& dc);
 
 	private:
 		// File handling
-		void file_open();
-		void file_close();
+		void file_open(std::ofstream&, const std::string& inputFile);
+		void file_close(std::ofstream&);
 
 		// Data processing
-		bool data_type();
-		void data_output();
-		void data_output_svg();
+		bool data_type(const std::string &, std::string&);
+		void data_output_svg(std::ofstream&);
+		void data_output_dc(wxDC& dc);
 
 
 		// Data
-		std::string type;
-		std::string file;
-		std::ofstream stream;
 		const Data* data;
 };
 

@@ -46,8 +46,6 @@
 
 Input::Input()
 {
-	// Reset everything
-	clear();
 }
 
 
@@ -58,25 +56,31 @@ Input::Input()
 // Read from the file
 void Input::read(const std::string &inputFile)
 {
-	// Save the requested filename
-	file = inputFile;
+	// Guess the data type from the extension
+	std::string type;
+	if (!data_type(inputFile, type))
+	{
+		throw std::string("cannot extract input file type");
+		return;
+	}
 
-	// Open the file
-	file_open();
+	// Decapitalize given type
+	for (unsigned int i = 0; i < type.size(); i++)
+		type[i] = tolower(type[i]);
 
-	// Read the file
-	data_input();
-
-	// Close the file
-	file_close();
-}
-
-// Reset the object's data
-void Input::clear()
-{
-	type.clear();
-	file.clear();
-	data.clear();
+	// Process all cases
+	if (type == "top")
+	{
+		std::ifstream stream;
+		file_open(stream, inputFile);
+		data_input_top(stream);
+		file_close(stream);
+	}
+	else
+	{
+		throw std::string("unsupported input file type");
+		return;
+	}
 }
 
 // Export all read data
@@ -92,63 +96,32 @@ Data* Input::getdata()
 //
 
 // Open a file
-void Input::file_open()
+void Input::file_open(std::ifstream& stream, const std::string& inputFile)
 {
-	// Check if stream hasn't been used before
-	if (stream.is_open())
-	{
-		throw std::string("cannot re-use input stream");
-	}
-
 	// Open the stream
-	stream.open(file.c_str());
+	stream.open(inputFile.c_str());
 
 	// Check stream validity
 	if (!stream.is_open())
 	{
-		throw std::string("error while opening input stream");
+		throw std::string("error while opening output stream");
 	}
 }
 
 // Close a file
-void Input::file_close()
+void Input::file_close(std::ifstream& inputStream)
 {
-	stream.close();
+	inputStream.close();
 }
+
 
 
 //
 // Data processing
 //
 
-// Input data (wrapper around the different types we support)
-void Input::data_input()
-{
-	// Guess the data type from the extension
-	if (!data_type())
-	{
-		throw std::string("cannot extract input file type");
-		return;
-	}
-
-	// Decapitalize given type
-	for (unsigned int i = 0; i < type.size(); i++)
-		type[i] = tolower(type[i]);
-
-	// Process all cases
-	if (type == "top")
-	{
-		data_input_top();
-	}
-	else
-	{
-		throw std::string("unsupported input file type");
-		return;
-	}
-}
-
 // Input data in TOP format
-void Input::data_input_top()
+void Input::data_input_top(std::ifstream& stream)
 {
 	// General buffer variable
 	char* buffer;
@@ -211,18 +184,17 @@ void Input::data_input_top()
 }
 
 // Guess the data type
-bool Input::data_type()
+bool Input::data_type(const std::string& inputFile, std::string& type)
 {
 	// Extension check
-	unsigned int position = file.find_last_of(".");
-	if (position < file.length())
+	unsigned int position = inputFile.find_last_of(".");
+	if (position < inputFile.length())
 	{
-		std::string extension = file.substr(position+1);
+		std::string extension = inputFile.substr(position+1);
 		type = extension;
 		return true;
 	}
 
-	// Data check
-	// TODO: Read some bytes to detect data type
+	// TODO: read some bytes to detect if no extension
 	return false;
 }

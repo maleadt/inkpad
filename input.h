@@ -58,23 +58,19 @@ class Input
 
 		// Class member routines
 		void read(const std::string &inputFile);
-		void clear();
 		Data* getdata();
+		// TODO: data mag niet geinstantieerd worden door input, naar main! en zo ook klassen "linken"
 
 	private:
 		// File handling
-		void file_open();
-		void file_close();
+		void file_open(std::ifstream&, const std::string& inputFile);
+		void file_close(std::ifstream&);
 
 		// Data processing
-		void data_input();
-		void data_input_top();
-		bool data_type();
+		bool data_type(const std::string &, std::string&);
+		void data_input_top(std::ifstream&);
 
 		// Data
-		std::string type;
-		std::string file;
-		std::ifstream stream;
 		Data data;
 };
 

@@ -87,7 +87,7 @@ class Data
 
 		// Element output
 		std::string getColourBg() const;
-		void getSize(int &w, int &h);
+		void getSize(int &w, int &h) const;
 
 		// Iterators
 		typedef std::vector<Element>::const_iterator const_iterator;

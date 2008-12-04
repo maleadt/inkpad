@@ -136,7 +136,7 @@ std::string Data::getColourBg() const
 }
 
 // Get the maximum size
-void Data::getSize(int &w, int &h)
+void Data::getSize(int &w, int &h) const
 {
 	w = 8800;
 	h = 12000;

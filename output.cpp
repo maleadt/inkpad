@@ -57,96 +57,20 @@ void Output::write(const Data* inputDataPointer, const std::string& inputFile, c
 {
 	// Save the given data
 	data = inputDataPointer;
-	file = inputFile;
-	type = inputType;
 
-	// Check and open the file
-	file_open();
-
-	// Convert data to given type
-	data_output();
-
-	// Close the file
-	file_close();
-}
-
-// Write the data to a given file (but detect the format)
-void Output::write(const Data* inputDataPointer, const std::string& inputFile)
-{
-	// Save the filename
-	file = inputFile;
-
-	// Detect the type
-	if (!data_type())
-	{
-		throw std::string("unsupported output file type");
-		return;
-	}
-
-	// Write the vile
-	write(inputDataPointer, inputFile, type);
-}
-
-
-//
-// File handling
-//
-
-// Open a file
-void Output::file_open()
-{
-	// Check if stream hasn't been used before
-	if (stream.is_open())
-	{
-		throw std::string("cannot re-use output stream");
-	}
-
-	// Open the stream
-	stream.open(file.c_str());
-
-	// Check stream validity
-	if (!stream.is_open())
-	{
-		throw std::string("error while opening output stream");
-	}
-}
-
-// Close a file
-void Output::file_close()
-{
-	stream.close();
-}
-
-
-//
-// Data processing
-//
-
-// Guess the data type
-bool Output::data_type()
-{
-	// Extension check
-	unsigned int position = file.find_last_of(".");
-	if (position < file.length())
-	{
-		std::string extension = file.substr(position+1);
-		type = extension;
-		return true;
-	}
-	return false;
-}
-
-// Output data (wrapper around different data types)
-void Output::data_output()
-{
 	// Decapitalize given type
-	for (unsigned int i = 0; i < type.size(); i++)
-		type[i] = tolower(type[i]);
+	std::string typeLC;
+	typeLC.resize(inputType.length());
+	for (unsigned int i = 0; i < inputType.size(); i++)
+		typeLC[i] = tolower(inputType[i]);
 
 	// Process all cases
-	if (type == "svg")
+	if (typeLC == "svg")
 	{
-		data_output_svg();
+		std::ofstream stream;
+		file_open(stream, inputFile);
+		data_output_svg(stream);
+		file_close(stream);
 	}
 
 	// We got an undetected case
@@ -157,12 +81,76 @@ void Output::data_output()
 	}
 }
 
+// Write the data to a given file (but detect the format)
+void Output::write(const Data* inputDataPointer, const std::string& inputFile)
+{
+	// Detect the type
+	std::string type;
+	if (!data_type(inputFile, type))
+	{
+		throw std::string("unsupported output file type");
+		return;
+	}
+
+	// Write the vile
+	write(inputDataPointer, inputFile, type);
+}
+
+// Write the data to a given wxWidgets draw container
+void Output::write(const Data* inputDataPointer, wxDC& dc)
+{
+	data_output_dc(dc);
+}
+
+
+//
+// File handling
+//
+
+// Open a file
+void Output::file_open(std::ofstream& stream, const std::string& inputFile)
+{
+	// Open the stream
+	stream.open(inputFile.c_str());
+
+	// Check stream validity
+	if (!stream.is_open())
+	{
+		throw std::string("error while opening output stream");
+	}
+}
+
+// Close a file
+void Output::file_close(std::ofstream& inputStream)
+{
+	inputStream.close();
+}
+
+
+//
+// Data processing
+//
+
+// Guess the data type
+bool Output::data_type(const std::string& inputFile, std::string& type)
+{
+	// Extension check
+	unsigned int position = inputFile.find_last_of(".");
+	if (position < inputFile.length())
+	{
+		std::string extension = inputFile.substr(position+1);
+		type = extension;
+		return true;
+	}
+	return false;
+}
+
 // Output data in SVG format
-void Output::data_output_svg()
+void Output::data_output_svg(std::ofstream& stream)
 {
 	// Get the maximal size
-	int x_max = 8800;
-	int y_max = 12000;
+	int x_max, y_max;
+	data->getSize(x_max, y_max);
 
 	// Print the SVG header
 	stream	<< "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -200,4 +188,29 @@ void Output::data_output_svg()
 
 	// Print the SVG footer
 	stream << "</svg>\n";
+}
+
+// Output data to wxWidgets draw container
+void Output::data_output_dc(wxDC& dc)
+{
+		// Clear the dc
+		dc.SetBackground(*wxWHITE_BRUSH);
+		dc.Clear();
+
+		// draw some text
+		dc.DrawText(wxT("Testing"), 40, 60);
+
+		// draw a circle
+		dc.SetBrush(*wxGREEN_BRUSH); // green filling
+		dc.SetPen( wxPen( wxColor(255,0,0), 5 ) ); // 5-pixels-thick red outline
+		dc.DrawCircle( wxPoint(2000,3000), 200 /* radius */ );
+
+		// draw a rectangle
+		dc.SetBrush(*wxBLUE_BRUSH); // blue filling
+		dc.SetPen( wxPen( wxColor(255,175,175), 10 ) ); // 10-pixels-thick pink outline
+		dc.DrawRectangle( 300, 100, 400, 200 );
+
+		// draw a line
+		dc.SetPen( wxPen( wxColor(0,0,0), 3 ) ); // black line, 3 pixels thick
+		dc.DrawLine( 300, 100, 700, 300 ); // draw line across the rectangle
 }
