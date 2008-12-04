@@ -100,6 +100,7 @@ class Inkpad: public wxApp
 		Input* engineInput;
 		Output* engineOutput;
 		Data* engineData;
+		std::string filename;
 
 	private:
 		virtual bool OnInit();
@@ -301,7 +302,7 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 {
 	wxFileDialog *OpenDialog = new wxFileDialog(
-		this, _("Choose a file to open"), wxEmptyString, wxEmptyString,
+		this, _("Open file"), wxEmptyString, wxEmptyString,
 		wxT("TOP image files (*.top)|*.top|"),
 		wxFD_OPEN, wxDefaultPosition);
 
@@ -325,7 +326,7 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 		catch (std::string error)
 		{
 			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxMessageBox(_T("An error happened while reading this file: ") + WXerror + _T("."),
+			wxMessageBox(_T("Error while reading: ") + WXerror + _T("."),
 				_T("Error"), wxOK | wxICON_ERROR, this);
 		}
 	}
@@ -335,11 +336,44 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 // Save a file
 void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 {
+	// Have we saved before?
+	if (parent->filename.length() > 0)
+	{
+		parent->engineOutput->write(parent->filename);
+	}
+
+	// If not, present the "save as" dialog
+	else
+	{
+		//OnMenuSaveAs(event);
+	}
 }
 
 // Save-as a file
 void FrameMain::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event))
 {
+	wxFileDialog *SaveDialog = new wxFileDialog(
+		this, _("Save file"), wxEmptyString, wxEmptyString,
+		wxT("SVG vector image (*.svg)|*.svg|"),
+		wxFD_SAVE|wxOVERWRITE_PROMPT, wxDefaultPosition);
+
+	// Creates a "open file" dialog
+	if (SaveDialog->ShowModal() == wxID_OK)
+	{
+		try
+		{
+			// Give the input engine the file we selected
+			parent->engineOutput->write(std::string(SaveDialog->GetPath().mb_str()));
+			parent->filename = SaveDialog->GetPath().mb_str();
+		}
+
+		catch (std::string error)
+		{
+			wxString WXerror(error.c_str(), wxConvUTF8);
+			wxMessageBox(_T("Error while saving: ") + WXerror + _T("."),
+				_T("Error"), wxOK | wxICON_ERROR, this);
+		}
+	}
 }
 
 // Quit
