@@ -71,7 +71,12 @@ enum
 
 	MENU_Settings,
 
-	MENU_About
+	MENU_About,
+
+	TOOL_Open,
+	TOOL_Save,
+	TOOL_Left,
+	TOOL_Right,
 };
 
 
@@ -93,8 +98,8 @@ class Inkpad: public wxApp
 {
 	public:
 		// Elements
-		FrameMain *frame;
-		DrawPane * drawPane;
+		FrameMain* frame;
+		DrawPane* drawPane;
 
 		// Data
 		bool hasData;
@@ -145,6 +150,12 @@ class FrameMain: public wxFrame
 		// Help menu
 		void OnMenuAbout(wxCommandEvent& event);
 
+		// Toolbar
+		void OnToolOpen(wxCommandEvent& event);
+		void OnToolSave(wxCommandEvent& event);
+		void OnToolLeft(wxCommandEvent& event);
+		void OnToolRight(wxCommandEvent& event);
+
 		DECLARE_EVENT_TABLE()
 };
 
@@ -167,6 +178,12 @@ BEGIN_EVENT_TABLE(FrameMain, wxFrame)
 	EVT_MENU(MENU_Settings, FrameMain::OnMenuSettings)
 
 	EVT_MENU(MENU_About, FrameMain::OnMenuAbout)
+
+	EVT_MENU(TOOL_Open, FrameMain::OnToolOpen)
+	EVT_MENU(TOOL_Save, FrameMain::OnToolSave)
+	EVT_MENU(TOOL_Left, FrameMain::OnToolLeft)
+	EVT_MENU(TOOL_Right, FrameMain::OnToolRight)
+
 END_EVENT_TABLE()
 
 
@@ -201,6 +218,7 @@ END_EVENT_TABLE()
 
 
 
+
 /////////////////
 // APPLICATION //
 /////////////////
@@ -221,7 +239,6 @@ bool Inkpad::OnInit()
 	drawPane->parent = this;
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(drawPane, 1, wxEXPAND);
-
 	frame->SetSizer(sizer);
 	frame->SetAutoLayout(true);
 
@@ -285,15 +302,31 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 	wxMenu *menuHelp = new wxMenu;
 	menuHelp->Append( MENU_About, _T("&About...") );
 
+	// Construct menu
 	wxMenuBar *menuBar = new wxMenuBar;
 	menuBar->Append( menuFile, _T("&File") );
 	menuBar->Append( menuEdit, _T("&Edit") );
 	menuBar->Append( menuView, _T("&View") );
 	menuBar->Append( menuTools, _T("&Tools") );
 	menuBar->Append( menuHelp, _T("&Help") );
-
 	SetMenuBar( menuBar );
 
+
+
+
+	// Toolbar
+	wxToolBar* toolbar = new wxToolBar;
+	toolbar->AddTool(TOOL_Open, _T("Open"), wxNullBitmap);
+	toolbar->AddTool(TOOL_Save, _T("Save"), wxNullBitmap);
+	toolbar->AddSeparator();
+	toolbar->AddTool(TOOL_Left, _T("Left"), wxNullBitmap);
+	toolbar->AddTool(TOOL_Right, _T("Right"), wxNullBitmap);
+	toolbar->Realize();
+
+
+
+
+	// Statusbar
 	CreateStatusBar();
 	SetStatusText( _T("Inkpad initialised") );
 }
@@ -504,6 +537,33 @@ void FrameMain::OnMenuAbout(wxCommandEvent& WXUNUSED(event))
 }
 
 
+//
+// Toolbar
+//
+
+// Open a new file
+void FrameMain::OnToolOpen(wxCommandEvent& WXUNUSED(event))
+{
+}
+
+// Save the file
+void FrameMain::OnToolSave(wxCommandEvent& WXUNUSED(event))
+{
+}
+
+// Rotate left
+
+void FrameMain::OnToolLeft(wxCommandEvent& WXUNUSED(event))
+{
+}
+
+// Rotate right
+
+void FrameMain::OnToolRight(wxCommandEvent& WXUNUSED(event))
+{
+}
+
+
 
 //////////////
 // DRAWPANE //
@@ -576,3 +636,7 @@ void DrawPane::render(wxDC& dc)
 		parent->frame->SetStatusText(  statusbar );
 	}
 }
+
+
+
+
