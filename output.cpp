@@ -151,20 +151,16 @@ bool Output::data_type(const std::string& inputFile, std::string& type)
 // Output data in SVG format
 void Output::data_output_svg(std::ofstream& stream)
 {
-	// Get the maximal size
-	int x_max, y_max, dummy;
-	data->getSize(dummy, dummy, x_max, y_max);
-
 	// Print the SVG header
 	stream	<< "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 			<< "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
 			<< "	xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
 			<< "	xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
 			<< "	version=\"1.1\" baseProfile=\"full\"\n"
-			<< "	width=\"" << x_max << "\" height=\"" << y_max << "\" viewBox=\"0 0 " << x_max << " " << y_max << "\">\n";
+			<< "	width=\"" << data->imgSizeX << "\" height=\"" << data->imgSizeY << "\" viewBox=\"0 0 " << data->imgSizeX << " " << data->imgSizeY << "\">\n";
 
 	// Add a background rectangle
-	stream << "<rect x=\"0\" y=\"0\" width=\"" << x_max << "\" height=\"" << y_max << "\" fill=\"" << data->getColourBg().rgb_hex() << "\" stroke=\"" << data->getColourBg().rgb_hex() << "\" stroke-width=\"1px\" />\n";
+	stream << "<rect x=\"0\" y=\"0\" width=\"" << data->imgSizeX << "\" height=\"" << data->imgSizeY << "\" fill=\"" << data->imgBackground.rgb_hex() << "\" stroke=\"" << data->imgBackground.rgb_hex() << "\" stroke-width=\"1px\" />\n";
 
 	// Process all elements
 	std::vector<Element>::const_iterator tempIterator = data->begin();
@@ -198,9 +194,13 @@ void Output::data_output_dc(wxDC& dc)
 {
 	// Clear the dc
 	wxBrush brush;
-	brush.SetColour( data->getColourBg().rgb_wxColor() );
+	brush.SetColour( data->imgBackground.rgb_wxColor() );
 	dc.SetBackground(brush);
 	dc.Clear();
+
+	// Draw a border
+	//dc.SetPen( wxPen( BLACK, 1 ) );
+	dc.DrawRectangle(0, 0, data->imgSizeX, data->imgSizeY);
 
 	// Process all elements
 	std::vector<Element>::const_iterator tempIterator = data->begin();

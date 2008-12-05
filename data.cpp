@@ -47,10 +47,13 @@ Data::Data()
 
 void Data::clear()
 {
-	// Default values
-	setColourBg(WHITE);
-	setColourFg(BLACK);
-	setWidth(10);
+	// Default pen values
+	penBackground = WHITE;
+	penForeground = BLACK;
+	penWidth = 10;
+
+	// Default image values
+	imgBackground = WHITE;
 
 	// Delete elements
 	elements.clear();
@@ -58,25 +61,53 @@ void Data::clear()
 
 
 //
-// Element appearance
+// Element input
 //
 
-// Set the line width
-void Data::setWidth(int inputWidth)
+// Add a single point
+void Data::addPoint(int x1, int y1)
 {
-	width = inputWidth;
+	// New element
+	Element tempElement;
+	tempElement.identifier = 1;
+
+	// Save parameters
+	tempElement.parameters.resize(2);
+	tempElement.parameters[0] = x1;
+	tempElement.parameters[1] = y1;
+
+	// Save the element
+	addElement(tempElement);
 }
 
-// Set the background colour
-void Data::setColourBg(const Colour& inputColour)
+// Add a new line
+void Data::addLine(int x1, int y1, int x2, int y2)
 {
-	colour_bg = inputColour;
+	// New element
+	Element tempElement;
+	tempElement.identifier = 2;
+
+	// Save parameters
+	tempElement.parameters.resize(4);
+	tempElement.parameters[0] = x1;
+	tempElement.parameters[1] = y1;
+	tempElement.parameters[2] = x2;
+	tempElement.parameters[3] = y2;
+
+	// Save the element
+	addElement(tempElement);
 }
 
-// Set the foreground colour
-void Data::setColourFg(const Colour& inputColour)
+// Add a new element (private, applies current settings)
+void Data::addElement(Element& inputElement)
 {
-	colour_fg = inputColour;
+	// Save pen condition
+	inputElement.width = penWidth;
+	inputElement.foreground = penForeground;
+	inputElement.background = penBackground;
+
+	// Save the element
+	elements.push_back(inputElement);
 }
 
 
@@ -127,6 +158,7 @@ void Data::rotate(double angle)
 }
 
 // Relocate the canvas
+// TODO: calculate new image size
 void Data::translate(int dx, int dy)
 {
 	// Loop elements
@@ -164,66 +196,20 @@ void Data::autocrop()
 
 	// Relocate the canvas
 	translate(-x0, -y0);
+
+	// Change the image's size
+	imgSizeX = x1 - x0;
+	imgSizeY = y1 - y0;
 }
 
 
 // http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
 
 
-//
-// Element input
-//
-
-// Add a single point
-void Data::addPoint(int x1, int y1)
-{
-	Element tempElement;
-	tempElement.identifier = 1;
-
-	tempElement.parameters.resize(2);
-	tempElement.parameters[0] = x1;
-	tempElement.parameters[1] = y1;
-
-	addElement(tempElement);
-}
-
-// Add a new line
-void Data::addLine(int x1, int y1, int x2, int y2)
-{
-	Element tempElement;
-	tempElement.identifier = 2;
-
-	tempElement.parameters.resize(4);
-	tempElement.parameters[0] = x1;
-	tempElement.parameters[1] = y1;
-	tempElement.parameters[2] = x2;
-	tempElement.parameters[3] = y2;
-
-	addElement(tempElement);
-}
-
-// Add a new element (private, applies current settings)
-void Data::addElement(Element& inputElement)
-{
-	// Apply current settings
-	inputElement.foreground = colour_fg;
-	inputElement.background = colour_bg;
-	inputElement.width = width;
-
-	// Save the element
-	elements.push_back(inputElement);
-}
-
 
 //
 // Element output
 //
-
-// Give the background colour
-Colour Data::getColourBg() const
-{
-	return colour_bg;
-}
 
 inline void help_range(int& low, int& high, const int& value)
 {
@@ -270,4 +256,15 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 		}
 		++it;
 	}
+}
+
+
+//
+// Statistics
+//
+
+// The amount of elements
+int Data::statElements()
+{
+	return elements.size();
 }

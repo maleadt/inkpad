@@ -119,7 +119,6 @@ struct Element
 
 // TODO: move hasdata from main to here
 // TODO: cache control in getSize function
-// TODO: improve the background colour situation in the main data class
 
 class Data
 {
@@ -128,23 +127,29 @@ class Data
 		Data();
 		void clear();
 
-		// Element appearance
-		void setWidth(int);
-		void setColourBg(const Colour&);
-		void setColourFg(const Colour&);
+		// Pen configuration
+		int penWidth;
+		Colour penBackground;
+		Colour penForeground;
+
+		// Image configuration
+		int imgSizeX, imgSizeY;
+		Colour imgBackground;
+
+		// Element input
+		void addPoint(int, int);
+		void addLine(int, int, int, int);
 
 		// Element conversion
 		void rotate(double angle);
 		void translate(int dx, int dy);
 		void autocrop();
 
-		// Element input
-		void addPoint(int, int);
-		void addLine(int, int, int, int);
-
 		// Element output
-		Colour getColourBg() const;
 		void getSize(int&, int&, int&, int&) const;
+
+		// Statistics
+		int statElements();
 
 		// Iterators
 		typedef std::vector<Element>::const_iterator const_iterator;
@@ -152,12 +157,7 @@ class Data
 		const_iterator end() const { return elements.end(); }
 
 	private:
-		// Element configuration data
-		Colour colour_bg;
-		Colour colour_fg;
-		int width;
-
-		// Element containers
+		// Elements
 		void addElement(Element&);
 		std::vector<Element> elements;
 };

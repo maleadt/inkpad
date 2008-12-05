@@ -155,6 +155,16 @@ void Input::data_input_top(std::ifstream& stream)
 	if (stream.eof())
 		return;
 
+	// Configure the pen
+	data->penWidth = 10;
+	data->penForeground = BLACK;
+	data->penBackground = WHITE;
+
+	// Configure image defaults
+	data->imgSizeX = 8800;
+	data->imgSizeY = 12000;
+	data->imgBackground = WHITE;
+
 	// Initialise and read start coördinates
 	buffer = new char [6];
 	stream.read(buffer, 6);

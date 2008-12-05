@@ -544,10 +544,8 @@ void DrawPane::render(wxDC& dc)
 	if (parent->hasData)
 	{
 		// Get the current image's size
-		int maxXi, maxYi, dummy;
-		parent->engineData->getSize(dummy, dummy, maxXi, maxYi);
-		float maxX = (float)maxXi;
-		float maxY = (float)maxYi;
+		float maxX = (float)parent->engineData->imgSizeX;
+		float maxY = (float)parent->engineData->imgSizeY;
 
 		// Get the size of the DC in pixels
 		int w, h;
@@ -570,5 +568,11 @@ void DrawPane::render(wxDC& dc)
 
 		// Output elements
 		parent->engineOutput->write(dc);
+
+		// Adjust status bar
+		wxString statusbar;
+		statusbar << parent->engineData->imgSizeX << _T(" x ") << parent->engineData->imgSizeY << _T(" pixels")
+				  << _T(" (") << parent->engineData->statElements() << _T(" elements)");
+		parent->frame->SetStatusText(  statusbar );
 	}
 }
