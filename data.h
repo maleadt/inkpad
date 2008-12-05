@@ -37,10 +37,19 @@
 #include <iostream>
 #include <vector>
 #include <string.h>
+#include <cmath>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
   #include <wx/wx.h>
 #endif
+
+
+//
+// Constants
+//
+
+// Mathematical
+#define PI 3.14159265
 
 
 ////////////////
@@ -124,6 +133,11 @@ class Data
 		void setColourBg(const Colour&);
 		void setColourFg(const Colour&);
 
+		// Element conversion
+		void rotate(double angle);
+		void translate(int dx, int dy);
+		void autocrop();
+
 		// Element input
 		void addPoint(int, int);
 		void addLine(int, int, int, int);
@@ -149,9 +163,9 @@ class Data
 };
 
 
-///////////////
-// CONSTANTS //
-///////////////
+////////////////////
+// STATIC OBJECTS //
+////////////////////
 
 //
 // Colours

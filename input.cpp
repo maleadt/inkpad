@@ -119,7 +119,18 @@ void Input::file_close(std::ifstream& inputStream)
 // Data processing
 //
 
-// Input data in TOP format
+// TODO: implement more formats:
+// MyScript Notes file format (.notes)
+// Logitech PEN file format (.pen)
+// Anoto Pen Generated Coordinates file format (.pgc)
+// Nokia Pen Generated Document file format (.pgd)
+// IBM Crosspad file format (.ps)
+// Anoto file format (.svg)
+// iRex iLiad file format (.irx)
+// ACECAD DigiMemo file format (.dhw) - http://www.kevlindev.com/blog/?p=58
+// Pegasus NoteTaker file format (.pnt)
+
+// Waltop file format (.top)
 void Input::data_input_top(std::ifstream& stream)
 {
 	// General buffer variable

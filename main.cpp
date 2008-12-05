@@ -63,6 +63,7 @@ enum
 	MENU_Undo,
 	MENU_Redo,
 	MENU_Rotate,
+	MENU_Autocrop,
 
 	MENU_ZoomIn,
 	MENU_ZoomOut,
@@ -131,6 +132,7 @@ class FrameMain: public wxFrame
 		void OnMenuUndo(wxCommandEvent& event);
 		void OnMenuRedo(wxCommandEvent& event);
 		void OnMenuRotate(wxCommandEvent& event);
+		void OnMenuAutocrop(wxCommandEvent& event);
 
 		// View menu
 		void OnMenuZoomIn(wxCommandEvent& event);
@@ -156,6 +158,7 @@ BEGIN_EVENT_TABLE(FrameMain, wxFrame)
 	EVT_MENU(MENU_Undo, FrameMain::OnMenuUndo)
 	EVT_MENU(MENU_Redo, FrameMain::OnMenuRedo)
 	EVT_MENU(MENU_Rotate, FrameMain::OnMenuRotate)
+	EVT_MENU(MENU_Autocrop, FrameMain::OnMenuAutocrop)
 
 	EVT_MENU(MENU_ZoomIn, FrameMain::OnMenuZoomIn)
 	EVT_MENU(MENU_ZoomOut, FrameMain::OnMenuZoomOut)
@@ -265,6 +268,7 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 	menuEdit->Append( MENU_Redo, _T("&Redo") );
 	menuEdit->AppendSeparator();
 	menuEdit->Append( MENU_Rotate, _T("&Rotate") );
+	menuEdit->Append( MENU_Autocrop, _T("&Autocrop") );
 
 	// View menu
 	wxMenu *menuView = new wxMenu;
@@ -303,7 +307,7 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 {
 	wxFileDialog *OpenDialog = new wxFileDialog(
 		this, _("Open file"), wxEmptyString, wxEmptyString,
-		wxT("TOP image files (*.top)|*.top|"),
+		wxT("TOP image files (*.top)|*.[tT][oO][pP]|"),
 		wxFD_OPEN, wxDefaultPosition);
 
 	// Creates a "open file" dialog
@@ -358,7 +362,7 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 	{
 		wxFileDialog *SaveDialog = new wxFileDialog(
 			this, _("Save file"), wxEmptyString, wxEmptyString,
-			wxT("SVG vector image (*.svg)|*.svg|"),
+			wxT("SVG vector image (*.svg)|*.[sS][vV][gG]|"),
 			wxFD_SAVE|wxOVERWRITE_PROMPT, wxDefaultPosition);
 
 		// Creates a "open file" dialog
@@ -386,7 +390,7 @@ void FrameMain::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event))
 {
 	wxFileDialog *SaveDialog = new wxFileDialog(
 		this, _("Save file"), wxEmptyString, wxEmptyString,
-		wxT("SVG vector image (*.svg)|*.svg|"),
+		wxT("SVG vector image (*.svg)|*.[sS][vV][gG]|"),
 		wxFD_SAVE|wxOVERWRITE_PROMPT, wxDefaultPosition);
 
 	// Creates a "open file" dialog
@@ -432,6 +436,28 @@ void FrameMain::OnMenuRedo(wxCommandEvent& WXUNUSED(event))
 // Rotate the image
 void FrameMain::OnMenuRotate(wxCommandEvent& WXUNUSED(event))
 {
+	// Aks the user an amount
+	wxString angle_string = wxGetTextFromUser(_T("Angle to rotate (in degrees):"), _T("Rotate"), _T("90"));
+	double angle;
+	angle_string.ToDouble(&angle);
+
+	// Rotate
+	parent->engineData->rotate(angle);
+
+	// Redraw
+	wxClientDC dc(parent->drawPane);
+	parent->drawPane->render(dc);
+}
+
+// Automatically crop the image
+void FrameMain::OnMenuAutocrop(wxCommandEvent& WXUNUSED(event))
+{
+	// Autocrop
+	parent->engineData->autocrop();
+
+	// Redraw
+	wxClientDC dc(parent->drawPane);
+	parent->drawPane->render(dc);
 }
 
 
@@ -518,7 +544,6 @@ void DrawPane::render(wxDC& dc)
 	if (parent->hasData)
 	{
 		// Get the current image's size
-		std::cout << "Redrawing" << std::endl;
 		int maxXi, maxYi, dummy;
 		parent->engineData->getSize(dummy, dummy, maxXi, maxYi);
 		float maxX = (float)maxXi;
@@ -532,8 +557,8 @@ void DrawPane::render(wxDC& dc)
 		float scaleX=(float)(w/maxX);
 		float scaleY=(float)(h/maxY);
 
-		// Use x or y scaling factor, whichever fits on the DC
-		float actualScale = wxMin(scaleX,scaleY);
+		// Use x or y scaling factor, whichever fits on the DC (but beware of 10% margin)
+		float actualScale = wxMin(scaleX,scaleY)*0.9;
 
 		// Calculate the position on the DC for centring the graphic
 		float posX = (float)((w - (maxX*actualScale))/2.0);
@@ -547,36 +572,3 @@ void DrawPane::render(wxDC& dc)
 		parent->engineOutput->write(dc);
 	}
 }
-
-
-
-/*
-int main()
-{
-	std::cout << "* Application initializing" << std::endl;
-
-	// Scan given folder for specific folder structure
-	try
-	{
-		// Initialise objects
-		std::cout << "* Initialising" << std::endl;
-		Input engineInput;
-		Output engineOutput;
-
-		// Read the file
-		std::cout << "* Reading data" << std::endl;
-		engineInput.read("testfile.top");
-		Data* engineData = engineInput.getdata();
-
-		// Output the file
-		std::cout << "* Writing data" << std::endl;
-		engineOutput.write(engineData, "testfile.svg");
-	}
-	catch (std::string error)
-	{
-		std::cout << "Caught error: " << error << std::endl;
-	}
-
-	return 0;
-}
-*/

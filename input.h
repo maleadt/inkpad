@@ -62,6 +62,7 @@ class Input
 
 	private:
 		// File handling
+		// TODO: move all file handling to seperate library)
 		void file_open(std::ifstream&, const std::string& inputFile);
 		void file_close(std::ifstream&);
 

@@ -81,6 +81,96 @@ void Data::setColourFg(const Colour& inputColour)
 
 
 //
+// Element conversion
+//
+
+// Rotate the image
+inline void help_rotate(double& x, double& y, double angle_rad)
+{
+	double xc = x;
+	x = x * cos(angle_rad) - y * sin(angle_rad);
+	y = xc * sin(angle_rad) + y* cos(angle_rad);
+}
+void Data::rotate(double angle)
+{
+	// Convert the given angle
+	double angle_rad = angle / 180 * PI;
+
+	// Rotate all elements
+	std::vector<Element>::iterator it = elements.begin();
+	while (it != elements.end())
+	{
+		switch (it->identifier)
+		{
+			// Point
+			case 1:
+				help_rotate(it->parameters[0], it->parameters[1], angle_rad);
+				break;
+
+			// Line
+			case 2:
+				help_rotate(it->parameters[0], it->parameters[1], angle_rad);
+				help_rotate(it->parameters[2], it->parameters[3], angle_rad);
+				break;
+			default:
+				throw std::string("unsupported element during canvas rotation");
+		}
+		++it;
+	}
+
+	// Make most of the image visible again
+	int x0, y0, x1, y1;
+	getSize(x0, y0, x1, y1);
+	x0 = (x0 < 0 ? x0 : 0);
+	y0 = (y0 < 0 ? y0 : 0);
+	translate(-x0, -y0);
+}
+
+// Relocate the canvas
+void Data::translate(int dx, int dy)
+{
+	// Loop elements
+	std::vector<Element>::iterator it = elements.begin();
+	while (it != elements.end())
+	{
+		switch (it->identifier)
+		{
+			// Point
+			case 1:
+				it->parameters[0] += dx;
+				it->parameters[1] += dy;
+				break;
+
+			// Line
+			case 2:
+				it->parameters[0] += dx;
+				it->parameters[1] += dy;
+				it->parameters[2] += dx;
+				it->parameters[3] += dy;
+				break;
+			default:
+				throw std::string("unsupported element during canvas relocation");
+		}
+		++it;
+	}
+}
+
+// Crop the image automatically
+void Data::autocrop()
+{
+	// Look up the size of our image
+	int x0, y0, x1, y1;
+	getSize(x0, y0, x1, y1);
+
+	// Relocate the canvas
+	translate(-x0, -y0);
+}
+
+
+// http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
+
+
+//
 // Element input
 //
 
@@ -135,7 +225,7 @@ Colour Data::getColourBg() const
 	return colour_bg;
 }
 
-void check_range(int& low, int& high, const int& value)
+inline void help_range(int& low, int& high, const int& value)
 {
 	if (value < low || low == -1)
 	{
@@ -158,24 +248,22 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 
 	// Loop elements
 	std::vector<Element>::const_iterator it = elements.begin();
-	int count = 0;
 	while (it != elements.end())
 	{
-		count++;
 		switch (it->identifier)
 		{
 			// Point
 			case 1:
-				check_range(x0, x1, it->parameters[0]);
-				check_range(y0, y1, it->parameters[1]);
+				help_range(x0, x1, it->parameters[0]);
+				help_range(y0, y1, it->parameters[1]);
 				break;
 
 			// Line
 			case 2:
-				check_range(x0, x1, it->parameters[0]);
-				check_range(y0, y1, it->parameters[1]);
-				check_range(x0, x1, it->parameters[2]);
-				check_range(y0, y1, it->parameters[3]);
+				help_range(x0, x1, it->parameters[0]);
+				help_range(y0, y1, it->parameters[1]);
+				help_range(x0, x1, it->parameters[2]);
+				help_range(y0, y1, it->parameters[3]);
 				break;
 			default:
 				throw std::string("unsupported element during size check");
