@@ -37,6 +37,8 @@
 // Default headers
 #include <iostream>
 #include <ctime>
+#include <wx/filename.h>
+#include <wx/cmdline.h>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
   #include <wx/wx.h>
@@ -106,11 +108,40 @@ class Inkpad: public wxApp
 		Input* engineInput;
 		Output* engineOutput;
 		Data* engineData;
-		std::string filename;
+		wxFileName file_save;
+		wxFileName file_load;
 
 	private:
+		// Initialisation
 		virtual bool OnInit();
+
+		// Command-line parser
+		virtual void OnInitCmdLine(wxCmdLineParser& parser);
+		virtual bool OnCmdLineParsed(wxCmdLineParser& parser);
 };
+
+// Configure the command-line parameters
+static const wxCmdLineEntryDesc g_cmdLineDesc [] =
+{
+	// Switches
+	 { wxCMD_LINE_SWITCH, wxT("h"), wxT("help"), wxT("displays help on the command line parameters"),
+		  wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+	 { wxCMD_LINE_SWITCH, wxT("b"), wxT("batch"), wxT("work in batch modus (no gui)"),
+		  wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+
+	// Options
+	 { wxCMD_LINE_OPTION, wxT("i"), wxT("input"), wxT("read from specific file"),
+		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
+	 { wxCMD_LINE_OPTION, wxT("o"), wxT("output"), wxT("write to specific file"),
+		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
+
+	// Standard unnamed parameter
+	 { wxCMD_LINE_PARAM, 0, 0, wxT("FILE"),
+		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
+
+	 { wxCMD_LINE_NONE }
+};
+
 
 // Implement it
 IMPLEMENT_APP(Inkpad)
@@ -232,6 +263,10 @@ END_EVENT_TABLE()
 
 bool Inkpad::OnInit()
 {
+    // call default behaviour (mandatory)
+    if (!wxApp::OnInit())
+        return false;
+
 	// Set title and size
 	frame = new FrameMain( _T("Inkpad"), wxPoint(50,50), wxSize(440,600));
 	frame->parent = this;
@@ -254,10 +289,54 @@ bool Inkpad::OnInit()
 	engineInput->setData(engineData);
 	engineOutput->setData(engineData);
 
+	// Should we load a file?
+	if (file_load.IsOk())
+	{
+		// Give the input engine the file we selected
+		try
+		{
+			engineInput->read(std::string(file_load.GetFullPath().fn_str()));
+			hasData = true;
+		}
+		catch (std::string error)
+		{
+			wxString WXerror(error.c_str(), wxConvUTF8);
+			wxMessageBox(_T("Error while reading: ") + WXerror + _T("."),
+				_T("Error"), wxOK | wxICON_ERROR, frame);
+		}
+
+		// Change the window's title
+		frame->SetTitle(_T("Inkpad - ") + file_save.GetFullPath());
+	}
+
 	// Show the frame
 	frame->Show(TRUE);
 	SetTopWindow(frame);
 	return TRUE;
+}
+
+
+//
+// Command-line parser
+//
+
+void Inkpad::OnInitCmdLine(wxCmdLineParser& parser)
+{
+	parser.SetDesc (g_cmdLineDesc);
+	// must refuse '/' as parameter starter or cannot use "/path" style paths
+	parser.SetSwitchChars (wxT("-"));
+}
+
+bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
+{
+	// Get unnamed parameter (only one accepted)
+	if (parser.GetParamCount() > 0)
+	{
+		file_load = wxFileName(( parser.GetParam(0) ));
+		file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+	}
+
+	return true;
 }
 
 
@@ -361,6 +440,10 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 			parent->engineInput->read(std::string(OpenDialog->GetPath().mb_str()));
 			parent->hasData = true;
 
+			// Save the loaded file
+			parent->file_load = OpenDialog->GetPath();
+			parent->file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+
 			// Change the window's title
 			SetTitle(_T("Inkpad - ") + OpenDialog->GetFilename());
 
@@ -383,11 +466,11 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 {
 	// Have we saved before?
-	if (parent->filename.length() > 0)
+	if (parent->file_save.IsOk())
 	{
 		try
 		{
-			parent->engineOutput->write(parent->filename);
+			parent->engineOutput->write(std::string(parent->file_save.GetFullPath().fn_str()));
 		}
 
 		catch (std::string error)
@@ -413,7 +496,8 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 			{
 				// Give the input engine the file we selected
 				parent->engineOutput->write(std::string(SaveDialog->GetPath().mb_str()));
-				parent->filename = SaveDialog->GetPath().mb_str();
+				parent->file_save = SaveDialog->GetPath();
+				parent->file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
 			}
 
 			catch (std::string error)
@@ -441,7 +525,8 @@ void FrameMain::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event))
 		{
 			// Give the input engine the file we selected
 			parent->engineOutput->write(std::string(SaveDialog->GetPath().mb_str()));
-			parent->filename = SaveDialog->GetPath().mb_str();
+			parent->file_save = SaveDialog->GetPath();
+			parent->file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
 		}
 
 		catch (std::string error)
@@ -638,7 +723,7 @@ void DrawPane::render(wxDC& dc)
 		float scaleY=(float)(h/maxY);
 
 		// Use x or y scaling factor, whichever fits on the DC (but beware of 10% margin)
-		float actualScale = wxMin(scaleX,scaleY)*0.9;
+		float actualScale = wxMin(scaleX,scaleY)*0.95;
 
 		// Calculate the position on the DC for centring the graphic
 		float posX = (float)((w - (maxX*actualScale))/2.0);
