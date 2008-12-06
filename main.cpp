@@ -114,10 +114,15 @@ class Inkpad: public wxApp
 	private:
 		// Initialisation
 		virtual bool OnInit();
+		bool InitBatch();
+		bool InitGui();
 
 		// Command-line parser
 		virtual void OnInitCmdLine(wxCmdLineParser& parser);
 		virtual bool OnCmdLineParsed(wxCmdLineParser& parser);
+
+		// Application flags
+		bool batch;
 };
 
 // Configure the command-line parameters
@@ -127,7 +132,7 @@ static const wxCmdLineEntryDesc g_cmdLineDesc [] =
 	 { wxCMD_LINE_SWITCH, wxT("h"), wxT("help"), wxT("displays help on the command line parameters"),
 		  wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
 	 { wxCMD_LINE_SWITCH, wxT("b"), wxT("batch"), wxT("work in batch modus (no gui)"),
-		  wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+		  wxCMD_LINE_VAL_NONE},
 
 	// Options
 	 { wxCMD_LINE_OPTION, wxT("i"), wxT("input"), wxT("read from specific file"),
@@ -261,23 +266,12 @@ END_EVENT_TABLE()
 // General
 //
 
+// General initialisation
 bool Inkpad::OnInit()
 {
-    // call default behaviour (mandatory)
+    // Call default behaviour (mandatory, it calls the command-line parser)
     if (!wxApp::OnInit())
         return false;
-
-	// Set title and size
-	frame = new FrameMain( _T("Inkpad"), wxPoint(50,50), wxSize(440,600));
-	frame->parent = this;
-
-	// Add a new drawpane
-	drawPane = new DrawPane( (wxFrame*) frame );
-	drawPane->parent = this;
-	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
-	sizer->Add(drawPane, 1, wxEXPAND);
-	frame->SetSizer(sizer);
-	frame->SetAutoLayout(true);
 
 	// Spawn all engines
 	engineInput = new Input;
@@ -288,6 +282,43 @@ bool Inkpad::OnInit()
 	// Link input and output engines to data engine
 	engineInput->setData(engineData);
 	engineOutput->setData(engineData);
+
+	// Call specific initialiser
+	if (batch)
+	{
+		return InitBatch();
+	}
+	else
+	{
+		return InitGui();
+	}
+}
+
+// Specific initialisation: batch mode
+bool Inkpad::InitBatch()
+{
+	try
+	{
+		// Read file
+		engineInput->read(std::string(file_load.GetFullPath().fn_str()));
+
+		// Write file
+		engineOutput->write(std::string(file_save.GetFullPath().fn_str()));
+	}
+	catch (std::string error)
+	{
+		std::cout << "Error: " << error << std::endl;
+	}
+
+	return false;
+}
+
+// Specific initialisation: GUI mode
+bool Inkpad::InitGui()
+{
+	// Set title and size
+	frame = new FrameMain( _T("Inkpad"), wxPoint(50,50), wxSize(440,600));
+	frame->parent = this;
 
 	// Should we load a file?
 	if (file_load.IsOk())
@@ -301,18 +332,26 @@ bool Inkpad::OnInit()
 		catch (std::string error)
 		{
 			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxMessageBox(_T("Error while reading: ") + WXerror + _T("."),
-				_T("Error"), wxOK | wxICON_ERROR, frame);
+			wxLogError(_T("Error while reading: ") + WXerror + _T("."));
 		}
 
 		// Change the window's title
 		frame->SetTitle(_T("Inkpad - ") + file_save.GetFullPath());
 	}
 
+	// Add a new drawpane
+	drawPane = new DrawPane( (wxFrame*) frame );
+	drawPane->parent = this;
+	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
+	sizer->Add(drawPane, 1, wxEXPAND);
+	frame->SetSizer(sizer);
+	frame->SetAutoLayout(true);
+
 	// Show the frame
 	frame->Show(TRUE);
 	SetTopWindow(frame);
-	return TRUE;
+
+	return true;
 }
 
 
@@ -334,6 +373,35 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	{
 		file_load = wxFileName(( parser.GetParam(0) ));
 		file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+	}
+
+	// Get input and output parameters
+	// TODO: move the normalization to the file_save call (avoid duplicate code)
+	wxString paramInput, paramOutput;
+	if (parser.Found( wxT("i"), &paramInput))
+	{
+		file_load = wxFileName( paramInput );
+		file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+	}
+	if (parser.Found( wxT("o"), &paramOutput))
+	{
+		file_save = wxFileName( paramOutput );
+		file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+	}
+
+	// Check if we are in batch mode
+	if (parser.Found( wxT("b")))
+	{
+		if (file_load.IsOk() && file_save.IsOk())
+		{
+			batch = true;
+		} else {
+			std::cout << "Batch mode requires given input and output parameters" << std::endl;
+			parser.Usage();
+			return false;
+		}
+	} else {
+		batch = false;
 	}
 
 	return true;
@@ -455,8 +523,7 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 		catch (std::string error)
 		{
 			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxMessageBox(_T("Error while reading: ") + WXerror + _T("."),
-				_T("Error"), wxOK | wxICON_ERROR, this);
+			wxLogError(_T("Error while reading: ") + WXerror + _T("."));
 		}
 	}
 }
@@ -476,8 +543,7 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 		catch (std::string error)
 		{
 			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxMessageBox(_T("Error while saving: ") + WXerror + _T("."),
-				_T("Error"), wxOK | wxICON_ERROR, this);
+			wxLogError(_T("Error while saving: ") + WXerror + _T("."));
 		}
 	}
 
@@ -503,8 +569,7 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 			catch (std::string error)
 			{
 				wxString WXerror(error.c_str(), wxConvUTF8);
-				wxMessageBox(_T("Error while saving: ") + WXerror + _T("."),
-					_T("Error"), wxOK | wxICON_ERROR, this);
+				wxLogError(_T("Error while saving: ") + WXerror + _T("."));
 			}
 		}
 	}
@@ -532,8 +597,7 @@ void FrameMain::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event))
 		catch (std::string error)
 		{
 			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxMessageBox(_T("Error while saving: ") + WXerror + _T("."),
-				_T("Error"), wxOK | wxICON_ERROR, this);
+			wxLogError(_T("Error while reading: ") + WXerror + _T("."));
 		}
 	}
 }
