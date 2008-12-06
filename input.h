@@ -38,6 +38,7 @@
 #include <fstream>
 #include <string.h>
 #include "data.h"
+#include "file.h"
 
 
 //
@@ -61,13 +62,7 @@ class Input
 		void setData(Data*);
 
 	private:
-		// File handling
-		// TODO: move all file handling to seperate library)
-		void file_open(std::ifstream&, const std::string& inputFile);
-		void file_close(std::ifstream&);
-
 		// Data processing
-		bool data_type(const std::string &, std::string&);
 		void data_input_top(std::ifstream&);
 
 		// Data

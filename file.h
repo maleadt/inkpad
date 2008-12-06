@@ -1,6 +1,6 @@
 /*
- * output.h
- * Inkpad output handling.
+ * file.h
+ * Inkpad file handling.
  *
  * Copyright (c) 2008 Tim Besard <tim.besard@gmail.com>
  * All rights reserved.
@@ -29,46 +29,34 @@
 //
 
 // Include guard
-#ifndef __OUTPUT
-#define __OUTPUT
+#ifndef __IFILE
+#define __IFILE
 
 
 // Headers
 #include <iostream>
-#include <string>
 #include <fstream>
-#include <vector>
-#include "data.h"
-#include "file.h"
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
-  #include <wx/wx.h>
-#endif
 
-//////////////////////
-// CLASS DEFINITION //
-//////////////////////
+//
+// Constants
+//
 
-class Output
-{
-	public:
-		// Construction and destruction
-		Output();
 
-		// Class member routines
-		void setData(Data*);
-		void write(const std::string& inputFile, const std::string& inputType);
-		void write(const std::string& inputFile);
-		void write(wxDC& dc);
+/////////////////
+// DEFINITIONS //
+/////////////////
 
-	private:
-		// Data processing
-		void data_output_svg(std::ofstream&);
-		void data_output_dc(wxDC& dc);
+// Open a file
+void file_open(std::ifstream& inputStream, const std::string& inputFile);
+void file_open(std::ofstream& inputStream, const std::string& inputFile);
 
-		// Data
-		const Data* data;
-};
+// Close a file
+void file_close(std::ifstream& inputStream);
+void file_close(std::ofstream& inputStream);
+
+// Identify a file
+bool file_identify(const std::string& inputFile, std::string& outputType);
+bool file_identify(std::ifstream& inputStream, std::string& outputType);
 
 
 // Include guard

@@ -64,7 +64,7 @@ void Input::read(const std::string &inputFile)
 {
 	// Guess the data type from the extension
 	std::string type;
-	if (!data_type(inputFile, type))
+	if (!file_identify(inputFile, type))
 	{
 		throw std::string("cannot extract input file type");
 		return;
@@ -87,30 +87,6 @@ void Input::read(const std::string &inputFile)
 		throw std::string("unsupported input file type");
 		return;
 	}
-}
-
-
-//
-// File handling
-//
-
-// Open a file
-void Input::file_open(std::ifstream& stream, const std::string& inputFile)
-{
-	// Open the stream
-	stream.open(inputFile.c_str());
-
-	// Check stream validity
-	if (!stream.is_open())
-	{
-		throw std::string("error while opening output stream");
-	}
-}
-
-// Close a file
-void Input::file_close(std::ifstream& inputStream)
-{
-	inputStream.close();
 }
 
 
@@ -201,20 +177,4 @@ void Input::data_input_top(std::ifstream& stream)
 
 	// Clear the buffer
 	delete[] buffer;
-}
-
-// Guess the data type
-bool Input::data_type(const std::string& inputFile, std::string& type)
-{
-	// Extension check
-	unsigned int position = inputFile.find_last_of(".");
-	if (position < inputFile.length())
-	{
-		std::string extension = inputFile.substr(position+1);
-		type = extension;
-		return true;
-	}
-
-	// TODO: read some bytes to detect if no extension
-	return false;
 }

@@ -135,9 +135,9 @@ static const wxCmdLineEntryDesc g_cmdLineDesc [] =
 		  wxCMD_LINE_VAL_NONE},
 
 	// Options
-	 { wxCMD_LINE_OPTION, wxT("i"), wxT("input"), wxT("read from specific file"),
+	 { wxCMD_LINE_OPTION, wxT("bi"), wxT("batch-input"), wxT("read from specific file"),
 		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
-	 { wxCMD_LINE_OPTION, wxT("o"), wxT("output"), wxT("write to specific file"),
+	 { wxCMD_LINE_OPTION, wxT("bo"), wxT("batch-output"), wxT("write to specific file"),
 		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
 
 	// Standard unnamed parameter
@@ -375,23 +375,24 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 		file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
 	}
 
-	// Get input and output parameters
-	// TODO: move the normalization to the file_save call (avoid duplicate code)
-	wxString paramInput, paramOutput;
-	if (parser.Found( wxT("i"), &paramInput))
-	{
-		file_load = wxFileName( paramInput );
-		file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
-	}
-	if (parser.Found( wxT("o"), &paramOutput))
-	{
-		file_save = wxFileName( paramOutput );
-		file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
-	}
-
 	// Check if we are in batch mode
 	if (parser.Found( wxT("b")))
 	{
+		// Get input and output parameters
+		// TODO: move the normalization to the file_save call (avoid duplicate code)
+		wxString paramInput, paramOutput;
+		if (parser.Found( wxT("bi"), &paramInput))
+		{
+			file_load = wxFileName( paramInput );
+			file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+		}
+		if (parser.Found( wxT("bo"), &paramOutput))
+		{
+			file_save = wxFileName( paramOutput );
+			file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+		}
+
+		// Batch mode requirments
 		if (file_load.IsOk() && file_save.IsOk())
 		{
 			batch = true;

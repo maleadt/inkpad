@@ -89,7 +89,7 @@ void Output::write(const std::string& inputFile)
 {
 	// Detect the type
 	std::string type;
-	if (!data_type(inputFile, type))
+	if (!file_identify(inputFile, type))
 	{
 		throw std::string("unsupported output file type");
 		return;
@@ -107,46 +107,8 @@ void Output::write(wxDC& dc)
 
 
 //
-// File handling
-//
-
-// Open a file
-void Output::file_open(std::ofstream& stream, const std::string& inputFile)
-{
-	// Open the stream
-	stream.open(inputFile.c_str());
-
-	// Check stream validity
-	if (!stream.is_open())
-	{
-		throw std::string("error while opening output stream");
-	}
-}
-
-// Close a file
-void Output::file_close(std::ofstream& inputStream)
-{
-	inputStream.close();
-}
-
-
-//
 // Data processing
 //
-
-// Guess the data type
-bool Output::data_type(const std::string& inputFile, std::string& type)
-{
-	// Extension check
-	unsigned int position = inputFile.find_last_of(".");
-	if (position < inputFile.length())
-	{
-		std::string extension = inputFile.substr(position+1);
-		type = extension;
-		return true;
-	}
-	return false;
-}
 
 // Output data in SVG format
 void Output::data_output_svg(std::ofstream& stream)
