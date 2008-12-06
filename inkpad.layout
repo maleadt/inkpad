@@ -2,56 +2,24 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
 	<File name="data.cpp" open="1" top="0" tabpos="7">
-		<Cursor position="2581" topLine="115" />
+		<Cursor position="5210" topLine="239" />
 	</File>
-	<File name="data.h" open="1" top="1" tabpos="6">
-		<Cursor position="999" topLine="25" />
+	<File name="data.h" open="1" top="0" tabpos="6">
+		<Cursor position="2624" topLine="128" />
 	</File>
 	<File name="input.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="2288" topLine="30" />
+		<Cursor position="3390" topLine="144" />
 	</File>
 	<File name="input.h" open="1" top="0" tabpos="2">
-		<Cursor position="1421" topLine="43" />
+		<Cursor position="1376" topLine="49" />
 	</File>
-	<File name="main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="9424" topLine="429" />
+	<File name="main.cpp" open="1" top="1" tabpos="1">
+		<Cursor position="6802" topLine="310" />
 	</File>
 	<File name="output.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="1123" topLine="32" />
+		<Cursor position="4732" topLine="189" />
 	</File>
 	<File name="output.h" open="1" top="0" tabpos="4">
-		<Cursor position="1025" topLine="22" />
+		<Cursor position="1025" topLine="40" />
 	</File>
 </CodeBlocks_layout_file>
-[Editors]
-Focused=0
-Order=4,0
-[Editor_0]
-Open=1
-Top=1
-CursorCol=58
-CursorRow=19
-TopLine=13
-LeftChar=1
-[Editor_1]
-Open=0
-Top=0
-[Editor_2]
-Open=0
-Top=0
-[Editor_3]
-Open=0
-Top=0
-[Editor_4]
-Open=1
-Top=0
-CursorCol=24
-CursorRow=9
-TopLine=1
-LeftChar=1
-[Editor_5]
-Open=0
-Top=0
-[Editor_6]
-Open=0
-Top=0

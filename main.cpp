@@ -179,10 +179,10 @@ BEGIN_EVENT_TABLE(FrameMain, wxFrame)
 
 	EVT_MENU(MENU_About, FrameMain::OnMenuAbout)
 
-	EVT_MENU(TOOL_Open, FrameMain::OnToolOpen)
-	EVT_MENU(TOOL_Save, FrameMain::OnToolSave)
-	EVT_MENU(TOOL_Left, FrameMain::OnToolLeft)
-	EVT_MENU(TOOL_Right, FrameMain::OnToolRight)
+	EVT_TOOL(TOOL_Open, FrameMain::OnToolOpen)
+	EVT_TOOL(TOOL_Save, FrameMain::OnToolSave)
+	EVT_TOOL(TOOL_Left, FrameMain::OnToolLeft)
+	EVT_TOOL(TOOL_Right, FrameMain::OnToolRight)
 
 END_EVENT_TABLE()
 
@@ -214,6 +214,8 @@ BEGIN_EVENT_TABLE(DrawPane, wxPanel)
 	// catch paint events
 	EVT_PAINT(DrawPane::paintEvent)
 END_EVENT_TABLE()
+
+
 
 
 
@@ -313,14 +315,20 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 
 
 
+	// Load images
+	wxToolBar *toolbar = this->CreateToolBar();
+	wxImage::AddHandler( new wxPNGHandler );
+	wxBitmap open(wxT("/usr/share/icons/gnome/24x24/actions/gtk-open.png") );
+	wxBitmap save(wxT("/usr/share/icons/gnome/24x24/actions/gtk-save.png") );
+	wxBitmap left(wxT("/usr/share/icons/gnome/24x24/actions/object-rotate-left.png") );
+	wxBitmap right(wxT("/usr/share/icons/gnome/24x24/actions/object-rotate-right.png") );
 
-	// Toolbar
-	wxToolBar* toolbar = new wxToolBar;
-	toolbar->AddTool(TOOL_Open, _T("Open"), wxNullBitmap);
-	toolbar->AddTool(TOOL_Save, _T("Save"), wxNullBitmap);
+	// Construct the toolbar
+	toolbar->AddTool(TOOL_Open, wxT("Open"), open, wxT("Open a new image"), wxITEM_NORMAL);
+	toolbar->AddTool(TOOL_Save, wxT("Save"), save, wxT("Save the current image"), wxITEM_NORMAL);
 	toolbar->AddSeparator();
-	toolbar->AddTool(TOOL_Left, _T("Left"), wxNullBitmap);
-	toolbar->AddTool(TOOL_Right, _T("Right"), wxNullBitmap);
+	toolbar->AddTool(TOOL_Left, wxT("Left"), left, wxT("Rotate to the left"), wxITEM_NORMAL);
+	toolbar->AddTool(TOOL_Right, wxT("Right"), right, wxT("Rotate to the right"), wxITEM_NORMAL);
 	toolbar->Realize();
 
 
@@ -542,25 +550,39 @@ void FrameMain::OnMenuAbout(wxCommandEvent& WXUNUSED(event))
 //
 
 // Open a new file
-void FrameMain::OnToolOpen(wxCommandEvent& WXUNUSED(event))
+void FrameMain::OnToolOpen(wxCommandEvent& event)
 {
+	OnMenuOpen(event);
 }
 
 // Save the file
-void FrameMain::OnToolSave(wxCommandEvent& WXUNUSED(event))
+void FrameMain::OnToolSave(wxCommandEvent& event)
 {
+	OnMenuSave(event);
 }
 
 // Rotate left
 
 void FrameMain::OnToolLeft(wxCommandEvent& WXUNUSED(event))
 {
+		// Rotate
+	parent->engineData->rotate(-90);
+
+	// Redraw
+	wxClientDC dc(parent->drawPane);
+	parent->drawPane->render(dc);
 }
 
 // Rotate right
 
 void FrameMain::OnToolRight(wxCommandEvent& WXUNUSED(event))
 {
+		// Rotate
+	parent->engineData->rotate(90);
+
+	// Redraw
+	wxClientDC dc(parent->drawPane);
+	parent->drawPane->render(dc);
 }
 
 
@@ -636,6 +658,7 @@ void DrawPane::render(wxDC& dc)
 		parent->frame->SetStatusText(  statusbar );
 	}
 }
+
 
 
 
