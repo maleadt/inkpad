@@ -80,30 +80,12 @@ void Data::addPoint(int x1, int y1)
 	addElement(tempElement);
 }
 
-// Add a new line
-void Data::addLine(int x1, int y1, int x2, int y2)
-{
-	// New element
-	Element tempElement;
-	tempElement.identifier = 2;
-
-	// Save parameters
-	tempElement.parameters.resize(4);
-	tempElement.parameters[0] = x1;
-	tempElement.parameters[1] = y1;
-	tempElement.parameters[2] = x2;
-	tempElement.parameters[3] = y2;
-
-	// Save the element
-	addElement(tempElement);
-}
-
 // Add a new polyline
 void Data::addPolyline(const std::vector<double>& points)
 {
 	// New element
 	Element tempElement;
-	tempElement.identifier = 3;
+	tempElement.identifier = 2;
 
 	// Save parameters
 	tempElement.parameters = points;
@@ -155,14 +137,8 @@ void Data::rotate(double angle)
 				help_rotate(it->parameters[0], it->parameters[1], angle_rad);
 				break;
 
-			// Line
-			case 2:
-				help_rotate(it->parameters[0], it->parameters[1], angle_rad);
-				help_rotate(it->parameters[2], it->parameters[3], angle_rad);
-				break;
-
 			// Polyline
-			case 3:
+			case 2:
 				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
 					help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
 				break;
@@ -215,16 +191,8 @@ void Data::translate(int dx, int dy)
 				it->parameters[1] += dy;
 				break;
 
-			// Line
-			case 2:
-				it->parameters[0] += dx;
-				it->parameters[1] += dy;
-				it->parameters[2] += dx;
-				it->parameters[3] += dy;
-				break;
-
 			// Polyline
-			case 3:
+			case 2:
 				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
 				{
 					it->parameters[i] += dx;
@@ -278,18 +246,10 @@ void Data::search_polyline()
 				polyline.push_back(elements[i].parameters[1]);
 				break;
 
-			// Line
-			case 2:
-				polyline.reserve(4);
-				polyline.push_back(elements[i].parameters[0]);
-				polyline.push_back(elements[i].parameters[1]);
-				polyline.push_back(elements[i].parameters[2]);
-				polyline.push_back(elements[i].parameters[3]);
-				break;
-
 			// Polyline
-			case 3:
+			case 2:
 				polyline = elements[i].parameters;
+				break;
 
 			// Not supported form
 			default:
@@ -311,23 +271,11 @@ void Data::search_polyline()
 				// Point
 				case 1:
 					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
-					{
 						found = true;
-					}
-					break;
-
-				// Line
-				case 2:
-					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
-					{
-						polyline.push_back(elements[j].parameters[2]);
-						polyline.push_back(elements[j].parameters[3]);
-						found = true;
-					}
 					break;
 
 				// Polyline
-				case 3:
+				case 2:
 					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
 					{
 						for (unsigned int i = 2; i < elements[j].parameters.size(); i++)
@@ -373,7 +321,7 @@ void Data::simplify_polyline(double accuracy)
 	{
 		switch (it->identifier)
 		{
-			case 3:
+			case 2:
 			{
 				std::vector<double> result;
 
@@ -470,16 +418,8 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 				help_range(y0, y1, it->parameters[1]);
 				break;
 
-			// Line
-			case 2:
-				help_range(x0, x1, it->parameters[0]);
-				help_range(y0, y1, it->parameters[1]);
-				help_range(x0, x1, it->parameters[2]);
-				help_range(y0, y1, it->parameters[3]);
-				break;
-
 			// Polyline
-			case 3:
+			case 2:
 				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
 				{
 					help_range(x0, x1, it->parameters[i]);
@@ -519,9 +459,6 @@ int Data::statParameters()
 				count += 2;
 				break;
 			case 2:
-				count += 4;
-				break;
-			case 3:
 				count += 2*it->parameters.size();
 			default:
 				break;

@@ -134,14 +134,8 @@ void Output::data_output_svg(std::ofstream& stream)
 			case 1:
 				break;
 
-			// Line
-			case 2:
-				stream << "<line x1=\"" << tempIterator->parameters[0] << "\" y1=\"" << tempIterator->parameters[1] << "\" x2=\""
-					 << tempIterator->parameters[2] << "\" y2=\"" << tempIterator->parameters[3] << "\" fill=\"none\" stroke=\"" << tempIterator->foreground .rgb_hex()<< "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
-				break;
-
 			// Polyline
-			case 3:
+			case 2:
 				stream << "<polyline points=\"";
 				for (unsigned int i = 0; i < tempIterator->parameters.size(); i += 2)
 					stream << tempIterator->parameters[i] << "," << tempIterator->parameters[i+1] << " ";
@@ -184,14 +178,8 @@ void Output::data_output_dc(wxDC& dc)
 				dc.DrawPoint( tempIterator->parameters[0], tempIterator->parameters[1] );
 				break;
 
-			// Line
-			case 2:
-				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
-				dc.DrawLine( tempIterator->parameters[0], tempIterator->parameters[1], tempIterator->parameters[2], tempIterator->parameters[3] );
-				break;
-
 			// Polyline
-			case 3:
+			case 2:
 				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
 				for (unsigned int i = 2; i < tempIterator->parameters.size(); i+=2)
 					dc.DrawLine( tempIterator->parameters[i-2], tempIterator->parameters[i-1], tempIterator->parameters[i], tempIterator->parameters[i+1] );

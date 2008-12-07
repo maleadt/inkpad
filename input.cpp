@@ -159,7 +159,13 @@ void Input::data_input_top(std::ifstream& stream)
 		// Create a new line (if we haven't started a new stroke
 		if (!end_of_stroke)
 		{
-			data->addLine(x1, y1, x2, y2);
+			std::vector<double> points;
+			points.resize(4);
+			points[0] = x1;
+			points[1] = y1;
+			points[2] = x2;
+			points[3] = y2;
+			data->addPolyline(points);
 		} else {
 			end_of_stroke = false;
 		}

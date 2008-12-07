@@ -107,10 +107,7 @@ struct Element
  * - ID 1: a point
  *   params: x value, y value
  *
- * - ID 2: a line
- *   params: x start value, y start value, x end value, y end value
- *
- * - ID 3: a polyline
+ * - ID 2: a (poly)line
  *   params: x start value, y start value, {x point value, y point value}(n times), x end value, y end value
  *
  */
@@ -141,7 +138,6 @@ class Data
 
 		// Element input
 		void addPoint(int, int);
-		void addLine(int, int, int, int);
 		void addPolyline(const std::vector<double>&);
 
 		// Element conversion
