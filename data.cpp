@@ -127,6 +127,9 @@ void Data::rotate(double angle)
 	// Convert the given angle
 	double angle_rad = angle / 180 * PI;
 
+	// Move the image to it's center
+	translate(-(imgSizeX/2), -(imgSizeY/2));
+
 	// Rotate all elements
 	std::vector<Element>::iterator it = elements.begin();
 	while (it != elements.end())
@@ -149,12 +152,31 @@ void Data::rotate(double angle)
 		++it;
 	}
 
-	// Make most of the image visible again
-	int x0, y0, x1, y1;
-	getSize(x0, y0, x1, y1);
-	x0 = (x0 < 0 ? x0 : 0);
-	y0 = (y0 < 0 ? y0 : 0);
-	translate(-x0, -y0);
+	// Move the image back to it's original location
+	translate((imgSizeX/2), (imgSizeY/2));
+
+	// TODO: change the image's size correct
+	// Temporary solution (still buggy)
+	if (angle == 90 || angle == -90)
+	{
+		int temp = imgSizeX;
+		imgSizeX = imgSizeY;
+		imgSizeY = temp;
+	}
+	else if (angle == 180 || angle == -180 || ((int)angle%360) == 0)
+	{
+		// Do nothing
+	}
+	else
+	{
+		autocrop();
+	}
+	/*
+	// Now move it so all is positive
+	int dx = (int)(cos(angle_rad) * (imgSizeX/2) - sin(angle_rad) * (imgSizeY/2) - (imgSizeX/2));
+	int dy = (int)(sin(angle_rad) * (-imgSizeX/2) + cos(angle_rad) * (imgSizeY/2) - (imgSizeY/2));
+	translate(dx, dy);
+	*/
 }
 
 // Relocate the canvas
