@@ -98,6 +98,20 @@ void Data::addLine(int x1, int y1, int x2, int y2)
 	addElement(tempElement);
 }
 
+// Add a new polyline
+void Data::addPolyline(const std::vector<double>& points)
+{
+	// New element
+	Element tempElement;
+	tempElement.identifier = 3;
+
+	// Save parameters
+	tempElement.parameters = points;
+
+	// Save the element
+	addElement(tempElement);
+}
+
 // Add a new element (private, applies current settings)
 void Data::addElement(Element& inputElement)
 {
@@ -146,6 +160,13 @@ void Data::rotate(double angle)
 				help_rotate(it->parameters[0], it->parameters[1], angle_rad);
 				help_rotate(it->parameters[2], it->parameters[3], angle_rad);
 				break;
+
+			// Polyline
+			case 3:
+				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+					help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+				break;
+
 			default:
 				throw std::string("unsupported element during canvas rotation");
 		}
@@ -172,7 +193,7 @@ void Data::rotate(double angle)
 		autocrop();
 	}
 	/*
-	// Now move it so all is positive
+	// Now move it so all is positive (alghorithm by Gert-Jan Stockman)
 	int dx = (int)(cos(angle_rad) * (imgSizeX/2) - sin(angle_rad) * (imgSizeY/2) - (imgSizeX/2));
 	int dy = (int)(sin(angle_rad) * (-imgSizeX/2) + cos(angle_rad) * (imgSizeY/2) - (imgSizeY/2));
 	translate(dx, dy);
@@ -180,7 +201,6 @@ void Data::rotate(double angle)
 }
 
 // Relocate the canvas
-// TODO: calculate new image size
 void Data::translate(int dx, int dy)
 {
 	// Loop elements
@@ -202,6 +222,16 @@ void Data::translate(int dx, int dy)
 				it->parameters[2] += dx;
 				it->parameters[3] += dy;
 				break;
+
+			// Polyline
+			case 3:
+				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+				{
+					it->parameters[i] += dx;
+					it->parameters[i+1] += dy;
+				}
+				break;
+
 			default:
 				throw std::string("unsupported element during canvas relocation");
 		}
@@ -225,8 +255,115 @@ void Data::autocrop()
 }
 
 
+//
+// Data optimalisation
+//
+
 // http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
 
+// Look for polylines
+void Data::search_polyline()
+{
+	// Loop elements
+	for (unsigned int i = 0; i < elements.size(); i++)
+	{
+		// Initialize a polyline vector
+		std::vector<double> polyline;
+
+		// Add start point(s)
+		switch (elements[i].identifier)
+		{
+			// Point
+			case 1:
+				polyline.reserve(2);
+				polyline.push_back(elements[i].parameters[0]);
+				polyline.push_back(elements[i].parameters[1]);
+				break;
+
+			// Line
+			case 2:
+				polyline.reserve(4);
+				polyline.push_back(elements[i].parameters[0]);
+				polyline.push_back(elements[i].parameters[1]);
+				polyline.push_back(elements[i].parameters[2]);
+				polyline.push_back(elements[i].parameters[3]);
+				break;
+
+			// Polyline
+			case 3:
+				polyline = elements[i].parameters;
+
+			// Not supported form
+			default:
+				continue;
+		}
+
+		// Save the end points
+		double x = polyline[ polyline.size() - 2 ];
+		double y = polyline[ polyline.size() - 1 ];
+		unsigned int oldsize = polyline.size();
+
+		// Scan other elements to look for a match with those end points
+		bool found = false;
+		for (unsigned int j = i+1; j < elements.size(); j++)
+		{
+			// Compare ending point
+			switch (elements[j].identifier)
+			{
+				// Point
+				case 1:
+					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
+					{
+						found = true;
+					}
+					break;
+
+				// Line
+				case 2:
+					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
+					{
+						polyline.push_back(elements[j].parameters[2]);
+						polyline.push_back(elements[j].parameters[3]);
+						found = true;
+					}
+					break;
+
+				// Polyline
+				case 3:
+					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
+					{
+						for (unsigned int i = 2; i < elements[j].parameters.size(); i++)
+							polyline.push_back(elements[j].parameters[i]);
+						found = true;
+					}
+					break;
+
+				// Not supported form
+				default:
+					continue;
+			}
+
+			// If found
+			if (found)
+			{
+				// Delete the old element
+				elements.erase( elements.begin() + (j--) );
+
+				// Alter the new comparison points
+				x = polyline[ polyline.size() - 2 ];
+				y = polyline[ polyline.size() - 1 ];
+				found = false;
+			}
+		}
+
+		// Save the polyline if we found something
+		if (oldsize != polyline.size())
+		{
+			elements.erase( elements.begin() + (i--) );
+			addPolyline(polyline);
+		}
+	}
+}
 
 
 //
@@ -273,6 +410,16 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 				help_range(x0, x1, it->parameters[2]);
 				help_range(y0, y1, it->parameters[3]);
 				break;
+
+			// Polyline
+			case 3:
+				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+				{
+					help_range(x0, x1, it->parameters[i]);
+					help_range(y0, y1, it->parameters[i+1]);
+				}
+				break;
+
 			default:
 				throw std::string("unsupported element during size check");
 		}

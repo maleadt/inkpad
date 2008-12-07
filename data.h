@@ -110,6 +110,9 @@ struct Element
  * - ID 2: a line
  *   params: x start value, y start value, x end value, y end value
  *
+ * - ID 3: a polyline
+ *   params: x start value, y start value, {x point value, y point value}(n times), x end value, y end value
+ *
  */
 
 
@@ -139,11 +142,15 @@ class Data
 		// Element input
 		void addPoint(int, int);
 		void addLine(int, int, int, int);
+		void addPolyline(const std::vector<double>&);
 
 		// Element conversion
 		void rotate(double angle);
 		void translate(int dx, int dy);
 		void autocrop();
+
+		// Data omptimalisation
+		void search_polyline();
 
 		// Element output
 		void getSize(int&, int&, int&, int&) const;

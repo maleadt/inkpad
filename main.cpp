@@ -72,6 +72,7 @@ enum
 	MENU_Fullscreen,
 
 	MENU_Settings,
+	MENU_SearchPolylines,
 
 	MENU_About,
 
@@ -182,6 +183,7 @@ class FrameMain: public wxFrame
 
 		// Tools menu
 		void OnMenuSettings(wxCommandEvent& event);
+		void OnMenuSearchPolylines(wxCommandEvent& event);
 
 		// Help menu
 		void OnMenuAbout(wxCommandEvent& event);
@@ -212,6 +214,7 @@ BEGIN_EVENT_TABLE(FrameMain, wxFrame)
 	EVT_MENU(MENU_Fullscreen, FrameMain::OnMenuFullscreen)
 
 	EVT_MENU(MENU_Settings, FrameMain::OnMenuSettings)
+	EVT_MENU(MENU_SearchPolylines, FrameMain::OnMenuSearchPolylines)
 
 	EVT_MENU(MENU_About, FrameMain::OnMenuAbout)
 
@@ -447,6 +450,8 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 	// Tools menu
 	wxMenu *menuTools = new wxMenu;
 	menuTools->Append( MENU_Settings, _T("&Settings") );
+	menuTools->AppendSeparator();
+	menuTools->Append( MENU_SearchPolylines, _T("Search for &polylines") );
 
 	// Help menu
 	wxMenu *menuHelp = new wxMenu;
@@ -680,6 +685,25 @@ void FrameMain::OnMenuFullscreen(wxCommandEvent& WXUNUSED(event))
 // Configure the application
 void FrameMain::OnMenuSettings(wxCommandEvent& WXUNUSED(event))
 {
+}
+
+// Search for polylines
+void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
+{
+	// Autocrop
+	parent->engineData->search_polyline();
+
+	// Redraw
+	try
+	{
+		wxClientDC dc(parent->drawPane);
+		parent->drawPane->render(dc);
+	}
+	catch (std::string error)
+	{
+		wxString WXerror(error.c_str(), wxConvUTF8);
+		wxLogError(_T("Error while drawing: ") + WXerror + _T("."));
+	}
 }
 
 
