@@ -155,6 +155,7 @@ void Data::rotate(double angle)
 	x0 = (x0 < 0 ? x0 : 0);
 	y0 = (y0 < 0 ? y0 : 0);
 	translate(-x0, -y0);
+}
 
 // Relocate the canvas
 // TODO: calculate new image size

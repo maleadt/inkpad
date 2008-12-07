@@ -37,6 +37,8 @@
 		</Linker>
 		<Unit filename="data.cpp" />
 		<Unit filename="data.h" />
+		<Unit filename="file.cpp" />
+		<Unit filename="file.h" />
 		<Unit filename="input.cpp" />
 		<Unit filename="input.h" />
 		<Unit filename="main.cpp" />
