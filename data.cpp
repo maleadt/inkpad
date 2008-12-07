@@ -259,8 +259,6 @@ void Data::autocrop()
 // Data optimalisation
 //
 
-// http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
-
 // Look for polylines
 void Data::search_polyline()
 {
@@ -365,6 +363,75 @@ void Data::search_polyline()
 	}
 }
 
+// Simplify polylines
+// http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
+void Data::simplify_polyline(double accuracy)
+{
+	// Loop elements
+	std::vector<Element>::iterator it = elements.begin();
+	while (it != elements.end())
+	{
+		switch (it->identifier)
+		{
+			case 3:
+			{
+				std::vector<double> result;
+
+				// Define last point
+				double lastX = it->parameters[0];
+				double lastY = it->parameters[1];
+				double lastI = 0;
+
+				// Starting point should always go on the result
+				result.push_back(lastX);
+				result.push_back(lastY);
+
+				// Loop other points
+				for (unsigned int i = 4; i < it->parameters.size(); i+=2)
+				{
+					// Define current point
+					double curX = it->parameters[i];
+					double curY = it->parameters[i+1];
+
+					// Derive (dx/dy)
+					double d = (curX - lastX) / (curY - lastY);
+
+					// Loop all points in between
+					bool falls_in_between = true;
+					for (unsigned int j = lastI; j < i; j+=2)
+					{
+						// Calculate borders in Y direction
+						double y = curY + d*(it->parameters[j] - curX);
+						double y_min = accuracy * y;
+						double y_max = (2-accuracy) * y;
+
+						// Check
+						if (it->parameters[j+1] < y_min || it->parameters[j+1] > y_max)
+							falls_in_between = false;
+					}
+
+					if (!falls_in_between)
+					{
+						result.push_back(curX);
+						result.push_back(curY);
+
+						lastX = curX;
+						lastY = curY;
+						lastI = i;
+					}
+				}
+
+				it->parameters = result;
+				break;
+			}
+
+			default:
+				break;
+		}
+		++it;
+	}
+}
+
 
 //
 // Element output
@@ -436,4 +503,30 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 int Data::statElements()
 {
 	return elements.size();
+}
+
+// The amount of parameters
+int Data::statParameters()
+{
+	// Loop elements
+	int count = 0;
+	std::vector<Element>::iterator it = elements.begin();
+	while (it != elements.end())
+	{
+		switch (it->identifier)
+		{
+			case 1:
+				count += 2;
+				break;
+			case 2:
+				count += 4;
+				break;
+			case 3:
+				count += 2*it->parameters.size();
+			default:
+				break;
+		}
+		++it;
+	}
+	return count;
 }

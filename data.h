@@ -151,12 +151,14 @@ class Data
 
 		// Data omptimalisation
 		void search_polyline();
+		void simplify_polyline(double accuracy);
 
 		// Element output
 		void getSize(int&, int&, int&, int&) const;
 
 		// Statistics
 		int statElements();
+		int statParameters();
 
 		// Iterators
 		typedef std::vector<Element>::const_iterator const_iterator;

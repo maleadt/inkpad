@@ -690,8 +690,9 @@ void FrameMain::OnMenuSettings(wxCommandEvent& WXUNUSED(event))
 // Search for polylines
 void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
 {
-	// Autocrop
+	// Search polylines
 	parent->engineData->search_polyline();
+	parent->engineData->simplify_polyline(0.999);
 
 	// Redraw
 	try
@@ -828,7 +829,7 @@ void DrawPane::render(wxDC& dc)
 		// Adjust status bar
 		wxString statusbar;
 		statusbar << parent->engineData->imgSizeX << _T(" x ") << parent->engineData->imgSizeY << _T(" pixels")
-				  << _T(" (") << parent->engineData->statElements() << _T(" elements)");
+				  << _T(" (") << parent->engineData->statElements() << _T(" elements with ") << parent->engineData->statParameters() << _T(" parameters)");
 		parent->frame->SetStatusText(  statusbar );
 	}
 }
