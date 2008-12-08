@@ -110,8 +110,14 @@ class Inkpad: public wxApp
 		Input* engineInput;
 		Output* engineOutput;
 		Data* engineData;
-		wxFileName file_save;
-		wxFileName file_load;
+
+		// File handline
+		void setfile_save(const wxFileName&);
+		void setfile_load(const wxFileName&);
+		wxFileName getfile_save();
+		wxFileName getfile_load();
+		void clearfile_save();
+		void clearfile_load();
 
 	private:
 		// Initialisation
@@ -122,6 +128,11 @@ class Inkpad: public wxApp
 		// Command-line parser
 		virtual void OnInitCmdLine(wxCmdLineParser& parser);
 		virtual bool OnCmdLineParsed(wxCmdLineParser& parser);
+
+		// Active files
+		wxFileName file_save;
+		wxFileName file_load;
+
 
 		// Application flags
 		bool batch;
@@ -306,10 +317,10 @@ bool Inkpad::InitBatch()
 	try
 	{
 		// Read file
-		engineInput->read(std::string(file_load.GetFullPath().fn_str()));
+		engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
 
 		// Write file
-		engineOutput->write(std::string(file_save.GetFullPath().fn_str()));
+		engineOutput->write(std::string(getfile_save().GetFullPath().mb_str()));
 	}
 	catch (std::string error)
 	{
@@ -327,12 +338,12 @@ bool Inkpad::InitGui()
 	frame->parent = this;
 
 	// Should we load a file?
-	if (file_load.IsOk())
+	if (getfile_load().IsOk())
 	{
 		// Give the input engine the file we selected
 		try
 		{
-			engineInput->read(std::string(file_load.GetFullPath().fn_str()));
+			engineInput->read(std::string(getfile_load().GetFullPath().fn_str()));
 			hasData = true;
 		}
 		catch (std::string error)
@@ -340,9 +351,6 @@ bool Inkpad::InitGui()
 			wxString WXerror(error.c_str(), wxConvUTF8);
 			wxLogError(_T("Error while reading: ") + WXerror + _T("."));
 		}
-
-		// Change the window's title
-		frame->SetTitle(_T("Inkpad - ") + file_load.GetName());
 	}
 
 	// Add a new drawpane
@@ -360,6 +368,36 @@ bool Inkpad::InitGui()
 	return true;
 }
 
+//
+// File handling
+//
+
+void Inkpad::setfile_save(const wxFileName& inputFile)
+{
+	file_save = inputFile;
+	file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+}
+void Inkpad::setfile_load(const wxFileName& inputFile)
+{
+	file_load = inputFile;
+	file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+}
+wxFileName Inkpad::getfile_save()
+{
+	return file_save;
+}
+wxFileName Inkpad::getfile_load()
+{
+	return file_load;
+}
+void Inkpad::clearfile_save()
+{
+	file_save.Clear();
+}
+void Inkpad::clearfile_load()
+{
+	file_load.Clear();
+}
 
 //
 // Command-line parser
@@ -377,29 +415,25 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	// Get unnamed parameter (only one accepted)
 	if (parser.GetParamCount() > 0)
 	{
-		file_load = wxFileName(( parser.GetParam(0) ));
-		file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+		setfile_load( wxFileName( parser.GetParam(0) ) );
 	}
 
 	// Check if we are in batch mode
 	if (parser.Found( wxT("b")))
 	{
 		// Get input and output parameters
-		// TODO: move the normalization/title setting to the file_save/file_load call (avoid duplicate code)
 		wxString paramInput, paramOutput;
 		if (parser.Found( wxT("bi"), &paramInput))
 		{
-			file_load = wxFileName( paramInput );
-			file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+			setfile_load( wxFileName(paramInput));
 		}
 		if (parser.Found( wxT("bo"), &paramOutput))
 		{
-			file_save = wxFileName( paramOutput );
-			file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+			setfile_save( wxFileName(paramInput));
 		}
 
 		// Batch mode requirments
-		if (file_load.IsOk() && file_save.IsOk())
+		if (getfile_load().IsOk() && getfile_save().IsOk())
 		{
 			batch = true;
 		} else {
@@ -519,14 +553,10 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 			parent->hasData = true;
 
 			// Save the loaded file
-			parent->file_load = OpenDialog->GetPath();
-			parent->file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
-
-			// Change the window's title
-			SetTitle(_T("Inkpad - ") + parent->file_load.GetName());
+			parent->setfile_load(OpenDialog->GetPath());
 
 			// Clear the "save" filename
-			parent->file_save.Clear();
+			parent->clearfile_save();
 
 			// Force a redraw
 			wxClientDC dc(parent->drawPane);
@@ -546,11 +576,11 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 {
 	// Have we saved before?
-	if (parent->file_save.IsOk())
+	if (parent->getfile_save().IsOk())
 	{
 		try
 		{
-			parent->engineOutput->write(std::string(parent->file_save.GetFullPath().fn_str()));
+			parent->engineOutput->write(std::string(parent->getfile_save().GetFullPath().fn_str()));
 		}
 
 		catch (std::string error)
@@ -575,8 +605,7 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 			{
 				// Give the input engine the file we selected
 				parent->engineOutput->write(std::string(SaveDialog->GetPath().mb_str()));
-				parent->file_save = SaveDialog->GetPath();
-				parent->file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+				parent->setfile_save(SaveDialog->GetPath());
 			}
 
 			catch (std::string error)
@@ -603,8 +632,7 @@ void FrameMain::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event))
 		{
 			// Give the input engine the file we selected
 			parent->engineOutput->write(std::string(SaveDialog->GetPath().mb_str()));
-			parent->file_save = SaveDialog->GetPath();
-			parent->file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+			parent->setfile_save(SaveDialog->GetPath());
 		}
 
 		catch (std::string error)
@@ -820,6 +848,9 @@ void DrawPane::render(wxDC& dc)
 	// Only draw if we have data
 	if (parent->hasData)
 	{
+		// Set the DC's title
+		parent->frame->SetTitle(_T("Inkpad - ") + parent->getfile_load().GetName());
+
 		// Get the current image's size
 		float maxX = (float)parent->engineData->imgSizeX;
 		float maxY = (float)parent->engineData->imgSizeY;

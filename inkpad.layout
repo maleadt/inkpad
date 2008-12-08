@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Release" />
+	<ActiveTarget name="Debug" />
 	<File name="data.cpp" open="1" top="0" tabpos="7">
-		<Cursor position="8618" topLine="389" />
+		<Cursor position="9201" topLine="368" />
 	</File>
 	<File name="data.h" open="1" top="0" tabpos="6">
-		<Cursor position="2555" topLine="129" />
+		<Cursor position="1655" topLine="81" />
 	</File>
 	<File name="file.cpp" open="1" top="0" tabpos="9">
 		<Cursor position="911" topLine="9" />
@@ -20,7 +20,7 @@
 		<Cursor position="1022" topLine="37" />
 	</File>
 	<File name="main.cpp" open="1" top="1" tabpos="1">
-		<Cursor position="12237" topLine="504" />
+		<Cursor position="8348" topLine="377" />
 	</File>
 	<File name="output.cpp" open="1" top="0" tabpos="5">
 		<Cursor position="5731" topLine="188" />
