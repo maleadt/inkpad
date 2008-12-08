@@ -339,7 +339,7 @@ bool Inkpad::InitGui()
 		}
 
 		// Change the window's title
-		frame->SetTitle(_T("Inkpad - ") + file_save.GetFullPath());
+		frame->SetTitle(_T("Inkpad - ") + file_load.GetName());
 	}
 
 	// Add a new drawpane
@@ -382,7 +382,7 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	if (parser.Found( wxT("b")))
 	{
 		// Get input and output parameters
-		// TODO: move the normalization to the file_save call (avoid duplicate code)
+		// TODO: move the normalization/title setting to the file_save/file_load call (avoid duplicate code)
 		wxString paramInput, paramOutput;
 		if (parser.Found( wxT("bi"), &paramInput))
 		{
@@ -519,7 +519,10 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 			parent->file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
 
 			// Change the window's title
-			SetTitle(_T("Inkpad - ") + OpenDialog->GetFilename());
+			SetTitle(_T("Inkpad - ") + parent->file_load.GetName());
+
+			// Clear the "save" filename
+			parent->file_save.Clear();
 
 			// Force a redraw
 			wxClientDC dc(parent->drawPane);
@@ -690,12 +693,10 @@ void FrameMain::OnMenuSettings(wxCommandEvent& WXUNUSED(event))
 // Search for polylines
 void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
 {
-	// Search polylines
-	parent->engineData->search_polyline();
-
 	// Redraw
 	try
 	{
+		parent->engineData->search_polyline();
 		wxClientDC dc(parent->drawPane);
 		parent->drawPane->render(dc);
 	}

@@ -141,8 +141,11 @@ class Data
 
 		// Element input
 		void addPoint(int, int);
+		void addPoint(int, int, std::vector<Element>::iterator);
 		void addPolyline(const std::vector<double>&);
+		void addPolyline(const std::vector<double>&, std::vector<Element>::iterator);
 		void addPolybezier(const std::vector<double>&);
+		void addPolybezier(const std::vector<double>&, std::vector<Element>::iterator);
 
 		// Element conversion
 		void rotate(double angle);
@@ -168,7 +171,7 @@ class Data
 
 	private:
 		// Elements
-		void addElement(Element&);
+		void addElement(Element&, std::vector<Element>::iterator);
 		std::vector<Element> elements;
 };
 

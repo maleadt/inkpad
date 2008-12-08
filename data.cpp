@@ -67,6 +67,10 @@ void Data::clear()
 // Add a single point
 void Data::addPoint(int x1, int y1)
 {
+	addPoint(x1, y1, elements.end());
+}
+void Data::addPoint(int x1, int y1, std::vector<Element>::iterator it)
+{
 	// New element
 	Element tempElement;
 	tempElement.identifier = 1;
@@ -77,11 +81,15 @@ void Data::addPoint(int x1, int y1)
 	tempElement.parameters[1] = y1;
 
 	// Save the element
-	addElement(tempElement);
+	addElement(tempElement, elements.end());
 }
 
 // Add a new polyline
 void Data::addPolyline(const std::vector<double>& points)
+{
+	addPolyline(points, elements.end());
+}
+void Data::addPolyline(const std::vector<double>& points, std::vector<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -91,11 +99,15 @@ void Data::addPolyline(const std::vector<double>& points)
 	tempElement.parameters = points;
 
 	// Save the element
-	addElement(tempElement);
+	addElement(tempElement, it);
 }
 
 // Add a new polybezier
 void Data::addPolybezier(const std::vector<double>& points)
+{
+	addPolybezier(points, elements.end());
+}
+void Data::addPolybezier(const std::vector<double>& points, std::vector<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -105,11 +117,11 @@ void Data::addPolybezier(const std::vector<double>& points)
 	tempElement.parameters = points;
 
 	// Save the element
-	addElement(tempElement);
+	addElement(tempElement, it);
 }
 
 // Add a new element (private, applies current settings)
-void Data::addElement(Element& inputElement)
+void Data::addElement(Element& inputElement, std::vector<Element>::iterator it)
 {
 	// Save pen condition
 	inputElement.width = penWidth;
@@ -117,7 +129,7 @@ void Data::addElement(Element& inputElement)
 	inputElement.background = penBackground;
 
 	// Save the element
-	elements.push_back(inputElement);
+	elements.insert(it, inputElement);
 }
 
 
@@ -331,11 +343,11 @@ void Data::search_polyline()
 			}
 		}
 
-		// Save the polyline if we found something
+		// Replace last line with resulting polyline
 		if (oldsize != polyline.size())
 		{
-			elements.erase( elements.begin() + (i--) );
-			addPolyline(polyline);
+			elements.erase( elements.begin() + i);
+			addPolyline(polyline, elements.begin() + i);
 		}
 	}
 }
@@ -448,18 +460,17 @@ void Data::smoothn_polyline(double tension)
 					result.push_back(it->parameters[i+1]);
 				}
 
-				// Save polybezier
-				addPolybezier(result);
 
-				// Remove polyline
+				// Replace polyline with polybezier
 				elements.erase(it);
+				addPolybezier(result, it);
 				break;
 			}
 
 			default:
-				++it;
 				break;
 		}
+		++it;
 	}
 }
 
