@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
-	<ActiveTarget name="Release" />
-	<File name="data.cpp" open="1" top="1" tabpos="7">
-		<Cursor position="7614" topLine="343" />
+	<ActiveTarget name="Debug" />
+	<File name="data.cpp" open="1" top="0" tabpos="7">
+		<Cursor position="8338" topLine="398" />
 	</File>
 	<File name="data.h" open="1" top="0" tabpos="6">
-		<Cursor position="2939" topLine="142" />
+		<Cursor position="2555" topLine="129" />
 	</File>
 	<File name="file.cpp" open="1" top="0" tabpos="9">
-		<Cursor position="2049" topLine="59" />
+		<Cursor position="911" topLine="9" />
 	</File>
 	<File name="file.h" open="1" top="0" tabpos="8">
-		<Cursor position="864" topLine="23" />
+		<Cursor position="1040" topLine="18" />
 	</File>
 	<File name="input.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="1423" topLine="66" />
+		<Cursor position="3596" topLine="151" />
 	</File>
 	<File name="input.h" open="1" top="0" tabpos="2">
 		<Cursor position="1022" topLine="37" />
 	</File>
-	<File name="main.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="15940" topLine="734" />
+	<File name="main.cpp" open="1" top="1" tabpos="1">
+		<Cursor position="16024" topLine="677" />
 	</File>
 	<File name="output.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="3802" topLine="129" />
+		<Cursor position="4296" topLine="138" />
 	</File>
 	<File name="output.h" open="1" top="0" tabpos="4">
-		<Cursor position="1042" topLine="34" />
+		<Cursor position="1112" topLine="34" />
 	</File>
 </CodeBlocks_layout_file>

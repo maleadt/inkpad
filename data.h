@@ -110,6 +110,9 @@ struct Element
  * - ID 2: a (poly)line
  *   params: x start value, y start value, {x point value, y point value}(n times), x end value, y end value
  *
+ * - ID 3: a polybezier curve
+ *   params: {x start value, y start value, x control point 1, y control point 1, x control point 2, y control point 2, x end point, y end point}(n times)
+ *
  */
 
 
@@ -139,6 +142,7 @@ class Data
 		// Element input
 		void addPoint(int, int);
 		void addPolyline(const std::vector<double>&);
+		void addPolybezier(const std::vector<double>&);
 
 		// Element conversion
 		void rotate(double angle);
@@ -148,6 +152,7 @@ class Data
 		// Data omptimalisation
 		void search_polyline();
 		void simplify_polyline(double accuracy);
+		void smoothn_polyline(double tension);
 
 		// Element output
 		void getSize(int&, int&, int&, int&) const;

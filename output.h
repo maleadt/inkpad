@@ -45,6 +45,7 @@
   #include <wx/wx.h>
 #endif
 
+
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////

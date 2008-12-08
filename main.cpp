@@ -692,7 +692,6 @@ void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
 {
 	// Search polylines
 	parent->engineData->search_polyline();
-	parent->engineData->simplify_polyline(0.999);
 
 	// Redraw
 	try

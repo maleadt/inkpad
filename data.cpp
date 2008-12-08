@@ -94,6 +94,20 @@ void Data::addPolyline(const std::vector<double>& points)
 	addElement(tempElement);
 }
 
+// Add a new polybezier
+void Data::addPolybezier(const std::vector<double>& points)
+{
+	// New element
+	Element tempElement;
+	tempElement.identifier = 3;
+
+	// Save parameters
+	tempElement.parameters = points;
+
+	// Save the element
+	addElement(tempElement);
+}
+
 // Add a new element (private, applies current settings)
 void Data::addElement(Element& inputElement)
 {
@@ -132,13 +146,19 @@ void Data::rotate(double angle)
 	{
 		switch (it->identifier)
 		{
-			// Point
+				// Point
 			case 1:
 				help_rotate(it->parameters[0], it->parameters[1], angle_rad);
 				break;
 
-			// Polyline
+				// Polyline
 			case 2:
+				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+					help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+				break;
+
+				// Polybezier
+			case 3:
 				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
 					help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
 				break;
@@ -185,14 +205,23 @@ void Data::translate(int dx, int dy)
 	{
 		switch (it->identifier)
 		{
-			// Point
+				// Point
 			case 1:
 				it->parameters[0] += dx;
 				it->parameters[1] += dy;
 				break;
 
-			// Polyline
+				// Polyline
 			case 2:
+				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+				{
+					it->parameters[i] += dx;
+					it->parameters[i+1] += dy;
+				}
+				break;
+
+				// Polybezier
+			case 3:
 				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
 				{
 					it->parameters[i] += dx;
@@ -239,19 +268,19 @@ void Data::search_polyline()
 		// Add start point(s)
 		switch (elements[i].identifier)
 		{
-			// Point
+				// Point
 			case 1:
 				polyline.reserve(2);
 				polyline.push_back(elements[i].parameters[0]);
 				polyline.push_back(elements[i].parameters[1]);
 				break;
 
-			// Polyline
+				// Polyline
 			case 2:
 				polyline = elements[i].parameters;
 				break;
 
-			// Not supported form
+				// Not supported form
 			default:
 				continue;
 		}
@@ -268,13 +297,13 @@ void Data::search_polyline()
 			// Compare ending point
 			switch (elements[j].identifier)
 			{
-				// Point
+					// Point
 				case 1:
 					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
 						found = true;
 					break;
 
-				// Polyline
+					// Polyline
 				case 2:
 					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
 					{
@@ -284,7 +313,7 @@ void Data::search_polyline()
 					}
 					break;
 
-				// Not supported form
+					// Not supported form
 				default:
 					continue;
 			}
@@ -380,6 +409,60 @@ void Data::simplify_polyline(double accuracy)
 	}
 }
 
+// Smoothn polylines
+// http://www.sitepen.com/blog/2007/07/16/softening-polylines-with-dojox-graphics/
+void Data::smoothn_polyline(double tension)
+{
+	// Loop elements
+	std::vector<Element>::iterator it = elements.begin();
+	while (it != elements.end())
+	{
+		switch (it->identifier)
+		{
+			case 2:
+			{
+				// Resulting vector
+				std::vector<double> result;
+				result.push_back(it->parameters[0]);
+				result.push_back(it->parameters[1]);
+
+				// Loop polyline
+				for (unsigned int i = 2; i < it->parameters.size(); i+=2)
+				{
+					result.reserve(result.size() + 6);
+
+					// Calculate data
+					double dx = it->parameters[i] - it->parameters[i-2];
+					double add = dx / tension;
+
+					// First control point
+					result.push_back(it->parameters[i-2] + add);
+					result.push_back(it->parameters[i-1]);
+
+					// Second control point
+					result.push_back(it->parameters[i] - add);
+					result.push_back(it->parameters[i+1]);
+
+					// End point
+					result.push_back(it->parameters[i]);
+					result.push_back(it->parameters[i+1]);
+				}
+
+				// Save polybezier
+				addPolybezier(result);
+
+				// Remove polyline
+				elements.erase(it);
+				break;
+			}
+
+			default:
+				++it;
+				break;
+		}
+	}
+}
+
 
 //
 // Element output
@@ -412,14 +495,23 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 	{
 		switch (it->identifier)
 		{
-			// Point
+				// Point
 			case 1:
 				help_range(x0, x1, it->parameters[0]);
 				help_range(y0, y1, it->parameters[1]);
 				break;
 
-			// Polyline
+				// Polyline
 			case 2:
+				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+				{
+					help_range(x0, x1, it->parameters[i]);
+					help_range(y0, y1, it->parameters[i+1]);
+				}
+				break;
+
+				// Polybezier
+			case 3:
 				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
 				{
 					help_range(x0, x1, it->parameters[i]);
@@ -459,6 +551,8 @@ int Data::statParameters()
 				count += 2;
 				break;
 			case 2:
+				count += 2*it->parameters.size();
+			case 3:
 				count += 2*it->parameters.size();
 			default:
 				break;

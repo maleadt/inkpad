@@ -142,6 +142,19 @@ void Output::data_output_svg(std::ofstream& stream)
 				stream << "\" fill=\"none\" stroke=\"" << tempIterator->foreground .rgb_hex()<< "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
 				break;
 
+			// Polybezier
+			case 3:
+				stream << "<path d=\"";
+				stream << "M" << tempIterator->parameters[0] << "," << tempIterator->parameters[1];
+				for (unsigned int i = 2; i < tempIterator->parameters.size(); i += 6)
+				{
+					stream << " C" << tempIterator->parameters[i] << "," << tempIterator->parameters[i+1];
+					stream << " " << tempIterator->parameters[i+2] << "," << tempIterator->parameters[i+3];
+					stream << " " << tempIterator->parameters[i+4] << "," << tempIterator->parameters[i+5];
+				}
+				stream << "\" fill=\"none\" stroke=\"" << tempIterator->foreground .rgb_hex()<< "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
+				break;
+
 			// Unsupported type
 			default:
 				throw std::string("unsupported element during svg output");
@@ -184,6 +197,22 @@ void Output::data_output_dc(wxDC& dc)
 				for (unsigned int i = 2; i < tempIterator->parameters.size(); i+=2)
 					dc.DrawLine( tempIterator->parameters[i-2], tempIterator->parameters[i-1], tempIterator->parameters[i], tempIterator->parameters[i+1] );
 				break;
+
+			// Polybezier
+			case 3:
+			{
+				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
+				wxPoint points[tempIterator->parameters.size() / 2];
+				int count = 0;
+				for (unsigned int i = 0; i < tempIterator->parameters.size(); i+=2)
+				{
+					points[count].x = tempIterator->parameters[i];
+					points[count].y= tempIterator->parameters[i+1];
+					count++;
+				}
+				dc.DrawSpline(tempIterator->parameters.size()/2, points);
+				break;
+			}
 
 			// Unsupported type
 			default:
