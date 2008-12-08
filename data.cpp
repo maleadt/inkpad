@@ -354,7 +354,7 @@ void Data::search_polyline()
 
 // Simplify polylines
 // http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
-void Data::simplify_polyline(double accuracy)
+void Data::simplify_polyline(double radius)
 {
 	// Loop elements
 	std::vector<Element>::iterator it = elements.begin();
@@ -382,20 +382,21 @@ void Data::simplify_polyline(double accuracy)
 					double curX = it->parameters[i];
 					double curY = it->parameters[i+1];
 
-					// Derive (dx/dy)
-					double d = (curX - lastX) / (curY - lastY);
+					// Calculate primary vector coefficients
+					double lineX = curX - lastX;
+					double lineY = curY - lastY;
 
 					// Loop all points in between
 					bool falls_in_between = true;
-					for (unsigned int j = lastI; j < i; j+=2)
+					for (unsigned int j = lastI+2; j < i-2 && falls_in_between; j+=2)
 					{
-						// Calculate borders in Y direction
-						double y = curY + d*(it->parameters[j] - curX);
-						double y_min = accuracy * y;
-						double y_max = (2-accuracy) * y;
+						// Calculate distance from point to line through secondary vector coefficients (dot product)
+						double pointX = it->parameters[j] - lastX;
+						double pointY = it->parameters[j+1] - lastY;
+						double dist = abs(pointX * lineY - lineX * pointY) / sqrt(lineX * lineX + lineY * lineY);
 
-						// Check
-						if (it->parameters[j+1] < y_min || it->parameters[j+1] > y_max)
+						// Check distance
+						if (dist > radius)
 							falls_in_between = false;
 					}
 
@@ -409,6 +410,10 @@ void Data::simplify_polyline(double accuracy)
 						lastI = i;
 					}
 				}
+
+				// And add the final point
+				result.push_back(it->parameters[ it->parameters.size()-2 ]);
+				result.push_back(it->parameters[ it->parameters.size()-1 ]);
 
 				it->parameters = result;
 				break;

@@ -73,6 +73,7 @@ enum
 
 	MENU_Settings,
 	MENU_SearchPolylines,
+	MENU_SimplifyPolylines,
 
 	MENU_About,
 
@@ -184,6 +185,7 @@ class FrameMain: public wxFrame
 		// Tools menu
 		void OnMenuSettings(wxCommandEvent& event);
 		void OnMenuSearchPolylines(wxCommandEvent& event);
+		void OnMenuSimplifyPolylines(wxCommandEvent& event);
 
 		// Help menu
 		void OnMenuAbout(wxCommandEvent& event);
@@ -215,6 +217,7 @@ BEGIN_EVENT_TABLE(FrameMain, wxFrame)
 
 	EVT_MENU(MENU_Settings, FrameMain::OnMenuSettings)
 	EVT_MENU(MENU_SearchPolylines, FrameMain::OnMenuSearchPolylines)
+	EVT_MENU(MENU_SimplifyPolylines, FrameMain::OnMenuSimplifyPolylines)
 
 	EVT_MENU(MENU_About, FrameMain::OnMenuAbout)
 
@@ -452,6 +455,7 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 	menuTools->Append( MENU_Settings, _T("&Settings") );
 	menuTools->AppendSeparator();
 	menuTools->Append( MENU_SearchPolylines, _T("Search for &polylines") );
+	menuTools->Append( MENU_SimplifyPolylines, _T("Simplify &polylines") );
 
 	// Help menu
 	wxMenu *menuHelp = new wxMenu;
@@ -707,6 +711,22 @@ void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
 	}
 }
 
+// Simplify polylines
+void FrameMain::OnMenuSimplifyPolylines(wxCommandEvent& WXUNUSED(event))
+{
+	// Redraw
+	try
+	{
+		parent->engineData->simplify_polyline(1.5);
+		wxClientDC dc(parent->drawPane);
+		parent->drawPane->render(dc);
+	}
+	catch (std::string error)
+	{
+		wxString WXerror(error.c_str(), wxConvUTF8);
+		wxLogError(_T("Error while drawing: ") + WXerror + _T("."));
+	}
+}
 
 //
 // Help-menu
