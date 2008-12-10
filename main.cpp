@@ -106,7 +106,6 @@ class Inkpad: public wxApp
 		DrawPane* drawPane;
 
 		// Data
-		bool hasData;
 		Input* engineInput;
 		Output* engineOutput;
 		Data* engineData;
@@ -294,7 +293,6 @@ bool Inkpad::OnInit()
 	engineInput = new Input;
 	engineOutput = new Output;
 	engineData = new Data;
-	hasData = false;
 
 	// Link input and output engines to data engine
 	engineInput->setData(engineData);
@@ -344,7 +342,6 @@ bool Inkpad::InitGui()
 		try
 		{
 			engineInput->read(std::string(getfile_load().GetFullPath().fn_str()));
-			hasData = true;
 		}
 		catch (std::string error)
 		{
@@ -550,7 +547,6 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 			// Give the input engine the file we selected
 			parent->engineData->clear();
 			parent->engineInput->read(std::string(OpenDialog->GetPath().mb_str()));
-			parent->hasData = true;
 
 			// Save the loaded file
 			parent->setfile_load(OpenDialog->GetPath());
@@ -846,7 +842,7 @@ void DrawPane::paintEvent(wxPaintEvent& evt)
 void DrawPane::render(wxDC& dc)
 {
 	// Only draw if we have data
-	if (parent->hasData)
+	if (parent->engineData->statElements() > 0)
 	{
 		// Set the DC's title
 		parent->frame->SetTitle(_T("Inkpad - ") + parent->getfile_load().GetName());

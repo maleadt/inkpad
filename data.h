@@ -120,7 +120,6 @@ struct Element
 // CLASS DEFINITION //
 //////////////////////
 
-// TODO: move hasdata from main to here
 // TODO: cache control in getSize function
 
 class Data
