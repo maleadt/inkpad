@@ -319,9 +319,6 @@ bool Inkpad::InitBatch()
 		// Read file
 		engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
 
-		// Process file
-		engineData->search_polyline();
-
 		// Write file
 		engineOutput->write(std::string(getfile_save().GetFullPath().mb_str()));
 	}
