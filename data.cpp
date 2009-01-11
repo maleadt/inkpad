@@ -69,7 +69,7 @@ void Data::addPoint(int x1, int y1)
 {
 	addPoint(x1, y1, elements.end());
 }
-void Data::addPoint(int x1, int y1, std::vector<Element>::iterator it)
+void Data::addPoint(int x1, int y1, vector<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -85,11 +85,11 @@ void Data::addPoint(int x1, int y1, std::vector<Element>::iterator it)
 }
 
 // Add a new polyline
-void Data::addPolyline(const std::vector<double>& points)
+void Data::addPolyline(const vector<double>& points)
 {
 	addPolyline(points, elements.end());
 }
-void Data::addPolyline(const std::vector<double>& points, std::vector<Element>::iterator it)
+void Data::addPolyline(const vector<double>& points, vector<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -103,11 +103,11 @@ void Data::addPolyline(const std::vector<double>& points, std::vector<Element>::
 }
 
 // Add a new polybezier
-void Data::addPolybezier(const std::vector<double>& points)
+void Data::addPolybezier(const vector<double>& points)
 {
 	addPolybezier(points, elements.end());
 }
-void Data::addPolybezier(const std::vector<double>& points, std::vector<Element>::iterator it)
+void Data::addPolybezier(const vector<double>& points, vector<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -121,7 +121,7 @@ void Data::addPolybezier(const std::vector<double>& points, std::vector<Element>
 }
 
 // Add a new element (private, applies current settings)
-void Data::addElement(Element& inputElement, std::vector<Element>::iterator it)
+void Data::addElement(Element& inputElement, vector<Element>::iterator it)
 {
 	// Save pen condition
 	inputElement.width = penWidth;
@@ -153,7 +153,7 @@ void Data::rotate(double angle)
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
 	// Rotate all elements
-	std::vector<Element>::iterator it = elements.begin();
+	vector<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -212,7 +212,7 @@ void Data::rotate(double angle)
 void Data::translate(int dx, int dy)
 {
 	// Loop elements
-	std::vector<Element>::iterator it = elements.begin();
+	vector<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -275,7 +275,7 @@ void Data::search_polyline()
 	for (unsigned int i = 0; i < elements.size(); i++)
 	{
 		// Initialize a polyline vector
-		std::vector<double> polyline;
+		vector<double> polyline;
 
 		// Add start point(s)
 		switch (elements[i].identifier)
@@ -357,14 +357,14 @@ void Data::search_polyline()
 void Data::simplify_polyline(double radius)
 {
 	// Loop elements
-	std::vector<Element>::iterator it = elements.begin();
+	vector<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
 		{
 			case 2:
 			{
-				std::vector<double> result;
+				vector<double> result;
 
 				// Define last point
 				double lastX = it->parameters[0];
@@ -431,7 +431,7 @@ void Data::simplify_polyline(double radius)
 void Data::smoothn_polyline(double tension)
 {
 	// Loop elements
-	std::vector<Element>::iterator it = elements.begin();
+	vector<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -439,7 +439,7 @@ void Data::smoothn_polyline(double tension)
 			case 2:
 			{
 				// Resulting vector
-				std::vector<double> result;
+				vector<double> result;
 				result.push_back(it->parameters[0]);
 				result.push_back(it->parameters[1]);
 
@@ -506,7 +506,7 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 	y1 = 0;
 
 	// Loop elements
-	std::vector<Element>::const_iterator it = elements.begin();
+	vector<Element>::const_iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -558,7 +558,7 @@ int Data::statParameters()
 {
 	// Loop elements
 	int count = 0;
-	std::vector<Element>::iterator it = elements.begin();
+	vector<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)

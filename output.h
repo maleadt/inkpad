@@ -45,6 +45,9 @@
   #include <wx/wx.h>
 #endif
 
+// Containers
+using std::vector;
+
 
 //////////////////////
 // CLASS DEFINITION //

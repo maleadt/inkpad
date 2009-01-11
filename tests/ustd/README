@@ -1,0 +1,4 @@
+To speed-test the functions in the ustd, call "benchmark.pl".
+It will test the ustd containers with a various amount of
+elements, and plot the data through a GNUplot-script ("plot.gp")
+to two resulting png files.

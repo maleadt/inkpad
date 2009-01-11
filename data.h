@@ -43,6 +43,9 @@
   #include <wx/wx.h>
 #endif
 
+// Containers
+using std::vector;
+
 
 //
 // Constants
@@ -95,7 +98,7 @@ struct Element
 {
 	// Data
 	int identifier;
-	std::vector<double> parameters;
+	vector<double> parameters;
 	Colour foreground;
 	Colour background;
 	int width;
@@ -140,11 +143,11 @@ class Data
 
 		// Element input
 		void addPoint(int, int);
-		void addPoint(int, int, std::vector<Element>::iterator);
-		void addPolyline(const std::vector<double>&);
-		void addPolyline(const std::vector<double>&, std::vector<Element>::iterator);
-		void addPolybezier(const std::vector<double>&);
-		void addPolybezier(const std::vector<double>&, std::vector<Element>::iterator);
+		void addPoint(int, int, vector<Element>::iterator);
+		void addPolyline(const vector<double>&);
+		void addPolyline(const vector<double>&, vector<Element>::iterator);
+		void addPolybezier(const vector<double>&);
+		void addPolybezier(const vector<double>&, vector<Element>::iterator);
 
 		// Element conversion
 		void rotate(double angle);
@@ -164,14 +167,14 @@ class Data
 		int statParameters();
 
 		// Iterators
-		typedef std::vector<Element>::const_iterator const_iterator;
+		typedef vector<Element>::const_iterator const_iterator;
 		const_iterator begin() const { return elements.begin(); }
 		const_iterator end() const { return elements.end(); }
 
 	private:
 		// Elements
-		void addElement(Element&, std::vector<Element>::iterator);
-		std::vector<Element> elements;
+		void addElement(Element&, vector<Element>::iterator);
+		vector<Element> elements;
 };
 
 

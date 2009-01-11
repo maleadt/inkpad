@@ -168,7 +168,7 @@ void Input::data_input_top(std::ifstream& stream)
 		// Create a new line (if we haven't started a new stroke
 		if (!end_of_stroke)
 		{
-			std::vector<double> points;
+			vector<double> points;
 			points.resize(4);
 			points[0] = x1;
 			points[1] = y1;

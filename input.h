@@ -39,6 +39,10 @@
 #include <string.h>
 #include "data.h"
 #include "file.h"
+#include <vector>
+
+// Containers
+using std::vector;
 
 //////////////////////
 // CLASS DEFINITION //
