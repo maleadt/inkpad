@@ -1,0 +1,10 @@
+To compile the inkpad application, you need CMake. Once installed, do as following to compile the application:
+	1) Make a build directory (can be a subdirectory of the svn trunk)
+	   mkdir build
+	2) Instruct CMake to generate a Code::Blocks set of makefiles (if the "project" folder is a
+	     subdirectory of the checkout, you can just enter "../")
+	   cmake "/usr/src/inkpad/trunk"
+	3) Build the project
+	   make
+	4) Run the project
+	   ./src/inkpad

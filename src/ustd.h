@@ -3,8 +3,8 @@
 /////////////
 
 // Include guard
-#ifndef __ARRAY
-#define __ARRAY
+#ifndef __USTD
+#define __USTD
 
 // Headers
 #include <iostream>

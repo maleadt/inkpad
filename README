@@ -1,0 +1,9 @@
+If you want to add some code and set up a development environment, you can use CMake too.
+This is how you'd set up CodeBlocks:
+	1) Make a project directory (can be a subdirectory of the svn trunk)
+	   mkdir project
+	2) Instruct CMake to generate a Code::Blocks set of makefiles (if the "project" folder is a
+	     subdirectory of the checkout, you can just enter "../")
+	   cmake "/usr/src/inkpad/trunk" -G "CodeBlocks - Unix Makefiles"
+	3) Fire up Code::Blocks
+	   codeblocks Inkpad.cpb
