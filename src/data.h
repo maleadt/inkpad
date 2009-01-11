@@ -2,7 +2,7 @@
  * data.h
  * Inkpad data handling.
  *
- * Copyright (c) 2008 Tim Besard <tim.besard@gmail.com>
+ * Copyright (c) 2009 Tim Besard <tim.besard@gmail.com>
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
