@@ -2,10 +2,10 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
 	<File name="data.cpp" open="1" top="0" tabpos="7">
-		<Cursor position="11776" topLine="526" />
+		<Cursor position="2735" topLine="98" />
 	</File>
 	<File name="data.h" open="1" top="0" tabpos="6">
-		<Cursor position="961" topLine="13" />
+		<Cursor position="2782" topLine="140" />
 	</File>
 	<File name="file.cpp" open="1" top="0" tabpos="9">
 		<Cursor position="911" topLine="0" />
@@ -14,7 +14,7 @@
 		<Cursor position="1040" topLine="15" />
 	</File>
 	<File name="input.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="2928" topLine="136" />
+		<Cursor position="3871" topLine="175" />
 	</File>
 	<File name="input.h" open="1" top="0" tabpos="2">
 		<Cursor position="1040" topLine="15" />
@@ -29,6 +29,6 @@
 		<Cursor position="1006" topLine="21" />
 	</File>
 	<File name="ustd.h" open="1" top="1" tabpos="10">
-		<Cursor position="123" topLine="0" />
+		<Cursor position="6544" topLine="0" />
 	</File>
 </CodeBlocks_layout_file>

@@ -299,6 +299,7 @@ namespace ustd
 			// Element input
 			void push_front(T data);
 			void push_back(T data);
+			void insert(T data, int index);
 
 			// Element output
 			T front() const;
@@ -307,6 +308,7 @@ namespace ustd
 			// Element removal
 			void pop_front();
 			void pop_back();
+			void erase(int index);
 
 			// List information
 			bool empty();
@@ -407,6 +409,19 @@ void ustd::list<T>::push_front (T data)
 	}
 }
 
+// Insert an element before a given index
+template <typename T>
+void ustd::list<T>::insert(T inputData, int inputIndex)
+{
+	// Go to the node
+	Node* tempNode = nodeFront;
+	for (int i = 0; i < inputIndex; i++)
+		tempNode = tempNode->next;
+
+	// Insert the data
+	push_before(inputData, tempNode);
+}
+
 //insert a Node before NodeB
 template <typename T>
 void ustd::list<T>::push_before(T data, Node *NodeB)
@@ -476,6 +491,19 @@ template <typename T>
 void ustd::list<T>::pop_back()
 {
 	pop_specific(nodeBack);
+}
+
+// Remove a given element
+template <typename T>
+void ustd::list<T>::erase(int inputIndex)
+{
+	// Go to the node
+	Node* tempNode = nodeFront;
+	for (int i = 0; i < inputIndex; i++)
+		tempNode = tempNode->next;
+
+	// Remove the data
+	pop_specific(tempNode);
 }
 
 //remove before a Node

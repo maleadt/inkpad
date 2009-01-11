@@ -428,7 +428,7 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 		}
 		if (parser.Found( wxT("bo"), &paramOutput))
 		{
-			setfile_save( wxFileName(paramInput));
+			setfile_save( wxFileName(paramOutput));
 		}
 
 		// Batch mode requirments
