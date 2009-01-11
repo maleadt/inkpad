@@ -44,6 +44,7 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="output.cpp" />
 		<Unit filename="output.h" />
+		<Unit filename="ustd.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
