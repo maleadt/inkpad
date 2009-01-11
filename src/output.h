@@ -61,9 +61,9 @@ class Output
 
 		// Class member routines
 		void setData(Data*);
-		void write(const std::string& inputFile, const std::string& inputType);
-		void write(const std::string& inputFile);
-		void write(wxDC& dc);
+		void write(const std::string& inputFile, const std::string& inputType) const;
+		void write(const std::string& inputFile) const;
+		void write(wxDC& dc) const;
 
 	private:
 		// Data processing

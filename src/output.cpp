@@ -59,7 +59,7 @@ void Output::setData(Data* inputDataPointer)
 }
 
 // Write the data to a given file (in a given format)
-void Output::write(const std::string& inputFile, const std::string& inputType)
+void Output::write(const std::string& inputFile, const std::string& inputType) const
 {
 	// Decapitalize given type
 	std::string typeLC;
@@ -85,7 +85,7 @@ void Output::write(const std::string& inputFile, const std::string& inputType)
 }
 
 // Write the data to a given file (but detect the format)
-void Output::write(const std::string& inputFile)
+void Output::write(const std::string& inputFile) const
 {
 	// Detect the type
 	std::string type;
@@ -100,7 +100,7 @@ void Output::write(const std::string& inputFile)
 }
 
 // Write the data to a given wxWidgets draw container
-void Output::write(wxDC& dc)
+void Output::write(wxDC& dc) const
 {
 	data_output_dc(dc);
 }
