@@ -125,7 +125,7 @@ void Output::data_output_svg(std::ofstream& stream)
 	stream << "<rect x=\"0\" y=\"0\" width=\"" << data->imgSizeX << "\" height=\"" << data->imgSizeY << "\" fill=\"" << data->imgBackground.rgb_hex() << "\" stroke=\"" << data->imgBackground.rgb_hex() << "\" stroke-width=\"1px\" />\n";
 
 	// Process all elements
-	vector<Element>::const_iterator tempIterator = data->begin();
+	list<Element>::const_iterator tempIterator = data->begin();
 	while (tempIterator != data->end())
 	{
 		switch (tempIterator->identifier)
@@ -179,7 +179,7 @@ void Output::data_output_dc(wxDC& dc)
 	dc.DrawRectangle(0, 0, data->imgSizeX, data->imgSizeY);
 
 	// Process all elements
-	vector<Element>::const_iterator tempIterator = data->begin();
+	list<Element>::const_iterator tempIterator = data->begin();
 	while (tempIterator != data->end())
 	{
 		switch (tempIterator->identifier)

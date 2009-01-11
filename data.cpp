@@ -69,7 +69,7 @@ void Data::addPoint(int x1, int y1)
 {
 	addPoint(x1, y1, elements.end());
 }
-void Data::addPoint(int x1, int y1, vector<Element>::iterator it)
+void Data::addPoint(int x1, int y1, list<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -89,7 +89,7 @@ void Data::addPolyline(const vector<double>& points)
 {
 	addPolyline(points, elements.end());
 }
-void Data::addPolyline(const vector<double>& points, vector<Element>::iterator it)
+void Data::addPolyline(const vector<double>& points, list<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -107,7 +107,7 @@ void Data::addPolybezier(const vector<double>& points)
 {
 	addPolybezier(points, elements.end());
 }
-void Data::addPolybezier(const vector<double>& points, vector<Element>::iterator it)
+void Data::addPolybezier(const vector<double>& points, list<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -121,7 +121,7 @@ void Data::addPolybezier(const vector<double>& points, vector<Element>::iterator
 }
 
 // Add a new element (private, applies current settings)
-void Data::addElement(Element& inputElement, vector<Element>::iterator it)
+void Data::addElement(Element& inputElement, list<Element>::iterator it)
 {
 	// Save pen condition
 	inputElement.width = penWidth;
@@ -153,7 +153,7 @@ void Data::rotate(double angle)
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
 	// Rotate all elements
-	vector<Element>::iterator it = elements.begin();
+	list<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -212,7 +212,7 @@ void Data::rotate(double angle)
 void Data::translate(int dx, int dy)
 {
 	// Loop elements
-	vector<Element>::iterator it = elements.begin();
+	list<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -272,24 +272,25 @@ void Data::autocrop()
 void Data::search_polyline()
 {
 	// Loop elements
-	for (unsigned int i = 0; i < elements.size(); i++)
+	list<Element>::iterator it = elements.begin();
+	while (it != elements.end())
 	{
 		// Initialize a polyline vector
 		vector<double> polyline;
 
 		// Add start point(s)
-		switch (elements[i].identifier)
+		switch (it->identifier)
 		{
 				// Point
 			case 1:
 				polyline.reserve(2);
-				polyline.push_back(elements[i].parameters[0]);
-				polyline.push_back(elements[i].parameters[1]);
+				polyline.push_back(it->parameters[0]);
+				polyline.push_back(it->parameters[1]);
 				break;
 
 				// Polyline
 			case 2:
-				polyline = elements[i].parameters;
+				polyline = it->parameters;
 				break;
 
 				// Not supported form
@@ -304,23 +305,25 @@ void Data::search_polyline()
 
 		// Scan other elements to look for a match with those end points
 		bool found = false;
-		for (unsigned int j = i+1; j < elements.size(); j++)
+		list<Element>::iterator it_a = it;
+		list<Element>::iterator it2 = ++it_a;
+		while (it2 != elements.end())
 		{
 			// Compare ending point
-			switch (elements[j].identifier)
+			switch (it2->identifier)
 			{
-					// Point
+				// Point
 				case 1:
-					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
+					if (x == it2->parameters[0] && y == it2->parameters[1])
 						found = true;
 					break;
 
-					// Polyline
+				// Polyline
 				case 2:
-					if (x == elements[j].parameters[0] && y == elements[j].parameters[1])
+					if (x == it2->parameters[0] && y == it2->parameters[1])
 					{
-						for (unsigned int i = 2; i < elements[j].parameters.size(); i++)
-							polyline.push_back(elements[j].parameters[i]);
+						for (unsigned int i = 2; i < it2->parameters.size(); i++)
+							polyline.push_back(it2->parameters[i]);
 						found = true;
 					}
 					break;
@@ -334,20 +337,26 @@ void Data::search_polyline()
 			if (found)
 			{
 				// Delete the old element
-				elements.erase( elements.begin() + (j--) );
+				it2 = elements.erase(it2);
 
 				// Alter the new comparison points
 				x = polyline[ polyline.size() - 2 ];
 				y = polyline[ polyline.size() - 1 ];
 				found = false;
+			} else {
+				// Advance!
+				++it2;
 			}
 		}
 
 		// Replace last line with resulting polyline
 		if (oldsize != polyline.size())
 		{
-			elements.erase( elements.begin() + i);
-			addPolyline(polyline, elements.begin() + i);
+			it = elements.erase(it);
+			addPolyline(polyline, it);
+		} else {
+			// Advance!
+			++it;
 		}
 	}
 }
@@ -357,7 +366,7 @@ void Data::search_polyline()
 void Data::simplify_polyline(double radius)
 {
 	// Loop elements
-	vector<Element>::iterator it = elements.begin();
+	list<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -431,7 +440,7 @@ void Data::simplify_polyline(double radius)
 void Data::smoothn_polyline(double tension)
 {
 	// Loop elements
-	vector<Element>::iterator it = elements.begin();
+	list<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -506,7 +515,7 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 	y1 = 0;
 
 	// Loop elements
-	vector<Element>::const_iterator it = elements.begin();
+	list<Element>::const_iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -558,7 +567,7 @@ int Data::statParameters()
 {
 	// Loop elements
 	int count = 0;
-	vector<Element>::iterator it = elements.begin();
+	list<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)

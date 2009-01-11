@@ -36,6 +36,7 @@
 // Headers
 #include <iostream>
 #include <vector>
+#include <list>
 #include <string.h>
 #include <cmath>
 #include <wx/wxprec.h>
@@ -45,6 +46,7 @@
 
 // Containers
 using std::vector;
+using std::list;
 
 
 //
@@ -143,11 +145,11 @@ class Data
 
 		// Element input
 		void addPoint(int, int);
-		void addPoint(int, int, vector<Element>::iterator);
+		void addPoint(int, int, list<Element>::iterator);
 		void addPolyline(const vector<double>&);
-		void addPolyline(const vector<double>&, vector<Element>::iterator);
+		void addPolyline(const vector<double>&, list<Element>::iterator);
 		void addPolybezier(const vector<double>&);
-		void addPolybezier(const vector<double>&, vector<Element>::iterator);
+		void addPolybezier(const vector<double>&, list<Element>::iterator);
 
 		// Element conversion
 		void rotate(double angle);
@@ -167,14 +169,14 @@ class Data
 		int statParameters();
 
 		// Iterators
-		typedef vector<Element>::const_iterator const_iterator;
+		typedef list<Element>::const_iterator const_iterator;
 		const_iterator begin() const { return elements.begin(); }
 		const_iterator end() const { return elements.end(); }
 
 	private:
 		// Elements
-		void addElement(Element&, vector<Element>::iterator);
-		vector<Element> elements;
+		void addElement(Element&, list<Element>::iterator);
+		list<Element> elements;
 };
 
 
