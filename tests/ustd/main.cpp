@@ -110,19 +110,19 @@ int main(int argc, char* argv[])
 
 	// Add some numbers
 	ustd::list<int> list_verify;
-	std::list<int> list_verify_correct;
+	std::list<int> list_correct;
 	srand(std::time(0));
 	for (int i = 0; i < 10; i++)
 	{
 		int number = rand()%100;
 		int number2 = rand()%100;
 		list_verify.push_back(number);
-		list_verify_correct.push_back(number);
+		list_correct.push_back(number);
 		list_verify.push_front(number2);
-		list_verify_correct.push_front(number2);
+		list_correct.push_front(number2);
 	}
 	list_verify.pop_front();
-	list_verify_correct.pop_front();
+	list_correct.pop_front();
 
 	// Print all numbers
 	std::cout << "\t- List contains:\t";
@@ -132,8 +132,8 @@ int main(int argc, char* argv[])
 		list_verify.pop_front();
 	}
 	std::cout << std::endl << "\t- List should contain:\t";
-	std::list<int>::const_iterator it = list_verify_correct.begin();
-	while (it != list_verify_correct.end())
+	std::list<int>::const_iterator it = list_correct.begin();
+	while (it != list_correct.end())
 	{
 		std::cout << *(it++) << " ";
 	}

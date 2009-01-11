@@ -507,7 +507,7 @@ inline void help_range(int& low, int& high, const int& value)
 }
 
 // Get the maximum size
-void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
+void Data::getSize(int& x0, int& y0, int &x1, int& y1)
 {
 	// Starting value
 	x0 = -1;
@@ -516,7 +516,7 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 	y1 = 0;
 
 	// Loop elements
-	list<Element>::const_iterator it = elements.begin();
+	list<Element>::iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)

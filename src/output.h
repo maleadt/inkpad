@@ -71,7 +71,7 @@ class Output
 		void data_output_dc(wxDC& dc);
 
 		// Data
-		const Data* data;
+		Data* data;
 };
 
 

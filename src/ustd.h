@@ -316,29 +316,6 @@ namespace ustd
 	template <typename T>
 	class list
 	{
-
-		public:
-			// Construction and destruction
-			list();
-			~list();
-
-			// Element input
-			void push_front(T data);
-			void push_back(T data);
-			void insert(T data, int index);
-
-			// Element output
-			T front() const;
-			T back() const;
-
-			// Element removal
-			void pop_front();
-			void pop_back();
-			void erase(int index);
-
-			// List information
-			bool empty();
-
 		private:
 			// The node structure
 			struct Node
@@ -348,6 +325,106 @@ namespace ustd
 				Node *prev;
 			};
 
+		public:
+			// Construction and destruction
+			list();
+			~list();
+
+			// Iterator
+			struct iterator
+			{
+				// Current location
+				Node* ptr;
+
+				// Constructor (based on given node)
+				iterator (Node* p = 0) : ptr(p) {}
+
+				// Assignment-operator
+				T operator= (const iterator& other)
+				{
+					ptr = other.ptr;
+				}
+
+				// Dereference-operator
+				T& operator* ()
+				{
+					return ptr->data;
+				}
+
+				// Member by pointer-operator
+				T* operator-> ()
+				{
+					return &(ptr->data);
+				}
+
+
+				// Move the iterator
+				iterator& operator++ ()
+				{
+					ptr = ptr->next;
+					return *this;
+				}
+
+				// Change value
+				iterator operator++ (int)
+				{
+					iterator tmp = *this;
+					++*this;
+					return tmp;
+				}
+
+				// Comparison
+				bool operator== (const iterator& other) const
+				{
+					return ptr == other.ptr;
+				}
+				bool operator!= (const iterator& other) const
+				{
+					return ptr != other.ptr;
+				}
+			};
+
+			// Static iterators
+			iterator begin()
+			{
+				return iterator(nodeFront);
+			}
+			iterator end()
+			{
+				return iterator(nodeBack->next);
+			}
+
+			// Element input
+			void push_front(T data);
+			void push_back(T data);
+			void insert(iterator, T data);
+
+			// Element output
+			T front() const;
+			T back() const;
+
+			// Element removal
+			void pop_front();
+			void pop_back();
+			// Erase: http://www.google.com/codesearch/p?hl=nl#721ufgYZrlQ/libg++-2.8.0/libstdc++/stl/stl_list.h&q=lang:c%2B%2B%20list%20iterator%20erase ook in header?????
+			iterator erase(iterator inputIterator)	// TODO: memory leak
+			{
+				// Iterator to next item
+				iterator outputIterator;
+				outputIterator.ptr = inputIterator.ptr->next;
+
+				// Remove the data
+				pop_specific(inputIterator.ptr);
+
+				return outputIterator;
+			}
+			void clear();	// TODO: memory leak
+
+			// List information
+			bool empty() const;
+			unsigned int size() const;
+
+		private:
 			// Front and back nodes
 			Node *nodeFront;
 			Node *nodeBack;
@@ -435,17 +512,12 @@ void ustd::list<T>::push_front (T data)
 	}
 }
 
-// Insert an element before a given index
+// Insert an element before a given iterator
 template <typename T>
-void ustd::list<T>::insert(T inputData, int inputIndex)
+void ustd::list<T>::insert(iterator inputIterator, T inputData)
 {
-	// Go to the node
-	Node* tempNode = nodeFront;
-	for (int i = 0; i < inputIndex; i++)
-		tempNode = tempNode->next;
-
 	// Insert the data
-	push_before(inputData, tempNode);
+	push_before(inputData, inputIterator.ptr);
 }
 
 //insert a Node before NodeB
@@ -519,18 +591,14 @@ void ustd::list<T>::pop_back()
 	pop_specific(nodeBack);
 }
 
-// Remove a given element
+// Clear the list
 template <typename T>
-void ustd::list<T>::erase(int inputIndex)
+void ustd::list<T>::clear()
 {
-	// Go to the node
-	Node* tempNode = nodeFront;
-	for (int i = 0; i < inputIndex; i++)
-		tempNode = tempNode->next;
-
-	// Remove the data
-	pop_specific(tempNode);
+	nodeFront = NULL;
+	nodeBack = NULL;
 }
+
 
 //remove before a Node
 template <typename T>
@@ -599,9 +667,28 @@ void ustd::list<T>::pop_specific(Node *NodeToRemove)
 
 // Check if list is empty
 template <typename T>
-bool ustd::list<T>::empty()
+bool ustd::list<T>::empty() const
 {
 	return (nodeFront == NULL);
+}
+
+// Check if list is empty
+template <typename T>
+unsigned int ustd::list<T>::size() const
+{
+	Node* tempNode = nodeFront;
+
+	if (tempNode == 0)
+		return 0;
+
+	int outputSize = 1;
+	while (tempNode->next != 0)
+	{
+		outputSize++;
+		tempNode = tempNode->next;
+	}
+
+	return outputSize;
 }
 
 #endif

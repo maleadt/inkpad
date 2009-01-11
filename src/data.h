@@ -37,6 +37,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include "ustd.h"
 #include <string.h>
 #include <cmath>
 #include <wx/wxprec.h>
@@ -162,16 +163,16 @@ class Data
 		void smoothn_polyline(double tension);
 
 		// Element output
-		void getSize(int&, int&, int&, int&) const;
+		void getSize(int&, int&, int&, int&);
 
 		// Statistics
 		int statElements();
 		int statParameters();
 
 		// Iterators
-		typedef list<Element>::const_iterator const_iterator;
-		const_iterator begin() const { return elements.begin(); }
-		const_iterator end() const { return elements.end(); }
+		typedef list<Element>::iterator iterator;
+		iterator begin() { return elements.begin(); }
+		iterator end() { return elements.end(); }
 
 	private:
 		// Elements
