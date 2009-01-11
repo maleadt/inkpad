@@ -23,7 +23,7 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="main.cpp" />
-		<Unit filename="../../ustd.h" />
+		<Unit filename="../../src/ustd.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

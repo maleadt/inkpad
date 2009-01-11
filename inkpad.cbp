@@ -35,16 +35,16 @@
 		<Linker>
 			<Add option="`wx-config --libs`" />
 		</Linker>
-		<Unit filename="data.cpp" />
-		<Unit filename="data.h" />
-		<Unit filename="file.cpp" />
-		<Unit filename="file.h" />
-		<Unit filename="input.cpp" />
-		<Unit filename="input.h" />
-		<Unit filename="main.cpp" />
-		<Unit filename="output.cpp" />
-		<Unit filename="output.h" />
-		<Unit filename="ustd.h" />
+		<Unit filename="src/data.cpp" />
+		<Unit filename="src/data.h" />
+		<Unit filename="src/file.cpp" />
+		<Unit filename="src/file.h" />
+		<Unit filename="src/input.cpp" />
+		<Unit filename="src/input.h" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/output.cpp" />
+		<Unit filename="src/output.h" />
+		<Unit filename="src/ustd.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
