@@ -312,13 +312,13 @@ void Data::search_polyline()
 			// Compare ending point
 			switch (it2->identifier)
 			{
-				// Point
+					// Point
 				case 1:
 					if (x == it2->parameters[0] && y == it2->parameters[1])
 						found = true;
 					break;
 
-				// Polyline
+					// Polyline
 				case 2:
 					if (x == it2->parameters[0] && y == it2->parameters[1])
 					{
@@ -333,7 +333,7 @@ void Data::search_polyline()
 					continue;
 			}
 
-			// If found
+			// If the line matched, remove it and push it up the temporary polyline
 			if (found)
 			{
 				// Delete the old element
@@ -343,19 +343,21 @@ void Data::search_polyline()
 				x = polyline[ polyline.size() - 2 ];
 				y = polyline[ polyline.size() - 1 ];
 				found = false;
-			} else {
-				// Advance!
+			}
+			else
+			{
 				++it2;
 			}
 		}
 
-		// Replace last line with resulting polyline
+		// If the size differs, we have removed some lines, so save the resulting polyline
 		if (oldsize != polyline.size())
 		{
 			it = elements.erase(it);
 			addPolyline(polyline, it);
-		} else {
-			// Advance!
+		}
+		else
+		{
 			++it;
 		}
 	}
@@ -476,7 +478,7 @@ void Data::smoothn_polyline(double tension)
 
 
 				// Replace polyline with polybezier
-				elements.erase(it);
+				it = elements.erase(it);
 				addPolybezier(result, it);
 				break;
 			}
@@ -484,7 +486,6 @@ void Data::smoothn_polyline(double tension)
 			default:
 				break;
 		}
-		++it;
 	}
 }
 
