@@ -111,7 +111,7 @@ void Output::write(wxDC& dc)
 //
 
 // Output data in SVG format
-void Output::data_output_svg(std::ofstream& stream)
+void Output::data_output_svg(std::ofstream& stream) const
 {
 	// Print the SVG header
 	stream	<< "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -125,7 +125,7 @@ void Output::data_output_svg(std::ofstream& stream)
 	stream << "<rect x=\"0\" y=\"0\" width=\"" << data->imgSizeX << "\" height=\"" << data->imgSizeY << "\" fill=\"" << data->imgBackground.rgb_hex() << "\" stroke=\"" << data->imgBackground.rgb_hex() << "\" stroke-width=\"1px\" />\n";
 
 	// Process all elements
-	list<Element>::iterator tempIterator = data->begin();
+	list<Element>::const_iterator tempIterator = data->begin();
 	while (tempIterator != data->end())
 	{
 		switch (tempIterator->identifier)
@@ -167,7 +167,7 @@ void Output::data_output_svg(std::ofstream& stream)
 }
 
 // Output data to wxWidgets draw container
-void Output::data_output_dc(wxDC& dc)
+void Output::data_output_dc(wxDC& dc) const
 {
 	// Clear the dc
 	wxBrush brush;
@@ -179,7 +179,7 @@ void Output::data_output_dc(wxDC& dc)
 	dc.DrawRectangle(0, 0, data->imgSizeX, data->imgSizeY);
 
 	// Process all elements
-	list<Element>::iterator tempIterator = data->begin();
+	list<Element>::const_iterator tempIterator = data->begin();
 	while (tempIterator != data->end())
 	{
 		switch (tempIterator->identifier)

@@ -383,16 +383,13 @@ namespace ustd
 					return ptr != other.ptr;
 				}
 			};
+			typedef iterator const_iterator;
 
 			// Static iterators
 			iterator begin()
-			{
-				return iterator(nodeFront);
-			}
+			{ return iterator(nodeFront); }
 			iterator end()
-			{
-				return iterator(nodeBack->next);
-			}
+			{ return iterator(nodeBack->next); }
 
 			// Element input
 			void push_front(T data);

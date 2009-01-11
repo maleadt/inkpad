@@ -163,16 +163,16 @@ class Data
 		void smoothn_polyline(double tension);
 
 		// Element output
-		void getSize(int&, int&, int&, int&);
+		void getSize(int&, int&, int&, int&) const;
 
 		// Statistics
-		int statElements();
-		int statParameters();
+		int statElements() const;
+		int statParameters() const;
 
 		// Iterators
-		typedef list<Element>::iterator iterator;
-		iterator begin() { return elements.begin(); }
-		iterator end() { return elements.end(); }
+		typedef list<Element>::const_iterator const_iterator;
+		const_iterator begin() const { return elements.begin(); }
+		const_iterator end() const { return elements.end(); }
 
 	private:
 		// Elements

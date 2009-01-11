@@ -507,7 +507,7 @@ inline void help_range(int& low, int& high, const int& value)
 }
 
 // Get the maximum size
-void Data::getSize(int& x0, int& y0, int &x1, int& y1)
+void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
 {
 	// Starting value
 	x0 = -1;
@@ -516,7 +516,7 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1)
 	y1 = 0;
 
 	// Loop elements
-	list<Element>::iterator it = elements.begin();
+	list<Element>::const_iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)
@@ -558,17 +558,17 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1)
 //
 
 // The amount of elements
-int Data::statElements()
+int Data::statElements() const
 {
 	return elements.size();
 }
 
 // The amount of parameters
-int Data::statParameters()
+int Data::statParameters() const
 {
 	// Loop elements
 	int count = 0;
-	list<Element>::iterator it = elements.begin();
+	list<Element>::const_iterator it = elements.begin();
 	while (it != elements.end())
 	{
 		switch (it->identifier)

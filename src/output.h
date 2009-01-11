@@ -67,11 +67,11 @@ class Output
 
 	private:
 		// Data processing
-		void data_output_svg(std::ofstream&);
-		void data_output_dc(wxDC& dc);
+		void data_output_svg(std::ofstream&) const;
+		void data_output_dc(wxDC& dc) const;
 
 		// Data
-		Data* data;
+		const Data* data;
 };
 
 
