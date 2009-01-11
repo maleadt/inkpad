@@ -24,6 +24,9 @@
 // CONFIGURATION //
 ///////////////////
 
+// TODO: throw custom exception, include from general.h
+// http://stackoverflow.com/questions/134569/c-exception-throwing-stdstring
+
 
 //
 // Essential stuff
@@ -263,7 +266,6 @@ class DrawPane : public wxPanel
 
 // Link events
 BEGIN_EVENT_TABLE(DrawPane, wxPanel)
-	// catch paint events
 	EVT_PAINT(DrawPane::paintEvent)
 END_EVENT_TABLE()
 
@@ -536,7 +538,7 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 {
 	wxFileDialog *OpenDialog = new wxFileDialog(
 		this, _("Open file"), wxEmptyString, wxEmptyString,
-		wxT("TOP image files (*.top)|*.[tT][oO][pP]|"),
+		wxT("TOP image files (*.top)|*.[tT][oO][pP]|DHW image files (*.top)|*.[dD][hH][wW]|"),
 		wxFD_OPEN, wxDefaultPosition);
 
 	// Creates a "open file" dialog
@@ -826,11 +828,11 @@ DrawPane::DrawPane(wxFrame* _parent) : wxPanel(_parent)
 //
 
 // Panel needs to be redrawn
-void DrawPane::paintEvent(wxPaintEvent& evt)
+void DrawPane::paintEvent(wxPaintEvent& WXUNUSED(event))
 {
 	// Force a redraw
 	wxPaintDC dc(this);
-	render(dc);
+	this->render(dc);
 }
 
 

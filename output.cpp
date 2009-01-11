@@ -176,7 +176,6 @@ void Output::data_output_dc(wxDC& dc)
 	dc.Clear();
 
 	// Draw a border
-	//dc.SetPen( wxPen( BLACK, 1 ) );
 	dc.DrawRectangle(0, 0, data->imgSizeX, data->imgSizeY);
 
 	// Process all elements

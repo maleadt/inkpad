@@ -40,13 +40,6 @@
 #include "data.h"
 #include "file.h"
 
-
-//
-// Inline functions
-//
-
-#define bitwise_tow(h,l) ((((unsigned char)h)<<8)|((unsigned char)l))
-
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
@@ -64,6 +57,7 @@ class Input
 	private:
 		// Data processing
 		void data_input_top(std::ifstream&);
+		void data_input_dhw(std::ifstream&);
 
 		// Data
 		Data* data;

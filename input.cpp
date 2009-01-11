@@ -35,6 +35,8 @@
 // Headers
 #include "input.h"
 
+#define bitwise_tow(h,l) ((((unsigned char)h)<<8)|((unsigned char)l))
+
 
 ////////////////////
 // CLASS ROUTINES //
@@ -82,6 +84,13 @@ void Input::read(const std::string &inputFile)
 		data_input_top(stream);
 		file_close(stream);
 	}
+	else if (type == "dhw")
+	{
+		std::ifstream stream;
+		file_open(stream, inputFile);
+		data_input_dhw(stream);
+		file_close(stream);
+	}
 	else
 	{
 		throw std::string("unsupported input file type");
@@ -103,7 +112,6 @@ void Input::read(const std::string &inputFile)
 // IBM Crosspad file format (.ps)
 // Anoto file format (.svg)
 // iRex iLiad file format (.irx)
-// ACECAD DigiMemo file format (.dhw) - http://www.kevlindev.com/blog/?p=58
 // Pegasus NoteTaker file format (.pnt)
 
 // Waltop file format (.top)
@@ -153,6 +161,7 @@ void Input::data_input_top(std::ifstream& stream)
 	{
 		// Initialise and read end coördinates
 		stream.read(buffer, 6);
+		buffer[6] = 0;	// Fix nullpointer at end of string
 		int x2 = bitwise_tow(buffer[4], buffer[3]);
 		int y2 = 12000 - bitwise_tow(buffer[2], buffer[1]);
 
@@ -183,4 +192,59 @@ void Input::data_input_top(std::ifstream& stream)
 
 	// Clear the buffer
 	delete[] buffer;
+}
+
+// ACECAD DigiMemo file format (.dhw)
+void Input::data_input_dhw(std::ifstream& stream)
+{
+	// General buffer variable
+	char* buffer;
+
+	// Read fileheader
+	buffer = new char [32];
+	stream.read(buffer, 32);
+	if (strncmp(buffer, "ACECAD_DIGIMEMO_HANDWRITING_____", 32) != 0)
+	{
+		throw std::string("header of dhw file seems damaged");
+		return;
+	}
+	delete[] buffer;
+
+	// Read version
+	char version = 0x01;
+	buffer = new char [1];
+	stream.read(buffer, 1);
+	if (strncmp(buffer, &version, 1) != 0)
+	{
+		throw std::string("unsupported dhw version");
+		return;
+	}
+	delete[] buffer;
+
+	// Read the image size
+	buffer = new char [1];
+	stream.read(buffer, 1);
+	std::cout << "Read value: " << buffer << std::endl;
+	/*
+	std::cout << "Int value: " << atoi(buffer) << std::endl;
+	printchar(buffer);
+	data->imgSizeX = xstrtoi(buffer);
+	buffer[1] = 0;
+	stream.read(buffer, 1);
+	printchar(buffer);
+	data->imgSizeX += 16*16*xstrtoi(buffer);
+	buffer[1] = 0;
+	stream.read(buffer, 1);
+	printchar(buffer);
+	data->imgSizeY = xstrtoi(buffer);
+	buffer[1] = 0;
+	stream.read(buffer, 1);
+	printchar(buffer);
+	data->imgSizeY += 16*16*xstrtoi(buffer);
+	delete[] buffer;
+	std::cout << "Got size: " << data->imgSizeX << " x " << data->imgSizeY << std::endl;
+	*/
+
+	// Clear the buffer
+	//delete[] buffer;
 }
