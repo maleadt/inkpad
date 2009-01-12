@@ -1,16 +1,16 @@
-// We require a sufficiently new version of CMake (for wxWidgets detection)
+# We require a sufficiently new version of CMake (for wxWidgets detection)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-// Project name
+# Project name
 PROJECT(Inkpad)
 
-// Type of build ("debug" or "release")
+# Type of build ("debug" or "release")
 set(CMAKE_BUILD_TYPE debug)
 
-// Use the experimental set of STD replacement data structures?
+# Use the experimental set of STD replacement data structures?
 set(INKPAD_USTD false)
 
-// Add individual subdirectories
+# Add individual subdirectories
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(tests)
 
