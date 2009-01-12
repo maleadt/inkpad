@@ -39,10 +39,15 @@
 #include <string.h>
 #include "data.h"
 #include "file.h"
-#include <vector>
 
 // Containers
-using std::vector;
+#ifdef USE_USTD
+ #include "ustd.h"
+ using ustd::vector;
+#else
+ #include <vector>
+ using std::vector;
+#endif
 
 //////////////////////
 // CLASS DEFINITION //

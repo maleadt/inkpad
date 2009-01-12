@@ -35,9 +35,6 @@
 
 // Headers
 #include <iostream>
-#include <vector>
-#include <list>
-#include "ustd.h"
 #include <string.h>
 #include <cmath>
 #include <wx/wxprec.h>
@@ -46,8 +43,16 @@
 #endif
 
 // Containers
-using std::vector;
-using std::list;
+#ifdef USE_USTD
+ #include "ustd.h"
+ using ustd::vector;
+ using ustd::list;
+#else
+ #include <vector>
+ #include <list>
+ using std::vector;
+ using std::list;
+#endif
 
 
 //

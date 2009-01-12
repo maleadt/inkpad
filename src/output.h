@@ -37,7 +37,6 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <vector>
 #include "data.h"
 #include "file.h"
 #include <wx/wxprec.h>
@@ -46,7 +45,13 @@
 #endif
 
 // Containers
-using std::vector;
+#ifdef USE_USTD
+ #include "ustd.h"
+ using ustd::vector;
+#else
+ #include <vector>
+ using std::vector;
+#endif
 
 
 //////////////////////
