@@ -169,7 +169,10 @@ void Output::data_output_svg(std::ofstream& stream) const
 // Output data to wxWidgets draw container
 void Output::data_output_dc(wxMemoryDC& dc) const
 {
-	// Clear the dc by drawing a rectangle with a small border
+    // Clear the DC
+    dc.Clear();
+
+	// Draw a background with border
 	wxBrush brush;
 	brush.SetColour( data->imgBackground.rgb_wxColor() );
 	dc.SetBrush(brush);

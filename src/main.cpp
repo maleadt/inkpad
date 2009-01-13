@@ -558,8 +558,7 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 			parent->clearfile_save();
 
 			// Force a redraw
-			wxClientDC dc(parent->drawPane);
-			parent->drawPane->render(dc);
+			parent->drawPane->Refresh();
 		}
 
 		catch (std::string error)
@@ -675,8 +674,7 @@ void FrameMain::OnMenuRotate(wxCommandEvent& WXUNUSED(event))
 	parent->engineData->rotate(angle);
 
 	// Redraw
-	wxClientDC dc(parent->drawPane);
-	parent->drawPane->render(dc);
+    parent->drawPane->Refresh();
 }
 
 // Automatically crop the image
@@ -686,8 +684,7 @@ void FrameMain::OnMenuAutocrop(wxCommandEvent& WXUNUSED(event))
 	parent->engineData->autocrop();
 
 	// Redraw
-	wxClientDC dc(parent->drawPane);
-	parent->drawPane->render(dc);
+    parent->drawPane->Refresh();
 }
 
 
@@ -728,8 +725,7 @@ void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
 	try
 	{
 		parent->engineData->search_polyline();
-		wxClientDC dc(parent->drawPane);
-		parent->drawPane->render(dc);
+        parent->drawPane->Refresh();
 	}
 	catch (std::string error)
 	{
@@ -745,8 +741,7 @@ void FrameMain::OnMenuSimplifyPolylines(wxCommandEvent& WXUNUSED(event))
 	try
 	{
 		parent->engineData->simplify_polyline(1.5);
-		wxClientDC dc(parent->drawPane);
-		parent->drawPane->render(dc);
+        parent->drawPane->Refresh();
 	}
 	catch (std::string error)
 	{
@@ -787,24 +782,22 @@ void FrameMain::OnToolSave(wxCommandEvent& event)
 
 void FrameMain::OnToolLeft(wxCommandEvent& WXUNUSED(event))
 {
-		// Rotate
+    // Rotate
 	parent->engineData->rotate(-90);
 
 	// Redraw
-	wxClientDC dc(parent->drawPane);
-	parent->drawPane->render(dc);
+    parent->drawPane->Refresh();
 }
 
 // Rotate right
 
 void FrameMain::OnToolRight(wxCommandEvent& WXUNUSED(event))
 {
-		// Rotate
+    // Rotate
 	parent->engineData->rotate(90);
 
 	// Redraw
-	wxClientDC dc(parent->drawPane);
-	parent->drawPane->render(dc);
+    parent->drawPane->Refresh();
 }
 
 
