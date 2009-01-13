@@ -147,7 +147,7 @@ void Input::data_input_top(std::ifstream& stream)
 	// Configure image defaults
 	data->imgSizeX = 8800;
 	data->imgSizeY = 12000;
-	data->imgBackground = GREEN;
+	data->imgBackground = WHITE;
 
 	// Initialise and read start coördinates
 	buffer = new char [6];

@@ -892,6 +892,9 @@ void DrawPane::render(wxDC& dc)
 		// Copy the temporary DC's content to the actual DC
 		dc.Blit(wxPoint(0, 0), wxSize(maxX, maxY), &dc_mem, wxPoint(0, 0), wxCOPY);
 
+		// Destruct the memory DC
+		dc_mem.SelectObject(wxNullBitmap);
+
 		// Adjust status bar
 		wxString statusbar;
 		statusbar << parent->engineData->imgSizeX << _T(" x ") << parent->engineData->imgSizeY << _T(" pixels")

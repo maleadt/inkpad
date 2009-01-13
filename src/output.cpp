@@ -172,7 +172,7 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 	// Clear the dc by drawing a rectangle with a small border
 	wxBrush brush;
 	brush.SetColour( data->imgBackground.rgb_wxColor() );
-	dc.SetBackground(brush);
+	dc.SetBrush(brush);
 	dc.DrawRectangle(0, 0, data->imgSizeX, data->imgSizeY);
 
 	// Process all elements
