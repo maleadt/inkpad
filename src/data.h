@@ -196,6 +196,9 @@ class Data
 
 static Colour BLACK(0, 0, 0);
 static Colour WHITE(255, 255, 255);
+static Colour RED(255, 0, 0);
+static Colour GREEN(0, 255, 0);
+static Colour BLUE(0, 0, 255);
 
 
 

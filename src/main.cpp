@@ -256,7 +256,7 @@ class DrawPane : public wxPanel
 		Inkpad* parent;
 
 		void paintEvent(wxPaintEvent& evt);
-		void paintNow();
+		void OnEraseBackground(wxEraseEvent& event);
 
 		void render(wxDC& dc);
 
@@ -267,6 +267,7 @@ class DrawPane : public wxPanel
 // Link events
 BEGIN_EVENT_TABLE(DrawPane, wxPanel)
 	EVT_PAINT(DrawPane::paintEvent)
+	EVT_ERASE_BACKGROUND(DrawPane::OnEraseBackground)
 END_EVENT_TABLE()
 
 
@@ -828,12 +829,18 @@ DrawPane::DrawPane(wxFrame* _parent) : wxPanel(_parent)
 //
 
 // Panel needs to be redrawn
-void DrawPane::paintEvent(wxPaintEvent& WXUNUSED(event))
+void DrawPane::paintEvent(wxPaintEvent& event)
 {
 	// Force a redraw
 	wxPaintDC dc(this);
-	this->render(dc);
+	render(dc);
 }
+
+// Empty implementation, to prevent flicker
+void DrawPane::OnEraseBackground(wxEraseEvent& event)
+{
+}
+
 
 
 //
@@ -868,12 +875,22 @@ void DrawPane::render(wxDC& dc)
 		float posX = (float)((w - (maxX*actualScale))/2.0);
 		float posY = (float)((h - (maxY*actualScale))/2.0);
 
+		// Create a temporary DC to draw on
+		wxMemoryDC dc_mem;
+
 		// Set the scale and origin
-		dc.SetUserScale(actualScale, actualScale);
+		dc_mem.SetUserScale(actualScale, actualScale);
 		dc.SetDeviceOrigin( (long)posX, (long)posY );
 
-		// Output elements
-		parent->engineOutput->write(dc);
+		// Attach a bitmap to that DC
+		wxBitmap dc_bitmap(maxX*actualScale, maxY*actualScale);
+		dc_mem.SelectObject(dc_bitmap);
+
+	    // Draw
+		parent->engineOutput->write(dc_mem);
+
+		// Copy the temporary DC's content to the actual DC
+		dc.Blit(wxPoint(0, 0), wxSize(maxX, maxY), &dc_mem, wxPoint(0, 0), wxCOPY);
 
 		// Adjust status bar
 		wxString statusbar;

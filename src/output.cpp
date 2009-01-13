@@ -100,7 +100,7 @@ void Output::write(const std::string& inputFile) const
 }
 
 // Write the data to a given wxWidgets draw container
-void Output::write(wxDC& dc) const
+void Output::write(wxMemoryDC& dc) const
 {
 	data_output_dc(dc);
 }
@@ -167,15 +167,12 @@ void Output::data_output_svg(std::ofstream& stream) const
 }
 
 // Output data to wxWidgets draw container
-void Output::data_output_dc(wxDC& dc) const
+void Output::data_output_dc(wxMemoryDC& dc) const
 {
-	// Clear the dc
+	// Clear the dc by drawing a rectangle with a small border
 	wxBrush brush;
 	brush.SetColour( data->imgBackground.rgb_wxColor() );
 	dc.SetBackground(brush);
-	dc.Clear();
-
-	// Draw a border
 	dc.DrawRectangle(0, 0, data->imgSizeX, data->imgSizeY);
 
 	// Process all elements

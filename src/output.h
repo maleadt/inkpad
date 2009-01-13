@@ -68,12 +68,12 @@ class Output
 		void setData(Data*);
 		void write(const std::string& inputFile, const std::string& inputType) const;
 		void write(const std::string& inputFile) const;
-		void write(wxDC& dc) const;
+		void write(wxMemoryDC& dc) const;
 
 	private:
 		// Data processing
 		void data_output_svg(std::ofstream&) const;
-		void data_output_dc(wxDC& dc) const;
+		void data_output_dc(wxMemoryDC& dc) const;
 
 		// Data
 		const Data* data;
