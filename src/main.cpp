@@ -846,7 +846,7 @@ void DrawPane::render(wxDC& dc)
 	// Only draw if we have data
 	if (parent->engineData->statElements() > 0)
 	{
-		// Set the DC's title
+		// Set the frame's title
 		parent->frame->SetTitle(_T("Inkpad - ") + parent->getfile_load().GetName());
 
 		// Get the current image's size

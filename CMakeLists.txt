@@ -8,7 +8,7 @@ PROJECT(Inkpad)
 set(CMAKE_BUILD_TYPE debug)
 
 # Use the experimental set of STD replacement data structures?
-set(INKPAD_USTD false)
+set(WITH_USTD false)
 
 # Add individual subdirectories
 ADD_SUBDIRECTORY(src)

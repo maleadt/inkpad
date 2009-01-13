@@ -45,7 +45,7 @@
 #endif
 
 // Containers
-#ifdef USE_USTD
+#ifdef WITH_USTD
  #include "ustd.h"
  using ustd::vector;
 #else
