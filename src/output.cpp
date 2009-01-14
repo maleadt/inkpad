@@ -201,15 +201,16 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 			case 3:
 			{
 				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
-				wxPoint points[tempIterator->parameters.size() / 2];
+				wxPoint* points = new wxPoint[tempIterator->parameters.size() / 2];
 				int count = 0;
 				for (unsigned int i = 0; i < tempIterator->parameters.size(); i+=2)
 				{
 					points[count].x = tempIterator->parameters[i];
-					points[count].y= tempIterator->parameters[i+1];
+					points[count].y = tempIterator->parameters[i+1];
 					count++;
 				}
 				dc.DrawSpline(tempIterator->parameters.size()/2, points);
+				delete[] points;
 				break;
 			}
 

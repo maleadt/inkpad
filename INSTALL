@@ -1,10 +1,50 @@
-To compile the inkpad application, you need CMake. Once installed, do as following to compile the application:
-	1) Make a build directory (can be a subdirectory of the svn trunk)
-	   mkdir build
-	2) Instruct CMake to generate a Code::Blocks set of makefiles (if the "project" folder is a
-	     subdirectory of the checkout, you can just enter "../")
-	   cmake "/usr/src/inkpad/trunk"
-	3) Build the project
-	   make
-	4) Run the project
-	   ./src/inkpad
+General
+~~~~~~~
+
+* Requirments:
+	- C++ compiler
+	- CMake >= 2.6
+	- wxWidgets >= 2.8
+	  modules: core
+
+* Compiling
+	- Make a build directory
+	- Use CMake to generate makefiles for your OS
+	- Compile those makefiles using the correct compiler
+
+
+Ubuntu
+~~~~~~
+
+* Requirments
+	- C++ compiler
+	  sudo aptitude install build-essential
+	- CMake >= 2.6
+	  sudo aptitude install cmake
+	- wxWidgets >= 2.8
+	  sudo aptitude install ...
+
+
+Windows
+~~~~~~~
+
+* Requirments:
+	- Visual C++ 2008 Express Edition (free)
+	   http://www.microsoft.com/express/vc/
+	- CMake >= 2.6
+	   http://www.cmake.org/cmake/resources/software.html
+	- wxWidgets >= 2.8
+	   http://www.wxwidgets.org/downloads/
+
+* Compiling wxWidgets
+	- Extract the archive you downloaded somewhere
+	- set WXWIN="path to your wxWidgets sources" (e.g. set WXWIN="c:\wxWidgets")
+	- cd %WXWIN%\build\msw 
+	- nmake -f makefile.vc 
+
+* Compiling
+	- Make a subdirectory "build", and enter it
+	- Use CMake to generate a set of makefiles
+	  cmake ..\ -G "Visual Studio 9 2008"
+	- Open "Inkpad.sln"
+	- Hit "Build"

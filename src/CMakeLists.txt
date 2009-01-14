@@ -5,16 +5,16 @@ ADD_LIBRARY(liboutput output.h output.cpp)
 ADD_LIBRARY(libfile file.h file.cpp)
 
 # Include wxWidgets
-SET(wxWidgets_USE_LIBS core) 
+SET(wxWidgets_USE_LIBS base core) 
 FIND_PACKAGE(wxWidgets REQUIRED) 
-INCLUDE(${wxWidgets_USE_FILE}) 
 INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
+add_definitions(${wxWidgets_DEFINITIONS})
 
 # uSTD?
 
 
 # Define the main inkpad executable, and what it should be linked too
-ADD_EXECUTABLE(inkpad main)
+ADD_EXECUTABLE(inkpad WIN32 main)
 TARGET_LINK_LIBRARIES(inkpad libdata)
 TARGET_LINK_LIBRARIES(inkpad libinput)
 TARGET_LINK_LIBRARIES(inkpad liboutput)
