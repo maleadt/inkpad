@@ -10,9 +10,6 @@ FIND_PACKAGE(wxWidgets REQUIRED)
 INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
 add_definitions(${wxWidgets_DEFINITIONS})
 
-# uSTD?
-
-
 # Define the main inkpad executable, and what it should be linked too
 ADD_EXECUTABLE(inkpad WIN32 main)
 TARGET_LINK_LIBRARIES(inkpad libdata)
