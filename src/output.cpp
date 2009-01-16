@@ -172,11 +172,11 @@ void Output::data_output_dc(wxMemoryDC& dc) const
     // Clear the DC
     dc.Clear();
 
-	// Draw a background with border
+	// Draw the background
 	wxBrush brush;
 	brush.SetColour( data->imgBackground.rgb_wxColor() );
 	dc.SetBrush(brush);
-	dc.DrawRectangle(0, 0, data->imgSizeX, data->imgSizeY);
+	dc.DrawRectangle(0, 0, data->imgSizeX-1, data->imgSizeY-1);
 
 	// Process all elements
 	list<Element>::const_iterator tempIterator = data->begin();

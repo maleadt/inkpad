@@ -160,7 +160,7 @@ void Input::data_input_top(std::ifstream& stream)
 	while (!stream.eof())
 	{
 		// Initialise and read end coördinates
-		stream.read(buffer, 6);
+		stream.read(buffer, 6); //TODO fails at end of file, might need to read first bits to indicate if EOF? Check file!
 		buffer[6] = 0;	// Fix nullpointer at end of string
 		int x2 = bitwise_tow(buffer[4], buffer[3]);
 		int y2 = 12000 - bitwise_tow(buffer[2], buffer[1]);
