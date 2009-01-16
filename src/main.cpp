@@ -255,8 +255,9 @@ class DrawPane : public wxPanel
 		DrawPane(wxFrame* _parent);
 		Inkpad* parent;
 
-		void paintEvent(wxPaintEvent& evt);
-		void OnEraseBackground(wxEraseEvent& event);
+		void eventPaint(wxPaintEvent&);
+		void eventEraseBackground(wxEraseEvent&);
+		void eventSize(wxSizeEvent&);
 
 		void render(wxDC& dc);
 
@@ -266,8 +267,9 @@ class DrawPane : public wxPanel
 
 // Link events
 BEGIN_EVENT_TABLE(DrawPane, wxPanel)
-	EVT_PAINT(DrawPane::paintEvent)
-	EVT_ERASE_BACKGROUND(DrawPane::OnEraseBackground)
+	EVT_PAINT(DrawPane::eventPaint)
+	EVT_ERASE_BACKGROUND(DrawPane::eventEraseBackground)
+	EVT_SIZE(DrawPane::eventSize)
 END_EVENT_TABLE()
 
 
@@ -822,7 +824,7 @@ DrawPane::DrawPane(wxFrame* _parent) : wxPanel(_parent)
 //
 
 // Panel needs to be redrawn
-void DrawPane::paintEvent(wxPaintEvent& event)
+void DrawPane::eventPaint(wxPaintEvent& event)
 {
 	// Force a redraw
 	wxPaintDC dc(this);
@@ -830,8 +832,15 @@ void DrawPane::paintEvent(wxPaintEvent& event)
 }
 
 // Empty implementation, to prevent flicker
-void DrawPane::OnEraseBackground(wxEraseEvent& event)
+void DrawPane::eventEraseBackground(wxEraseEvent& event)
 {
+}
+
+// Working around a current wxWidgets bug
+void DrawPane::eventSize(wxSizeEvent& event)
+{
+    this->OnSize(event);
+    this->Refresh();
 }
 
 
@@ -887,6 +896,13 @@ void DrawPane::render(wxDC& dc)
 
 		// Destruct the memory DC
 		dc_mem.SelectObject(wxNullBitmap);
+
+		// DEBUG
+		Colour temp = RED;
+		rand();
+		if (rand()%100 < 50)
+            temp = BLUE;
+        dc.FloodFill(wxPoint(0, 0), temp.rgb_wxColor(), 1);
 
 		// Adjust status bar
 		wxString statusbar;
