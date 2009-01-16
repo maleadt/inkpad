@@ -35,7 +35,8 @@
 // Headers
 #include "input.h"
 
-#define bitwise_tow(h,l) ((((unsigned char)h)<<8)|((unsigned char)l))
+#define dbytes_to_value(h,l) ((((unsigned char)h)<<8)|((unsigned char)l))
+#define byte_to_value(h) (((unsigned char)h)<<0)
 
 
 ////////////////////
@@ -152,8 +153,8 @@ void Input::data_input_top(std::ifstream& stream)
 	// Initialise and read start coördinates
 	buffer = new char [6];
 	stream.read(buffer, 6);
-	int x1 = bitwise_tow(buffer[4], buffer[3]);
-	int y1 = 12000 - bitwise_tow(buffer[2], buffer[1]);
+	int x1 = dbytes_to_value(buffer[4], buffer[3]);
+	int y1 = 12000 - dbytes_to_value(buffer[2], buffer[1]);
 
 	// Read untill at end of file
 	bool end_of_stroke = false;
@@ -162,8 +163,8 @@ void Input::data_input_top(std::ifstream& stream)
 		// Initialise and read end coördinates
 		stream.read(buffer, 6); //TODO fails at end of file, might need to read first bits to indicate if EOF? Check file!
 		buffer[6] = 0;	// Fix nullpointer at end of string
-		int x2 = bitwise_tow(buffer[4], buffer[3]);
-		int y2 = 12000 - bitwise_tow(buffer[2], buffer[1]);
+		int x2 = dbytes_to_value(buffer[4], buffer[3]);
+		int y2 = 12000 - dbytes_to_value(buffer[2], buffer[1]);
 
 		// Create a new line (if we haven't started a new stroke
 		if (!end_of_stroke)
@@ -200,7 +201,7 @@ void Input::data_input_dhw(std::ifstream& stream)
 	// General buffer variable
 	char* buffer;
 
-	// Read fileheader
+	// Fileheader
 	buffer = new char [32];
 	stream.read(buffer, 32);
 	if (strncmp(buffer, "ACECAD_DIGIMEMO_HANDWRITING_____", 32) != 0)
@@ -210,7 +211,7 @@ void Input::data_input_dhw(std::ifstream& stream)
 	}
 	delete[] buffer;
 
-	// Read version
+	// Version
 	char version = 0x01;
 	buffer = new char [1];
 	stream.read(buffer, 1);
@@ -221,30 +222,64 @@ void Input::data_input_dhw(std::ifstream& stream)
 	}
 	delete[] buffer;
 
-	// Read the image size
+	// Image size
+	buffer = new char [2];
+	stream.read(buffer, 4);
+	data->imgSizeX = dbytes_to_value(buffer[1], buffer[0]);
+	data->imgSizeY = dbytes_to_value(buffer[3], buffer[2]);
+	delete[] buffer;
+
+	// Page type
+	// TODO: preserve field in data structure
 	buffer = new char [1];
 	stream.read(buffer, 1);
-	std::cout << "Read value: " << buffer << std::endl;
-	/*
-	std::cout << "Int value: " << atoi(buffer) << std::endl;
-	printchar(buffer);
-	data->imgSizeX = xstrtoi(buffer);
-	buffer[1] = 0;
-	stream.read(buffer, 1);
-	printchar(buffer);
-	data->imgSizeX += 16*16*xstrtoi(buffer);
-	buffer[1] = 0;
-	stream.read(buffer, 1);
-	printchar(buffer);
-	data->imgSizeY = xstrtoi(buffer);
-	buffer[1] = 0;
-	stream.read(buffer, 1);
-	printchar(buffer);
-	data->imgSizeY += 16*16*xstrtoi(buffer);
+	std::string type;
+	switch (byte_to_value(buffer[0]))
+	{
+	    case 0:
+            type = "A5";
+            break;
+        case 1:
+            type = "A4";
+            break;
+        case 2:
+            type = "A3";
+            break;
+        case 3:
+            type = "A2";
+            break;
+        case 4:
+            type = "A1";
+            break;
+        case 5:
+            type = "A0";
+            break;
+        case 6:
+            type = "B7";
+            break;
+        case 7:
+            type = "B6";
+            break;
+        case 8:
+            type = "B5";
+            break;
+        case 9:
+            type = "B4";
+            break;
+        default:
+            std::cout << "WARNING: DHW file page type is unknown (" << byte_to_value(buffer[0]) << ")" << std::endl;
+            type = "unknown";
+            break;
+	}
 	delete[] buffer;
-	std::cout << "Got size: " << data->imgSizeX << " x " << data->imgSizeY << std::endl;
-	*/
 
-	// Clear the buffer
-	//delete[] buffer;
+	// Padding bytes
+	buffer = new char[2];
+	stream.read(buffer, 2);
+	if (dbytes_to_value(buffer[1], buffer[0]) != 0)
+	{
+	    throw std::string("dhw padding bytes invalid");
+	    return;
+	}
+	delete[] buffer;
 }
