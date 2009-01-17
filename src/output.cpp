@@ -84,7 +84,7 @@ void Output::write(const std::string& inputFile, const std::string& inputType) c
 	}
 }
 
-// Write the data to a given file (but detect the format)
+// Write the data to a file (but detect the format)
 void Output::write(const std::string& inputFile) const
 {
 	// Detect the type
@@ -99,7 +99,7 @@ void Output::write(const std::string& inputFile) const
 	write(inputFile, type);
 }
 
-// Write the data to a given wxWidgets draw container
+// Write the data to a wxWidgets draw container
 void Output::write(wxMemoryDC& dc) const
 {
 	data_output_dc(dc);
@@ -115,11 +115,11 @@ void Output::data_output_svg(std::ofstream& stream) const
 {
 	// Print the SVG header
 	stream	<< "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-			<< "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
-			<< "	xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
-			<< "	xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
-			<< "	version=\"1.1\" baseProfile=\"full\"\n"
-			<< "	width=\"" << data->imgSizeX << "\" height=\"" << data->imgSizeY << "\" viewBox=\"0 0 " << data->imgSizeX << " " << data->imgSizeY << "\">\n";
+	<< "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
+	<< "	xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
+	<< "	xmlns:ev=\"http://www.w3.org/2001/xml-events\"\n"
+	<< "	version=\"1.1\" baseProfile=\"full\"\n"
+	<< "	width=\"" << data->imgSizeX << "\" height=\"" << data->imgSizeY << "\" viewBox=\"0 0 " << data->imgSizeX << " " << data->imgSizeY << "\">\n";
 
 	// Add a background rectangle
 	stream << "<rect x=\"0\" y=\"0\" width=\"" << data->imgSizeX << "\" height=\"" << data->imgSizeY << "\" fill=\"" << data->imgBackground.rgb_hex() << "\" stroke=\"" << data->imgBackground.rgb_hex() << "\" stroke-width=\"1px\" />\n";
@@ -130,11 +130,11 @@ void Output::data_output_svg(std::ofstream& stream) const
 	{
 		switch (tempIterator->identifier)
 		{
-			// Point
+				// Point
 			case 1:
 				break;
 
-			// Polyline
+				// Polyline
 			case 2:
 				stream << "<polyline points=\"";
 				for (unsigned int i = 0; i < tempIterator->parameters.size(); i += 2)
@@ -142,7 +142,7 @@ void Output::data_output_svg(std::ofstream& stream) const
 				stream << "\" fill=\"none\" stroke=\"" << tempIterator->foreground .rgb_hex()<< "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
 				break;
 
-			// Polybezier
+				// Polybezier
 			case 3:
 				stream << "<path d=\"";
 				stream << "M" << tempIterator->parameters[0] << "," << tempIterator->parameters[1];
@@ -155,7 +155,7 @@ void Output::data_output_svg(std::ofstream& stream) const
 				stream << "\" fill=\"none\" stroke=\"" << tempIterator->foreground .rgb_hex()<< "\" stroke-width=\"" << tempIterator->width << "px\"/>\n";
 				break;
 
-			// Unsupported type
+				// Unsupported type
 			default:
 				throw std::string("unsupported element during svg output");
 		}
@@ -169,12 +169,12 @@ void Output::data_output_svg(std::ofstream& stream) const
 // Output data to wxWidgets draw container
 void Output::data_output_dc(wxMemoryDC& dc) const
 {
-    // Clear the DC
-    dc.Clear();
+	// Clear the DC
+	dc.Clear();
 
 	// Draw the background
 	wxBrush brush;
-	brush.SetColour( data->imgBackground.rgb_wxColor() );
+	brush.SetColour(data->imgBackground.rgb_wxColor());
 	dc.SetBrush(brush);
 	dc.DrawRectangle(0, 0, data->imgSizeX-1, data->imgSizeY-1);
 
@@ -184,37 +184,37 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 	{
 		switch (tempIterator->identifier)
 		{
-			// Point
+				// Point
 			case 1:
-				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
-				dc.DrawPoint( tempIterator->parameters[0], tempIterator->parameters[1] );
+				dc.SetPen(wxPen(tempIterator->foreground.rgb_wxColor(), tempIterator->width));
+				dc.DrawPoint(tempIterator->parameters[0], tempIterator->parameters[1]);
 				break;
 
-			// Polyline
+				// Polyline
 			case 2:
-				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
+				dc.SetPen(wxPen(tempIterator->foreground.rgb_wxColor(), tempIterator->width));
 				for (unsigned int i = 2; i < tempIterator->parameters.size(); i+=2)
-					dc.DrawLine( tempIterator->parameters[i-2], tempIterator->parameters[i-1], tempIterator->parameters[i], tempIterator->parameters[i+1] );
+					dc.DrawLine(tempIterator->parameters[i-2], tempIterator->parameters[i-1], tempIterator->parameters[i], tempIterator->parameters[i+1]);
 				break;
 
-			// Polybezier
+				// Polybezier
 			case 3:
-			{
-				dc.SetPen( wxPen( tempIterator->foreground.rgb_wxColor(), tempIterator->width ) );
-				wxPoint* points = new wxPoint[tempIterator->parameters.size() / 2];
-				int count = 0;
-				for (unsigned int i = 0; i < tempIterator->parameters.size(); i+=2)
 				{
-					points[count].x = tempIterator->parameters[i];
-					points[count].y = tempIterator->parameters[i+1];
-					count++;
+					dc.SetPen(wxPen(tempIterator->foreground.rgb_wxColor(), tempIterator->width));
+					wxPoint* points = new wxPoint[tempIterator->parameters.size() / 2];
+					int count = 0;
+					for (unsigned int i = 0; i < tempIterator->parameters.size(); i+=2)
+					{
+						points[count].x = tempIterator->parameters[i];
+						points[count].y = tempIterator->parameters[i+1];
+						count++;
+					}
+					dc.DrawSpline(tempIterator->parameters.size()/2, points);
+					delete[] points;
+					break;
 				}
-				dc.DrawSpline(tempIterator->parameters.size()/2, points);
-				delete[] points;
-				break;
-			}
 
-			// Unsupported type
+				// Unsupported type
 			default:
 				throw std::string("unsupported element during dc output");
 		}

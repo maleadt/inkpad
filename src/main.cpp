@@ -44,7 +44,7 @@
 #include <wx/cmdline.h>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
-  #include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 #include <wx/sizer.h>
 
@@ -144,22 +144,22 @@ class Inkpad: public wxApp
 static const wxCmdLineEntryDesc g_cmdLineDesc [] =
 {
 	// Switches
-	 { wxCMD_LINE_SWITCH, wxT("h"), wxT("help"), wxT("displays help on the command line parameters"),
-		  wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
-	 { wxCMD_LINE_SWITCH, wxT("b"), wxT("batch"), wxT("work in batch modus (no gui)"),
-		  wxCMD_LINE_VAL_NONE},
+	{ wxCMD_LINE_SWITCH, wxT("h"), wxT("help"), wxT("displays help on the command line parameters"),
+		wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+	{ wxCMD_LINE_SWITCH, wxT("b"), wxT("batch"), wxT("work in batch modus (no gui)"),
+	  wxCMD_LINE_VAL_NONE},
 
 	// Options
-	 { wxCMD_LINE_OPTION, wxT("bi"), wxT("batch-input"), wxT("read from specific file"),
-		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
-	 { wxCMD_LINE_OPTION, wxT("bo"), wxT("batch-output"), wxT("write to specific file"),
-		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
+	{ wxCMD_LINE_OPTION, wxT("bi"), wxT("batch-input"), wxT("read from specific file"),
+	  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
+	{ wxCMD_LINE_OPTION, wxT("bo"), wxT("batch-output"), wxT("write to specific file"),
+	  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL | wxCMD_LINE_NEEDS_SEPARATOR },
 
 	// Standard unnamed parameter
-	 { wxCMD_LINE_PARAM, 0, 0, wxT("FILE"),
-		  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
+	{ wxCMD_LINE_PARAM, 0, 0, wxT("FILE"),
+	  wxCMD_LINE_VAL_STRING, wxCMD_LINE_PARAM_OPTIONAL },
 
-	 { wxCMD_LINE_NONE }
+	{ wxCMD_LINE_NONE }
 };
 
 
@@ -290,9 +290,9 @@ END_EVENT_TABLE()
 // General initialisation
 bool Inkpad::OnInit()
 {
-    // Call default behaviour (mandatory, it calls the command-line parser)
-    if (!wxApp::OnInit())
-        return false;
+	// Call default behaviour (mandatory, it calls the command-line parser)
+	if (!wxApp::OnInit())
+		return false;
 
 	// Spawn all engines
 	engineInput = new Input;
@@ -337,7 +337,7 @@ bool Inkpad::InitBatch()
 bool Inkpad::InitGui()
 {
 	// Set title and size
-	frame = new FrameMain( _T("Inkpad"), wxPoint(50,50), wxSize(440,600));
+	frame = new FrameMain(_T("Inkpad"), wxPoint(50,50), wxSize(440,600));
 	frame->parent = this;
 
 	// Should we load a file?
@@ -356,7 +356,7 @@ bool Inkpad::InitGui()
 	}
 
 	// Add a new drawpane
-	drawPane = new DrawPane( (wxFrame*) frame );
+	drawPane = new DrawPane((wxFrame*) frame);
 	drawPane->parent = this;
 	wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 	sizer->Add(drawPane, 1, wxEXPAND);
@@ -377,12 +377,12 @@ bool Inkpad::InitGui()
 void Inkpad::setfile_save(const wxFileName& inputFile)
 {
 	file_save = inputFile;
-	file_save.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+	file_save.Normalize(wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE);
 }
 void Inkpad::setfile_load(const wxFileName& inputFile)
 {
 	file_load = inputFile;
-	file_load.Normalize( wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE );
+	file_load.Normalize(wxPATH_NORM_LONG | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE | wxPATH_NORM_ABSOLUTE);
 }
 wxFileName Inkpad::getfile_save()
 {
@@ -407,9 +407,9 @@ void Inkpad::clearfile_load()
 
 void Inkpad::OnInitCmdLine(wxCmdLineParser& parser)
 {
-	parser.SetDesc (g_cmdLineDesc);
+	parser.SetDesc(g_cmdLineDesc);
 	// must refuse '/' as parameter starter or cannot use "/path" style paths
-	parser.SetSwitchChars (wxT("-"));
+	parser.SetSwitchChars(wxT("-"));
 }
 
 bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
@@ -417,33 +417,37 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	// Get unnamed parameter (only one accepted)
 	if (parser.GetParamCount() > 0)
 	{
-		setfile_load( wxFileName( parser.GetParam(0) ) );
+		setfile_load(wxFileName(parser.GetParam(0)));
 	}
 
 	// Check if we are in batch mode
-	if (parser.Found( wxT("b")))
+	if (parser.Found(wxT("b")))
 	{
 		// Get input and output parameters
 		wxString paramInput, paramOutput;
-		if (parser.Found( wxT("bi"), &paramInput))
+		if (parser.Found(wxT("bi"), &paramInput))
 		{
-			setfile_load( wxFileName(paramInput));
+			setfile_load(wxFileName(paramInput));
 		}
-		if (parser.Found( wxT("bo"), &paramOutput))
+		if (parser.Found(wxT("bo"), &paramOutput))
 		{
-			setfile_save( wxFileName(paramOutput));
+			setfile_save(wxFileName(paramOutput));
 		}
 
 		// Batch mode requirments
 		if (getfile_load().IsOk() && getfile_save().IsOk())
 		{
 			batch = true;
-		} else {
+		}
+		else
+		{
 			std::cout << "Batch mode requires given input and output parameters" << std::endl;
 			parser.Usage();
 			return false;
 		}
-	} else {
+	}
+	else
+	{
 		batch = false;
 	}
 
@@ -461,60 +465,60 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 //
 
 FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& size)
-: wxFrame((wxFrame *)NULL, -1, title, pos, size, wxDEFAULT_FRAME_STYLE | wxFULL_REPAINT_ON_RESIZE)
+		: wxFrame((wxFrame *)NULL, -1, title, pos, size, wxDEFAULT_FRAME_STYLE | wxFULL_REPAINT_ON_RESIZE)
 {
 	// File menu
 	wxMenu *menuFile = new wxMenu;
-	menuFile->Append( MENU_Open, _T("&Open") );
-	menuFile->Append( MENU_Save, _T("&Save") );
-	menuFile->Append( MENU_SaveAs, _T("Save &as") );
+	menuFile->Append(MENU_Open, _T("&Open"));
+	menuFile->Append(MENU_Save, _T("&Save"));
+	menuFile->Append(MENU_SaveAs, _T("Save &as"));
 	menuFile->AppendSeparator();
-	menuFile->Append( MENU_Quit, _T("&Quit") );
+	menuFile->Append(MENU_Quit, _T("&Quit"));
 
 	// Edit menu
 	wxMenu *menuEdit = new wxMenu;
-	menuEdit->Append( MENU_Undo, _T("&Undo") );
-	menuEdit->Append( MENU_Redo, _T("&Redo") );
+	menuEdit->Append(MENU_Undo, _T("&Undo"));
+	menuEdit->Append(MENU_Redo, _T("&Redo"));
 	menuEdit->AppendSeparator();
-	menuEdit->Append( MENU_Rotate, _T("&Rotate") );
-	menuEdit->Append( MENU_Autocrop, _T("&Autocrop") );
+	menuEdit->Append(MENU_Rotate, _T("&Rotate"));
+	menuEdit->Append(MENU_Autocrop, _T("&Autocrop"));
 
 	// View menu
 	wxMenu *menuView = new wxMenu;
-	menuView->Append( MENU_ZoomIn, _T("Zoom &in") );
-	menuView->Append( MENU_ZoomOut, _T("Zoom &out") );
+	menuView->Append(MENU_ZoomIn, _T("Zoom &in"));
+	menuView->Append(MENU_ZoomOut, _T("Zoom &out"));
 	menuView->AppendSeparator();
-	menuView->Append( MENU_Fullscreen, _T("&Fullscreen") );
+	menuView->Append(MENU_Fullscreen, _T("&Fullscreen"));
 
 	// Tools menu
 	wxMenu *menuTools = new wxMenu;
-	menuTools->Append( MENU_Settings, _T("&Settings") );
+	menuTools->Append(MENU_Settings, _T("&Settings"));
 	menuTools->AppendSeparator();
-	menuTools->Append( MENU_SearchPolylines, _T("Search for &polylines") );
-	menuTools->Append( MENU_SimplifyPolylines, _T("Simplify &polylines") );
+	menuTools->Append(MENU_SearchPolylines, _T("Search for &polylines"));
+	menuTools->Append(MENU_SimplifyPolylines, _T("Simplify &polylines"));
 
 	// Help menu
 	wxMenu *menuHelp = new wxMenu;
-	menuHelp->Append( MENU_About, _T("&About...") );
+	menuHelp->Append(MENU_About, _T("&About..."));
 
 	// Construct menu
 	wxMenuBar *menuBar = new wxMenuBar;
-	menuBar->Append( menuFile, _T("&File") );
-	menuBar->Append( menuEdit, _T("&Edit") );
-	menuBar->Append( menuView, _T("&View") );
-	menuBar->Append( menuTools, _T("&Tools") );
-	menuBar->Append( menuHelp, _T("&Help") );
-	SetMenuBar( menuBar );
+	menuBar->Append(menuFile, _T("&File"));
+	menuBar->Append(menuEdit, _T("&Edit"));
+	menuBar->Append(menuView, _T("&View"));
+	menuBar->Append(menuTools, _T("&Tools"));
+	menuBar->Append(menuHelp, _T("&Help"));
+	SetMenuBar(menuBar);
 
 
 
 	// Load images
 	wxToolBar *toolbar = this->CreateToolBar();
-	wxImage::AddHandler( new wxPNGHandler );
-	wxBitmap open(wxT("/usr/share/icons/gnome/24x24/actions/gtk-open.png") );
-	wxBitmap save(wxT("/usr/share/icons/gnome/24x24/actions/gtk-save.png") );
-	wxBitmap left(wxT("/usr/share/icons/gnome/24x24/actions/object-rotate-left.png") );
-	wxBitmap right(wxT("/usr/share/icons/gnome/24x24/actions/object-rotate-right.png") );
+	wxImage::AddHandler(new wxPNGHandler);
+	wxBitmap open(wxT("/usr/share/icons/gnome/24x24/actions/gtk-open.png"));
+	wxBitmap save(wxT("/usr/share/icons/gnome/24x24/actions/gtk-save.png"));
+	wxBitmap left(wxT("/usr/share/icons/gnome/24x24/actions/object-rotate-left.png"));
+	wxBitmap right(wxT("/usr/share/icons/gnome/24x24/actions/object-rotate-right.png"));
 
 	// Construct the toolbar
 	toolbar->AddTool(TOOL_Open, wxT("Open"), open, wxT("Open a new image"), wxITEM_NORMAL);
@@ -529,7 +533,7 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 
 	// Statusbar
 	CreateStatusBar();
-	SetStatusText( _T("Inkpad initialised") );
+	SetStatusText(_T("Inkpad initialised"));
 }
 
 //
@@ -676,7 +680,7 @@ void FrameMain::OnMenuRotate(wxCommandEvent& WXUNUSED(event))
 	parent->engineData->rotate(angle);
 
 	// Redraw
-    parent->drawPane->Refresh();
+	parent->drawPane->Refresh();
 }
 
 // Automatically crop the image
@@ -686,7 +690,7 @@ void FrameMain::OnMenuAutocrop(wxCommandEvent& WXUNUSED(event))
 	parent->engineData->autocrop();
 
 	// Redraw
-    parent->drawPane->Refresh();
+	parent->drawPane->Refresh();
 }
 
 
@@ -727,7 +731,7 @@ void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
 	try
 	{
 		parent->engineData->search_polyline();
-        parent->drawPane->Refresh();
+		parent->drawPane->Refresh();
 	}
 	catch (std::string error)
 	{
@@ -743,7 +747,7 @@ void FrameMain::OnMenuSimplifyPolylines(wxCommandEvent& WXUNUSED(event))
 	try
 	{
 		parent->engineData->simplify_polyline(1.5);
-        parent->drawPane->Refresh();
+		parent->drawPane->Refresh();
 	}
 	catch (std::string error)
 	{
@@ -760,7 +764,7 @@ void FrameMain::OnMenuSimplifyPolylines(wxCommandEvent& WXUNUSED(event))
 void FrameMain::OnMenuAbout(wxCommandEvent& WXUNUSED(event))
 {
 	wxMessageBox(_T("Inkpad is a piece of software capable of converting proprietary TOP files from the MEDION MD85276 Digital Notepad to some other formats.\n\nCurrent code by Tim Besard (tim.besard@gmail.com)."),
-		_T("About inkpad"), wxOK | wxICON_INFORMATION, this);
+				 _T("About inkpad"), wxOK | wxICON_INFORMATION, this);
 }
 
 
@@ -784,22 +788,22 @@ void FrameMain::OnToolSave(wxCommandEvent& event)
 
 void FrameMain::OnToolLeft(wxCommandEvent& WXUNUSED(event))
 {
-    // Rotate
+	// Rotate
 	parent->engineData->rotate(-90);
 
 	// Redraw
-    parent->drawPane->Refresh();
+	parent->drawPane->Refresh();
 }
 
 // Rotate right
 
 void FrameMain::OnToolRight(wxCommandEvent& WXUNUSED(event))
 {
-    // Rotate
+	// Rotate
 	parent->engineData->rotate(90);
 
 	// Redraw
-    parent->drawPane->Refresh();
+	parent->drawPane->Refresh();
 }
 
 
@@ -839,8 +843,8 @@ void DrawPane::eventEraseBackground(wxEraseEvent& event)
 // Working around a current wxWidgets bug
 void DrawPane::eventSize(wxSizeEvent& event)
 {
-    this->OnSize(event);
-    this->Refresh();
+	this->OnSize(event);
+	this->Refresh();
 }
 
 
@@ -873,22 +877,26 @@ void DrawPane::render(wxDC& dc)
 		// Use x or y scaling factor, whichever fits on the DC (but beware of 10% margin)
 		float actualScale = wxMin(scaleX,scaleY)*0.95;
 
-		// Calculate the position on the DC for centring the graphic
+		// Calculate the new dimensins
+		int width = maxX * actualScale + 0.5;
+		int height = maxY * actualScale + 0.5;
+
+		// Center the image
 		float posX = (float)((w - (maxX*actualScale))/2.0);
 		float posY = (float)((h - (maxY*actualScale))/2.0);
+		dc.SetDeviceOrigin((long)posX, (long)posY);
 
 		// Create a temporary DC to draw on
 		wxMemoryDC dc_mem;
 
 		// Set the scale and origin
 		dc_mem.SetUserScale(actualScale, actualScale);
-		dc.SetDeviceOrigin( (long)posX, (long)posY );
 
 		// Attach a bitmap to that DC
 		wxBitmap dc_bitmap(maxX*actualScale, maxY*actualScale);
 		dc_mem.SelectObject(dc_bitmap);
 
-	    // Draw
+		// Draw
 		parent->engineOutput->write(dc_mem);
 
 		// Copy the temporary DC's content to the actual DC
@@ -897,18 +905,11 @@ void DrawPane::render(wxDC& dc)
 		// Destruct the memory DC
 		dc_mem.SelectObject(wxNullBitmap);
 
-		// DEBUG
-		Colour temp = RED;
-		rand();
-		if (rand()%100 < 50)
-            temp = BLUE;
-        dc.FloodFill(wxPoint(0, 0), temp.rgb_wxColor(), 1);
-
 		// Adjust status bar
 		wxString statusbar;
 		statusbar << parent->engineData->imgSizeX << _T(" x ") << parent->engineData->imgSizeY << _T(" pixels")
-				  << _T(" (") << parent->engineData->statElements() << _T(" elements with ") << parent->engineData->statParameters() << _T(" parameters)");
-		parent->frame->SetStatusText(  statusbar );
+		<< _T(" (") << parent->engineData->statElements() << _T(" elements with ") << parent->engineData->statParameters() << _T(" parameters)");
+		parent->frame->SetStatusText(statusbar);
 	}
 }
 

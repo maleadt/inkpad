@@ -39,19 +39,19 @@
 #include <cmath>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
-  #include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 // Containers
 #ifdef WITH_USTD
- #include "ustd.h"
- using ustd::vector;
- using ustd::list;
+#include "ustd.h"
+using ustd::vector;
+using ustd::list;
 #else
- #include <vector>
- #include <list>
- using std::vector;
- using std::list;
+#include <vector>
+#include <list>
+using std::vector;
+using std::list;
 #endif
 
 
@@ -176,8 +176,14 @@ class Data
 
 		// Iterators
 		typedef list<Element>::const_iterator const_iterator;
-		const_iterator begin() const { return elements.begin(); }
-		const_iterator end() const { return elements.end(); }
+		const_iterator begin() const
+		{
+			return elements.begin();
+		}
+		const_iterator end() const
+		{
+			return elements.end();
+		}
 
 	private:
 		// Elements

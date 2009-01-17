@@ -42,11 +42,11 @@
 
 // Containers
 #ifdef WITH_USTD
- #include "ustd.h"
- using ustd::vector;
+#include "ustd.h"
+using ustd::vector;
 #else
- #include <vector>
- using std::vector;
+#include <vector>
+using std::vector;
 #endif
 
 //////////////////////

@@ -176,7 +176,9 @@ void Input::data_input_top(std::ifstream& stream)
 			points[2] = x2;
 			points[3] = y2;
 			data->addPolyline(points);
-		} else {
+		}
+		else
+		{
 			end_of_stroke = false;
 		}
 
@@ -236,40 +238,40 @@ void Input::data_input_dhw(std::ifstream& stream)
 	std::string type;
 	switch (byte_to_value(buffer[0]))
 	{
-	    case 0:
-            type = "A5";
-            break;
-        case 1:
-            type = "A4";
-            break;
-        case 2:
-            type = "A3";
-            break;
-        case 3:
-            type = "A2";
-            break;
-        case 4:
-            type = "A1";
-            break;
-        case 5:
-            type = "A0";
-            break;
-        case 6:
-            type = "B7";
-            break;
-        case 7:
-            type = "B6";
-            break;
-        case 8:
-            type = "B5";
-            break;
-        case 9:
-            type = "B4";
-            break;
-        default:
-            std::cout << "WARNING: DHW file page type is unknown (" << byte_to_value(buffer[0]) << ")" << std::endl;
-            type = "unknown";
-            break;
+		case 0:
+			type = "A5";
+			break;
+		case 1:
+			type = "A4";
+			break;
+		case 2:
+			type = "A3";
+			break;
+		case 3:
+			type = "A2";
+			break;
+		case 4:
+			type = "A1";
+			break;
+		case 5:
+			type = "A0";
+			break;
+		case 6:
+			type = "B7";
+			break;
+		case 7:
+			type = "B6";
+			break;
+		case 8:
+			type = "B5";
+			break;
+		case 9:
+			type = "B4";
+			break;
+		default:
+			std::cout << "WARNING: DHW file page type is unknown (" << byte_to_value(buffer[0]) << ")" << std::endl;
+			type = "unknown";
+			break;
 	}
 	delete[] buffer;
 
@@ -278,8 +280,8 @@ void Input::data_input_dhw(std::ifstream& stream)
 	stream.read(buffer, 2);
 	if (dbytes_to_value(buffer[1], buffer[0]) != 0)
 	{
-	    throw std::string("dhw padding bytes invalid");
-	    return;
+		throw std::string("dhw padding bytes invalid");
+		return;
 	}
 	delete[] buffer;
 }

@@ -41,16 +41,16 @@
 #include "file.h"
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
-  #include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 // Containers
 #ifdef WITH_USTD
- #include "ustd.h"
- using ustd::vector;
+#include "ustd.h"
+using ustd::vector;
 #else
- #include <vector>
- using std::vector;
+#include <vector>
+using std::vector;
 #endif
 
 
@@ -68,12 +68,12 @@ class Output
 		void setData(Data*);
 		void write(const std::string& inputFile, const std::string& inputType) const;
 		void write(const std::string& inputFile) const;
-		void write(wxMemoryDC& dc) const;
+		void write(wxMemoryDC&) const;
 
 	private:
 		// Data processing
 		void data_output_svg(std::ofstream&) const;
-		void data_output_dc(wxMemoryDC& dc) const;
+		void data_output_dc(wxMemoryDC&) const;
 
 		// Data
 		const Data* data;
