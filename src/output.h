@@ -69,11 +69,13 @@ class Output
 		void write(const std::string& inputFile, const std::string& inputType) const;
 		void write(const std::string& inputFile) const;
 		void write(wxMemoryDC&) const;
+		void write(cairo_t*) const;
 
 	private:
 		// Data processing
 		void data_output_svg(std::ofstream&) const;
 		void data_output_dc(wxMemoryDC&) const;
+		void data_output_cairo(cairo_t*) const;
 
 		// Data
 		const Data* data;

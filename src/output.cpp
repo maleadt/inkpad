@@ -105,6 +105,12 @@ void Output::write(wxMemoryDC& dc) const
 	data_output_dc(dc);
 }
 
+// Write the data to a Cairo surface
+void Output::write(cairo_t* cr) const
+{
+	data_output_cairo(cr);
+}
+
 
 //
 // Data processing
@@ -164,6 +170,12 @@ void Output::data_output_svg(std::ofstream& stream) const
 
 	// Print the SVG footer
 	stream << "</svg>\n";
+}
+
+// Output data to Cairo surface
+void Output::data_output_cairo(cairo_t* cr) const
+{
+
 }
 
 // Output data to wxWidgets draw container

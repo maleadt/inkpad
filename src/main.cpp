@@ -47,6 +47,10 @@
 #include <wx/wx.h>
 #endif
 #include <wx/sizer.h>
+#include <cairo/cairo.h>
+
+// Settings
+const bool USE_CAIRO = false;
 
 
 //////////////////////
@@ -886,24 +890,70 @@ void DrawPane::render(wxDC& dc)
 		float posY = (float)((h - (maxY*actualScale))/2.0);
 		dc.SetDeviceOrigin((long)posX, (long)posY);
 
-		// Create a temporary DC to draw on
-		wxMemoryDC dc_mem;
+		// Render using Cairo
+		if (USE_CAIRO)
+		{
+			// Surface format
+			cairo_format_t format = CAIRO_FORMAT_RGB24;
 
-		// Set the scale and origin
-		dc_mem.SetUserScale(actualScale, actualScale);
+			// Create the buffers
+			unsigned char *dataCairo = new unsigned char[width*height*4];
+			unsigned char *dataWx = new unsigned char[width*height*3];
 
-		// Attach a bitmap to that DC
-		wxBitmap dc_bitmap(maxX*actualScale, maxY*actualScale);
-		dc_mem.SelectObject(dc_bitmap);
+			// Create a surface
+			cairo_surface_t* surface;
+			surface = cairo_image_surface_create_for_data(dataCairo, format, width, height, width*4);
 
-		// Draw
-		parent->engineOutput->write(dc_mem);
+			// Create cairo object
+			cairo_t* cr;
+			cr = cairo_create(surface);
 
-		// Copy the temporary DC's content to the actual DC
-		dc.Blit(wxPoint(0, 0), wxSize(maxX, maxY), &dc_mem, wxPoint(0, 0), wxCOPY);
+			// Draw
+			parent->engineOutput->write(cr);
 
-		// Destruct the memory DC
-		dc_mem.SelectObject(wxNullBitmap);
+			// Convert from Cairo RGB24 format to wxImage BGR format.
+			for (int y=0; y<height; y++)
+			{
+				for (int x=0; x<width; x++)
+				{
+					dataWx[x*3+y*width*3] = dataCairo[x*4+2+y*width*4];
+					dataWx[x*3+1+y*width*3] = dataCairo[x*4+1+y*width*4];
+					dataWx[x*3+2+y*width*3] = dataCairo[x*4+y*width*4];
+				}
+			}
+
+			// Blit final image to the screen.
+			wxBitmap m_bitmap(wxImage(width, height, dataWx, true));
+			dc.DrawBitmap(m_bitmap, 0, 0, true);
+
+			// Cleanup
+			delete dataWx, dataCairo;
+			cairo_destroy(cr);
+			cairo_surface_destroy(surface);
+		}
+
+		// Render using wxWidgets
+		else
+		{
+			// Create a temporary DC to draw on
+			wxMemoryDC dc_mem;
+
+			// Set the scale and origin
+			dc_mem.SetUserScale(actualScale, actualScale);
+
+			// Attach a bitmap to that DC
+			wxBitmap dc_bitmap(maxX*actualScale, maxY*actualScale);
+			dc_mem.SelectObject(dc_bitmap);
+
+			// Draw
+			parent->engineOutput->write(dc_mem);
+
+			// Copy the temporary DC's content to the actual DC
+			dc.Blit(wxPoint(0, 0), wxSize(maxX, maxY), &dc_mem, wxPoint(0, 0), wxCOPY);
+
+			// Destruct the memory DC
+			dc_mem.SelectObject(wxNullBitmap);
+		}
 
 		// Adjust status bar
 		wxString statusbar;
