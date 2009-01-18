@@ -158,11 +158,10 @@ void Input::data_input_top(std::ifstream& stream)
 
 	// Read untill at end of file
 	bool end_of_stroke = false;
+	stream.read(buffer, 6);
 	while (!stream.eof())
 	{
 		// Initialise and read end coördinates
-		stream.read(buffer, 6); //TODO fails at end of file, might need to read first bits to indicate if EOF? Check file!
-		buffer[6] = 0;	// Fix nullpointer at end of string
 		int x2 = dbytes_to_value(buffer[4], buffer[3]);
 		int y2 = 12000 - dbytes_to_value(buffer[2], buffer[1]);
 
@@ -191,6 +190,9 @@ void Input::data_input_top(std::ifstream& stream)
 		{
 			end_of_stroke = true;
 		}
+
+		// Read new bytes
+		stream.read(buffer, 6);
 	}
 
 	// Clear the buffer
@@ -214,7 +216,7 @@ void Input::data_input_dhw(std::ifstream& stream)
 	delete[] buffer;
 
 	// Version
-	char version = 0x01;
+	char version = 1;
 	buffer = new char [1];
 	stream.read(buffer, 1);
 	if (strncmp(buffer, &version, 1) != 0)
@@ -225,11 +227,14 @@ void Input::data_input_dhw(std::ifstream& stream)
 	delete[] buffer;
 
 	// Image size
-	buffer = new char [2];
+	buffer = new char [4];
 	stream.read(buffer, 4);
 	data->imgSizeX = dbytes_to_value(buffer[1], buffer[0]);
 	data->imgSizeY = dbytes_to_value(buffer[3], buffer[2]);
 	delete[] buffer;
+
+	// Background
+	data->imgBackground = WHITE;
 
 	// Page type
 	// TODO: preserve field in data structure
@@ -283,5 +288,100 @@ void Input::data_input_dhw(std::ifstream& stream)
 		throw std::string("dhw padding bytes invalid");
 		return;
 	}
+	delete[] buffer;
+
+	// Process the file
+	vector<double> points;
+	buffer = new char[1];
+	stream.read(buffer, 1);
+	while (!stream.eof())
+	{
+	    // Process the byte
+	    int tag = byte_to_value(buffer[0]);
+
+	    // Layer
+	    if (tag == 0x90)
+	    {
+	        stream.read(buffer, 1);
+	        int data = byte_to_value(buffer[0]);
+	        //std::cout << "Layer number: " << data << std::endl;
+	    }
+
+	    // Timestamp
+	    else if (tag == 0x88)
+	    {
+	        stream.read(buffer, 1);
+	        int data = byte_to_value(buffer[0]);
+	        //std::cout << "Timestamp: " << data << std::endl;
+	    }
+
+	    // Pen state
+	    else if (tag >= 128 && tag <= 135)    // Pattern 10000XXX
+	    {
+	        // Pen up or down?
+	        if (tag%2 == 0)
+	        {
+	            // Pen up
+	            // Cannot save right now, still 1 point to follow
+	        } else {
+	            // Pen down, save previous points
+	            if (!points.empty())
+	            {
+                    data->addPolyline(points);
+                    points.clear();
+	            }
+	        }
+
+	        // Extract colour
+	        int colour = (tag >> 1)-64;
+	        switch (colour)
+	        {
+	            case 0:
+                    data->penForeground = BLACK;
+                    break;
+                case 1:
+                    data->penForeground = RED;
+                    break;
+                case 2:
+                    data->penForeground = BLUE;
+                    break;
+                case 3:
+                    data->penForeground = GREEN;
+                    break;
+                default:
+                    throw std::string("input-dhw: unknown pen colour");
+                    break;
+	        }
+	    }
+
+	    // Point
+	    if (tag < 128)  // Pattern 0XXXXXXX
+	    {
+            // Read raw coördinates
+	        int x1 = byte_to_value(buffer[0]);
+	        stream.read(buffer, 1);
+	        int x2 = byte_to_value(buffer[0]);
+	        stream.read(buffer, 1);
+	        int y1 = byte_to_value(buffer[0]);
+	        stream.read(buffer, 1);
+	        int y2 = byte_to_value(buffer[0]);
+
+	        // Shift to actual coördinates
+	        double x = x1 | x2<<7;
+	        double y = data->imgSizeY - (y1 | y2<<7);
+
+	        // Push them up the temporary queue
+	        points.push_back(x);
+	        points.push_back(y);
+	    }
+
+	    // Read a new byte
+	    stream.read(buffer, 1);
+	}
+
+	// Push last series of points
+	data->addPolyline(points);
+
+	// Remove buffer
 	delete[] buffer;
 }

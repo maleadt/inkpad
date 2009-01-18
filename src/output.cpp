@@ -163,7 +163,7 @@ void Output::write(wxDC& dc) const
 		dc.DrawBitmap(m_bitmap, 0, 0, true);
 
 		// Cleanup
-		delete dataWx, dataCairo;
+		delete[] dataWx, dataCairo;
 		cairo_destroy(cr);
 		cairo_surface_destroy(surface);
 	}
@@ -353,7 +353,7 @@ void Output::data_output_cairo(cairo_t* cr, float scale) const
 
 				// Unsupported type
 			default:
-				throw std::string("unsupported element during dc output");
+				throw std::string("unsupported element during cairo output");
 		}
 		++tempIterator;
 	}

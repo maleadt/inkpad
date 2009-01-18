@@ -43,10 +43,14 @@
 // Containers
 #ifdef WITH_USTD
 #include "ustd.h"
+#include <queue>
 using ustd::vector;
+using std::queue;
 #else
 #include <vector>
+#include <queue>
 using std::vector;
+using std::queue;
 #endif
 
 //////////////////////
