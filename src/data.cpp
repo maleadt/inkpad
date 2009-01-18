@@ -147,7 +147,7 @@ inline void help_rotate(double& x, double& y, double angle_rad)
 void Data::rotate(double angle)
 {
 	// Convert the given angle
-	double angle_rad = angle / 180 * PI;
+	double angle_rad = angle / 180 * M_PI;
 
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));

@@ -145,7 +145,7 @@ void Output::write(wxDC& dc) const
 		cr = cairo_create(surface);
 
 		// Draw
-		data_output_cairo(cr);
+		data_output_cairo(cr, actualScale);
 
 		// Convert from Cairo RGB24 format to wxImage BGR format.
 		for (int y=0; y<height; y++)
@@ -259,12 +259,6 @@ void Output::data_output_svg(std::ofstream& stream) const
 	stream << "</svg>\n";
 }
 
-// Output data to Cairo surface
-void Output::data_output_cairo(cairo_t* cr) const
-{
-
-}
-
 // Output data to wxWidgets draw container
 void Output::data_output_dc(wxMemoryDC& dc) const
 {
@@ -275,6 +269,7 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 	wxBrush brush;
 	brush.SetColour(data->imgBackground.rgb_wxColor());
 	dc.SetBrush(brush);
+	dc.SetPen(wxPen(BLACK.rgb_wxColor(), 1));
 	dc.DrawRectangle(0, 0, data->imgSizeX-1, data->imgSizeY-1);
 
 	// Process all elements
@@ -316,6 +311,49 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 				// Unsupported type
 			default:
 				throw std::string("unsupported element during dc output");
+		}
+		++tempIterator;
+	}
+}
+
+// Output data to Cairo surface
+void Output::data_output_cairo(cairo_t* cr, float scale) const
+{
+    // Clear the surface
+
+    // Draw the background
+    cairo_set_source_rgb(cr, BLACK.r, BLACK.g, BLACK.b);
+    cairo_set_line_width(cr, 1);
+    cairo_rectangle(cr, 1, 1, scale*data->imgSizeX-2, scale*data->imgSizeY-2);
+    cairo_set_source_rgb(cr, data->imgBackground.r, data->imgBackground.b, data->imgBackground.g);
+    cairo_fill(cr);
+
+	// Process all elements
+	list<Element>::const_iterator tempIterator = data->begin();
+	while (tempIterator != data->end())
+	{
+		switch (tempIterator->identifier)
+		{
+				// Point
+			case 1:
+                cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
+                cairo_arc(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1], scale*1, 0, 2*M_PI);
+                cairo_fill(cr);
+				break;
+
+				// Polyline
+			case 2:
+                cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
+                cairo_set_line_width(cr, scale*tempIterator->width);
+                cairo_move_to(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1]);
+				for (unsigned int i = 2; i < tempIterator->parameters.size(); i+=2)
+                    cairo_line_to(cr, scale*tempIterator->parameters[i], scale*tempIterator->parameters[i+1]);
+                cairo_stroke(cr);
+				break;
+
+				// Unsupported type
+			default:
+                throw std::string("unsupported element during dc output");
 		}
 		++tempIterator;
 	}

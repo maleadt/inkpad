@@ -39,6 +39,7 @@
 #include <fstream>
 #include "data.h"
 #include "file.h"
+#include <cmath>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
@@ -60,7 +61,7 @@ using std::vector;
 //
 
 // Render
-const std::string RENDER = "wxwidgets";
+const std::string RENDER = "cairo";
 
 
 //////////////////////
@@ -83,7 +84,7 @@ class Output
 		// Data processing
 		void data_output_svg(std::ofstream&) const;
 		void data_output_dc(wxMemoryDC&) const;
-		void data_output_cairo(cairo_t*) const;
+		void data_output_cairo(cairo_t*, float scale) const;
 
 		// Data
 		const Data* data;

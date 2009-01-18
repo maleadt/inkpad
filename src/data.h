@@ -20,6 +20,8 @@
  *
  */
 
+// TODO: implement "scale" functionality which alters all data points on readout
+
 ///////////////////
 // CONFIGURATION //
 ///////////////////
@@ -53,14 +55,6 @@ using ustd::list;
 using std::vector;
 using std::list;
 #endif
-
-
-//
-// Constants
-//
-
-// Mathematical
-#define PI 3.14159265
 
 
 ////////////////
