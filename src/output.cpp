@@ -102,7 +102,7 @@ void Output::write(const std::string& inputFile) const
 // Write the data to a wxWidgets draw container
 void Output::write(wxDC& dc) const
 {
-    // Get the current image's size
+	// Get the current image's size
 	float maxX = (float)data->imgSizeX;
 	float maxY = (float)data->imgSizeY;
 
@@ -194,7 +194,7 @@ void Output::write(wxDC& dc) const
 	// Unknown render
 	else
 	{
-	    throw std::string("unknown render");
+		throw std::string("unknown render");
 	}
 }
 
@@ -293,22 +293,22 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 
 				// Polybezier
 			case 3:
+			{
+				dc.SetPen(wxPen(tempIterator->foreground.rgb_wxColor(), tempIterator->width));
+				wxPoint* points = new wxPoint[tempIterator->parameters.size() / 2];
+				int count = 0;
+				for (unsigned int i = 0; i < tempIterator->parameters.size(); i+=2)
 				{
-					dc.SetPen(wxPen(tempIterator->foreground.rgb_wxColor(), tempIterator->width));
-					wxPoint* points = new wxPoint[tempIterator->parameters.size() / 2];
-					int count = 0;
-					for (unsigned int i = 0; i < tempIterator->parameters.size(); i+=2)
-					{
-						points[count].x = tempIterator->parameters[i];
-						points[count].y = tempIterator->parameters[i+1];
-						count++;
-					}
-					dc.DrawSpline(tempIterator->parameters.size()/2, points);
-					delete[] points;
-					break;
+					points[count].x = tempIterator->parameters[i];
+					points[count].y = tempIterator->parameters[i+1];
+					count++;
 				}
+				dc.DrawSpline(tempIterator->parameters.size()/2, points);
+				delete[] points;
+				break;
+			}
 
-				// Unsupported type
+			// Unsupported type
 			default:
 				throw std::string("unsupported element during dc output");
 		}
@@ -319,14 +319,14 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 // Output data to Cairo surface
 void Output::data_output_cairo(cairo_t* cr, float scale) const
 {
-    // Clear the surface
+	// Clear the surface
 
-    // Draw the background
-    cairo_set_source_rgb(cr, BLACK.r, BLACK.g, BLACK.b);
-    cairo_set_line_width(cr, 1);
-    cairo_rectangle(cr, 1, 1, scale*data->imgSizeX-2, scale*data->imgSizeY-2);
-    cairo_set_source_rgb(cr, data->imgBackground.r, data->imgBackground.b, data->imgBackground.g);
-    cairo_fill(cr);
+	// Draw the background
+	cairo_set_source_rgb(cr, BLACK.r, BLACK.g, BLACK.b);
+	cairo_set_line_width(cr, 1);
+	cairo_rectangle(cr, 1, 1, scale*data->imgSizeX-2, scale*data->imgSizeY-2);
+	cairo_set_source_rgb(cr, data->imgBackground.r, data->imgBackground.b, data->imgBackground.g);
+	cairo_fill(cr);
 
 	// Process all elements
 	list<Element>::const_iterator tempIterator = data->begin();
@@ -336,24 +336,24 @@ void Output::data_output_cairo(cairo_t* cr, float scale) const
 		{
 				// Point
 			case 1:
-                cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
-                cairo_arc(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1], scale*1, 0, 2*M_PI);
-                cairo_fill(cr);
+				cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
+				cairo_arc(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1], scale*1, 0, 2*M_PI);
+				cairo_fill(cr);
 				break;
 
 				// Polyline
 			case 2:
-                cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
-                cairo_set_line_width(cr, scale*tempIterator->width);
-                cairo_move_to(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1]);
+				cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
+				cairo_set_line_width(cr, scale*tempIterator->width);
+				cairo_move_to(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1]);
 				for (unsigned int i = 2; i < tempIterator->parameters.size(); i+=2)
-                    cairo_line_to(cr, scale*tempIterator->parameters[i], scale*tempIterator->parameters[i+1]);
-                cairo_stroke(cr);
+					cairo_line_to(cr, scale*tempIterator->parameters[i], scale*tempIterator->parameters[i+1]);
+				cairo_stroke(cr);
 				break;
 
 				// Unsupported type
 			default:
-                throw std::string("unsupported element during dc output");
+				throw std::string("unsupported element during dc output");
 		}
 		++tempIterator;
 	}

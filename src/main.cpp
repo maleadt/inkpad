@@ -862,8 +862,8 @@ void DrawPane::render(wxDC& dc)
 		// Set the frame's title
 		parent->frame->SetTitle(_T("Inkpad - ") + parent->getfile_load().GetName());
 
-        // Render the data
-        parent->engineOutput->write(dc);
+		// Render the data
+		parent->engineOutput->write(dc);
 
 		// Adjust status bar
 		wxString statusbar;

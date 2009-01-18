@@ -448,7 +448,7 @@ void Data::smoothn_polyline(double tension)
 		switch (it->identifier)
 		{
 			case 2:
-            {
+			{
 				// Resulting vector
 				vector<double> result;
 				result.push_back(it->parameters[0]);
@@ -481,7 +481,7 @@ void Data::smoothn_polyline(double tension)
 				it = elements.erase(it);
 				addPolybezier(result, it);
 				break;
-            }
+			}
 
 			default:
 				break;
