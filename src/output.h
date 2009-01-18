@@ -43,6 +43,7 @@
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
 #endif
+#include <cairo/cairo.h>
 
 // Containers
 #ifdef WITH_USTD
@@ -52,6 +53,14 @@ using ustd::vector;
 #include <vector>
 using std::vector;
 #endif
+
+
+//
+// Constants
+//
+
+// Render
+const std::string RENDER = "wxwidgets";
 
 
 //////////////////////
@@ -68,8 +77,7 @@ class Output
 		void setData(Data*);
 		void write(const std::string& inputFile, const std::string& inputType) const;
 		void write(const std::string& inputFile) const;
-		void write(wxMemoryDC&) const;
-		void write(cairo_t*) const;
+		void write(wxDC&) const;
 
 	private:
 		// Data processing

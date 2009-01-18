@@ -47,10 +47,6 @@
 #include <wx/wx.h>
 #endif
 #include <wx/sizer.h>
-#include <cairo/cairo.h>
-
-// Settings
-const bool USE_CAIRO = false;
 
 
 //////////////////////
@@ -866,94 +862,8 @@ void DrawPane::render(wxDC& dc)
 		// Set the frame's title
 		parent->frame->SetTitle(_T("Inkpad - ") + parent->getfile_load().GetName());
 
-		// Get the current image's size
-		float maxX = (float)parent->engineData->imgSizeX;
-		float maxY = (float)parent->engineData->imgSizeY;
-
-		// Get the size of the DC in pixels
-		int w, h;
-		dc.GetSize(&w, &h);
-
-		// Calculate a suitable scaling factor
-		float scaleX=(float)(w/maxX);
-		float scaleY=(float)(h/maxY);
-
-		// Use x or y scaling factor, whichever fits on the DC (but beware of 10% margin)
-		float actualScale = wxMin(scaleX,scaleY)*0.95;
-
-		// Calculate the new dimensins
-		int width = maxX * actualScale + 0.5;
-		int height = maxY * actualScale + 0.5;
-
-		// Center the image
-		float posX = (float)((w - (maxX*actualScale))/2.0);
-		float posY = (float)((h - (maxY*actualScale))/2.0);
-		dc.SetDeviceOrigin((long)posX, (long)posY);
-
-		// Render using Cairo
-		if (USE_CAIRO)
-		{
-			// Surface format
-			cairo_format_t format = CAIRO_FORMAT_RGB24;
-
-			// Create the buffers
-			unsigned char *dataCairo = new unsigned char[width*height*4];
-			unsigned char *dataWx = new unsigned char[width*height*3];
-
-			// Create a surface
-			cairo_surface_t* surface;
-			surface = cairo_image_surface_create_for_data(dataCairo, format, width, height, width*4);
-
-			// Create cairo object
-			cairo_t* cr;
-			cr = cairo_create(surface);
-
-			// Draw
-			parent->engineOutput->write(cr);
-
-			// Convert from Cairo RGB24 format to wxImage BGR format.
-			for (int y=0; y<height; y++)
-			{
-				for (int x=0; x<width; x++)
-				{
-					dataWx[x*3+y*width*3] = dataCairo[x*4+2+y*width*4];
-					dataWx[x*3+1+y*width*3] = dataCairo[x*4+1+y*width*4];
-					dataWx[x*3+2+y*width*3] = dataCairo[x*4+y*width*4];
-				}
-			}
-
-			// Blit final image to the screen.
-			wxBitmap m_bitmap(wxImage(width, height, dataWx, true));
-			dc.DrawBitmap(m_bitmap, 0, 0, true);
-
-			// Cleanup
-			delete dataWx, dataCairo;
-			cairo_destroy(cr);
-			cairo_surface_destroy(surface);
-		}
-
-		// Render using wxWidgets
-		else
-		{
-			// Create a temporary DC to draw on
-			wxMemoryDC dc_mem;
-
-			// Set the scale and origin
-			dc_mem.SetUserScale(actualScale, actualScale);
-
-			// Attach a bitmap to that DC
-			wxBitmap dc_bitmap(maxX*actualScale, maxY*actualScale);
-			dc_mem.SelectObject(dc_bitmap);
-
-			// Draw
-			parent->engineOutput->write(dc_mem);
-
-			// Copy the temporary DC's content to the actual DC
-			dc.Blit(wxPoint(0, 0), wxSize(maxX, maxY), &dc_mem, wxPoint(0, 0), wxCOPY);
-
-			// Destruct the memory DC
-			dc_mem.SelectObject(wxNullBitmap);
-		}
+        // Render the data
+        parent->engineOutput->write(dc);
 
 		// Adjust status bar
 		wxString statusbar;
