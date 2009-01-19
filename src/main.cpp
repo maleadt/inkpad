@@ -868,7 +868,6 @@ void DrawPane::render(wxDC& dc)
 		parent->engineOutput->render_available(renders);
 
 		// Render the data using first available render
-		std::cout << "Rendering using " << renders[0] << std::endl;
 		parent->engineOutput->write(dc, renders[0]);
 
 		// Adjust status bar

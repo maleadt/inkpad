@@ -55,6 +55,9 @@ void Data::clear()
 	// Default image values
 	imgBackground = WHITE;
 
+	// Cache reset
+	cacheBoundsDirty = true;
+
 	// Delete elements
 	elements.clear();
 }
@@ -130,6 +133,9 @@ void Data::addElement(Element& inputElement, list<Element>::iterator it)
 
 	// Save the element
 	elements.insert(it, inputElement);
+
+	// Invalidate caches
+	cacheBoundsDirty = true;
 }
 
 
@@ -206,6 +212,9 @@ void Data::rotate(double angle)
 	int dy = (int)(sin(angle_rad) * (-imgSizeX/2) + cos(angle_rad) * (imgSizeY/2) - (imgSizeY/2));
 	translate(dx, dy);
 	*/
+
+	// Invalidate caches
+	cacheBoundsDirty = true;
 }
 
 // Relocate the canvas
@@ -246,6 +255,9 @@ void Data::translate(int dx, int dy)
 		}
 		++it;
 	}
+
+	// Invalidate caches
+	cacheBoundsDirty = true;
 }
 
 // Crop the image automatically
@@ -261,6 +273,9 @@ void Data::autocrop()
 	// Change the image's size
 	imgSizeX = x1 - x0;
 	imgSizeY = y1 - y0;
+
+	// Invalidate caches
+	cacheBoundsDirty = true;
 }
 
 
@@ -435,6 +450,9 @@ void Data::simplify_polyline(double radius)
 		}
 		++it;
 	}
+
+	// Invalidate caches
+	cacheBoundsDirty = true;
 }
 
 // Smoothn polylines
@@ -487,6 +505,9 @@ void Data::smoothn_polyline(double tension)
 				break;
 		}
 	}
+
+	// Invalidate caches
+	cacheBoundsDirty = true;
 }
 
 
@@ -507,49 +528,81 @@ inline void help_range(int& low, int& high, const int& value)
 }
 
 // Get the maximum size
-void Data::getSize(int& x0, int& y0, int &x1, int& y1) const
+void Data::getSize(int& x0, int& y0, int &x1, int& y1)
 {
-	// Starting value
-	x0 = -1;
-	y0 = -1;
-	x1 = 0;
-	y1 = 0;
+    // Have we got data?
+    if (elements.empty())
+    {
+        x0 = 0;
+        y0 = 0;
+        x1 = 0;
+        y1 = 0;
+    }
 
-	// Loop elements
-	list<Element>::const_iterator it = elements.begin();
-	while (it != elements.end())
-	{
-		switch (it->identifier)
-		{
-				// Point
-			case 1:
-				help_range(x0, x1, it->parameters[0]);
-				help_range(y0, y1, it->parameters[1]);
-				break;
+    // Do we really need a refresh?
+    else if (!cacheBoundsDirty)
+    {
+        x0 = cacheBoundsLowerX;
+        y0 = cacheBoundsLowerY;
+        x1 = cacheBoundsUpperX;
+        y1 = cacheBoundsUpperY;
+    }
 
-				// Polyline
-			case 2:
-				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-				{
-					help_range(x0, x1, it->parameters[i]);
-					help_range(y0, y1, it->parameters[i+1]);
-				}
-				break;
+    // Sadly, we do really need to calculate the size
+    else
+    {
+        // Starting value
+        x0 = -1;
+        y0 = -1;
+        x1 = 0;
+        y1 = 0;
 
-				// Polybezier
-			case 3:
-				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-				{
-					help_range(x0, x1, it->parameters[i]);
-					help_range(y0, y1, it->parameters[i+1]);
-				}
-				break;
+        // Loop elements
+        list<Element>::const_iterator it = elements.begin();
+        while (it != elements.end())
+        {
+            switch (it->identifier)
+            {
+                    // Point
+                case 1:
+                    help_range(x0, x1, it->parameters[0]);
+                    help_range(y0, y1, it->parameters[1]);
+                    break;
 
-			default:
-				throw std::string("unsupported element during size check");
-		}
-		++it;
-	}
+                    // Polyline
+                case 2:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                    {
+                        help_range(x0, x1, it->parameters[i]);
+                        help_range(y0, y1, it->parameters[i+1]);
+                    }
+                    break;
+
+                    // Polybezier
+                case 3:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                    {
+                        help_range(x0, x1, it->parameters[i]);
+                        help_range(y0, y1, it->parameters[i+1]);
+                    }
+                    break;
+
+                default:
+                    throw std::string("unsupported element during size check");
+            }
+            ++it;
+        }
+    }
+
+    // Save state to cache
+    if (cacheBoundsDirty)
+    {
+        cacheBoundsDirty = false;
+        cacheBoundsLowerX = x0;
+        cacheBoundsLowerY = y0;
+        cacheBoundsUpperX = x1;
+        cacheBoundsUpperY = y1;
+    }
 }
 
 

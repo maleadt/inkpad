@@ -21,6 +21,8 @@
  */
 
 // TODO: implement "scale" functionality which alters all data points on readout
+// Needs a proper way to do. [] overloading in Element is not a proper way, as it requires do
+// de-const the data object in output.h
 
 ///////////////////
 // CONFIGURATION //
@@ -162,7 +164,7 @@ class Data
 		void smoothn_polyline(double tension);
 
 		// Element output
-		void getSize(int&, int&, int&, int&) const;
+		void getSize(int&, int&, int&, int&);
 
 		// Statistics
 		int statElements() const;
@@ -183,6 +185,10 @@ class Data
 		// Elements
 		void addElement(Element&, list<Element>::iterator);
 		list<Element> elements;
+
+		// Cache control - image bounds
+		bool cacheBoundsDirty;
+		int cacheBoundsLowerX, cacheBoundsUpperX, cacheBoundsLowerY, cacheBoundsUpperY;
 };
 
 
