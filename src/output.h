@@ -44,7 +44,7 @@
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
 #endif
-#include <cairo/cairo.h>
+
 
 // Containers
 #ifdef WITH_USTD
@@ -57,11 +57,18 @@ using std::vector;
 
 
 //
-// Constants
+// Render engines
 //
 
-// Render
-const std::string RENDER = "cairo";
+// Cairo
+#ifdef RENDER_CAIRO
+#include <cairo/cairo.h>
+#endif
+
+// wxWidgets
+#ifdef RENDER_WXWIDGETS
+#include <cairo/cairo.h>
+#endif
 
 
 //////////////////////
@@ -78,13 +85,20 @@ class Output
 		void setData(Data*);
 		void write(const std::string& inputFile, const std::string& inputType) const;
 		void write(const std::string& inputFile) const;
-		void write(wxDC&) const;
+		void write(wxDC&, const std::string) const;
+
+		// Informational routines
+		void render_available(vector<std::string>&) const;
 
 	private:
 		// Data processing
 		void data_output_svg(std::ofstream&) const;
-		void data_output_dc(wxMemoryDC&) const;
+        #ifdef RENDER_CAIRO
 		void data_output_cairo(cairo_t*, float scale) const;
+		#endif
+		#ifdef RENDER_WXWIDGETS
+		void data_output_dc(wxMemoryDC&) const;
+		#endif
 
 		// Data
 		const Data* data;

@@ -100,7 +100,7 @@ void Output::write(const std::string& inputFile) const
 }
 
 // Write the data to a wxWidgets draw container
-void Output::write(wxDC& dc) const
+void Output::write(wxDC& dc, const std::string render) const
 {
 	// Get the current image's size
 	float maxX = (float)data->imgSizeX;
@@ -126,8 +126,14 @@ void Output::write(wxDC& dc) const
 	float posY = (float)((h - (maxY*actualScale))/2.0);
 	dc.SetDeviceOrigin((long)posX, (long)posY);
 
+	// Bogus if
+	if (false)
+	{
+	}
+
 	// Render using Cairo
-	if (RENDER == "cairo")
+	#ifdef RENDER_CAIRO
+	else if (render == "cairo")
 	{
 		// Surface format
 		cairo_format_t format = CAIRO_FORMAT_RGB24;
@@ -167,9 +173,11 @@ void Output::write(wxDC& dc) const
 		cairo_destroy(cr);
 		cairo_surface_destroy(surface);
 	}
+	#endif
 
 	// Render using wxWidgets
-	else if (RENDER == "wxwidgets")
+	#ifdef RENDER_WXWIDGETS
+	else if (render == "wxwidgets")
 	{
 		// Create a temporary DC to draw on
 		wxMemoryDC dc_mem;
@@ -190,12 +198,33 @@ void Output::write(wxDC& dc) const
 		// Destruct the memory DC
 		dc_mem.SelectObject(wxNullBitmap);
 	}
+	#endif
 
 	// Unknown render
+	// TODO: this throw is not catched
 	else
 	{
-		throw std::string("unknown render");
+		throw std::string("invalid render specified");
 	}
+}
+
+
+//
+// Informational routines
+//
+
+// List the available renders
+void Output::render_available(vector<std::string>& data) const
+{
+    // Cairo render
+    #ifdef RENDER_CAIRO
+    data.push_back("cairo");
+    #endif
+
+    // wxWidgets render
+    #ifdef RENDER_WXWIDGETS
+    data.push_back("wxwidgets");
+    #endif
 }
 
 
@@ -259,7 +288,53 @@ void Output::data_output_svg(std::ofstream& stream) const
 	stream << "</svg>\n";
 }
 
+// Output data to Cairo surface
+#ifdef RENDER_CAIRO
+void Output::data_output_cairo(cairo_t* cr, float scale) const
+{
+	// Clear the surface
+
+	// Draw the background
+	cairo_set_source_rgb(cr, BLACK.r, BLACK.g, BLACK.b);
+	cairo_set_line_width(cr, 1);
+	cairo_rectangle(cr, 1, 1, scale*data->imgSizeX-2, scale*data->imgSizeY-2);
+	cairo_set_source_rgb(cr, data->imgBackground.r, data->imgBackground.b, data->imgBackground.g);
+	cairo_fill(cr);
+
+	// Process all elements
+	list<Element>::const_iterator tempIterator = data->begin();
+	while (tempIterator != data->end())
+	{
+		switch (tempIterator->identifier)
+		{
+				// Point
+			case 1:
+				cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
+				cairo_arc(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1], scale*1, 0, 2*M_PI);
+				cairo_fill(cr);
+				break;
+
+				// Polyline
+			case 2:
+				cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
+				cairo_set_line_width(cr, scale*tempIterator->width);
+				cairo_move_to(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1]);
+				for (unsigned int i = 2; i < tempIterator->parameters.size(); i+=2)
+					cairo_line_to(cr, scale*tempIterator->parameters[i], scale*tempIterator->parameters[i+1]);
+				cairo_stroke(cr);
+				break;
+
+				// Unsupported type
+			default:
+				throw std::string("unsupported element during cairo output");
+		}
+		++tempIterator;
+	}
+}
+#endif
+
 // Output data to wxWidgets draw container
+#ifdef RENDER_WXWIDGETS
 void Output::data_output_dc(wxMemoryDC& dc) const
 {
 	// Clear the DC
@@ -315,46 +390,4 @@ void Output::data_output_dc(wxMemoryDC& dc) const
 		++tempIterator;
 	}
 }
-
-// Output data to Cairo surface
-void Output::data_output_cairo(cairo_t* cr, float scale) const
-{
-	// Clear the surface
-
-	// Draw the background
-	cairo_set_source_rgb(cr, BLACK.r, BLACK.g, BLACK.b);
-	cairo_set_line_width(cr, 1);
-	cairo_rectangle(cr, 1, 1, scale*data->imgSizeX-2, scale*data->imgSizeY-2);
-	cairo_set_source_rgb(cr, data->imgBackground.r, data->imgBackground.b, data->imgBackground.g);
-	cairo_fill(cr);
-
-	// Process all elements
-	list<Element>::const_iterator tempIterator = data->begin();
-	while (tempIterator != data->end())
-	{
-		switch (tempIterator->identifier)
-		{
-				// Point
-			case 1:
-				cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
-				cairo_arc(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1], scale*1, 0, 2*M_PI);
-				cairo_fill(cr);
-				break;
-
-				// Polyline
-			case 2:
-				cairo_set_source_rgb(cr, tempIterator->foreground.r, tempIterator->foreground.g, tempIterator->foreground.b);
-				cairo_set_line_width(cr, scale*tempIterator->width);
-				cairo_move_to(cr, scale*tempIterator->parameters[0], scale*tempIterator->parameters[1]);
-				for (unsigned int i = 2; i < tempIterator->parameters.size(); i+=2)
-					cairo_line_to(cr, scale*tempIterator->parameters[i], scale*tempIterator->parameters[i+1]);
-				cairo_stroke(cr);
-				break;
-
-				// Unsupported type
-			default:
-				throw std::string("unsupported element during cairo output");
-		}
-		++tempIterator;
-	}
-}
+#endif

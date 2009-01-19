@@ -10,6 +10,10 @@ set(CMAKE_BUILD_TYPE debug)
 # Use the experimental set of STD replacement data structures?
 set(WITH_USTD false)
 
+# Which render engines to use
+set (RENDER_CAIRO true)
+set (RENDER_WXWIDGETS true)
+
 # Add individual subdirectories
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(tests)

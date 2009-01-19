@@ -26,6 +26,7 @@
 
 // TODO: throw custom exception, include from general.h
 // http://stackoverflow.com/questions/134569/c-exception-throwing-stdstring
+// Use: can specify level of severity. Maybe able to resume application after throw?
 
 
 //
@@ -862,8 +863,13 @@ void DrawPane::render(wxDC& dc)
 		// Set the frame's title
 		parent->frame->SetTitle(_T("Inkpad - ") + parent->getfile_load().GetName());
 
-		// Render the data
-		parent->engineOutput->write(dc);
+		// Get available renders
+		vector<std::string> renders;
+		parent->engineOutput->render_available(renders);
+
+		// Render the data using first available render
+		std::cout << "Rendering using " << renders[0] << std::endl;
+		parent->engineOutput->write(dc, renders[0]);
 
 		// Adjust status bar
 		wxString statusbar;
