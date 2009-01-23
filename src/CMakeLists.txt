@@ -3,6 +3,7 @@ ADD_LIBRARY(libdata data.h data.cpp)
 ADD_LIBRARY(libinput input.h input.cpp)
 ADD_LIBRARY(liboutput output.h output.cpp)
 ADD_LIBRARY(libfile file.h file.cpp)
+ADD_LIBRARY(librender render.h render.cpp)
 
 # Include wxWidgets
 SET(wxWidgets_USE_LIBS base core) 
@@ -16,6 +17,7 @@ TARGET_LINK_LIBRARIES(inkpad libdata)
 TARGET_LINK_LIBRARIES(inkpad libinput)
 TARGET_LINK_LIBRARIES(inkpad liboutput)
 TARGET_LINK_LIBRARIES(inkpad libfile)
+TARGET_LINK_LIBRARIES(inkpad librender)
 TARGET_LINK_LIBRARIES(inkpad ${wxWidgets_LIBRARIES})
 
 # Use uSTD?

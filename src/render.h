@@ -1,6 +1,6 @@
 /*
- * output.h
- * Inkpad output handling.
+ * render.h
+ * Inkpad render engines.
  *
  * Copyright (c) 2009 Tim Besard <tim.besard@gmail.com>
  * All rights reserved.
@@ -29,8 +29,8 @@
 //
 
 // Include guard
-#ifndef __OUTPUT
-#define __OUTPUT
+#ifndef __RENDER
+#define __RENDER
 
 
 // Headers
@@ -38,8 +38,11 @@
 #include <string>
 #include <fstream>
 #include "data.h"
-#include "file.h"
 #include <cmath>
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+#include <wx/wx.h>
+#endif
 
 
 // Containers
@@ -49,6 +52,21 @@ using ustd::vector;
 #else
 #include <vector>
 using std::vector;
+#endif
+
+
+//
+// Render engines
+//
+
+// Cairo
+#ifdef RENDER_CAIRO
+#include <cairo/cairo.h>
+#endif
+
+// wxWidgets
+#ifdef RENDER_WXWIDGETS
+#include <cairo/cairo.h>
 #endif
 
 
@@ -63,20 +81,27 @@ This should also be done for output files, through output_file_available or so.
 Therefore, file output and screen output should be split somehow!
 */
 
-class Output
+class Render
 {
 	public:
 		// Construction and destruction
-		Output();
+		Render();
 
 		// Class member routines
 		void setData(Data*);
-		void write(const std::string& inputFile, const std::string& inputType) const;
-		void write(const std::string& inputFile) const;
+		void write(wxDC&, const std::string) const;
+
+		// Informational routines
+		void render_available(vector<std::string>&) const;
 
 	private:
 		// Data processing
-		void data_output_svg(std::ofstream&) const;
+        #ifdef RENDER_CAIRO
+		void data_output_cairo(cairo_t*, float scale) const;
+		#endif
+		#ifdef RENDER_WXWIDGETS
+		void data_output_dc(wxMemoryDC&) const;
+		#endif
 
 		// Data
 		const Data* data;

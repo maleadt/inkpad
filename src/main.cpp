@@ -39,6 +39,7 @@
 #include "input.h"
 #include "output.h"
 #include "data.h"
+#include "render.h"
 
 // Default headers
 #include <iostream>
@@ -57,7 +58,7 @@
 //
 
 // Benchmark counters
-const int BENCHMARK_OUTPUT_RENDER_FPS = 10;
+const int BENCHMARK_RENDER_FPS = 10;
 const int BENCHMARK_DATA_TRANSFORM_ROTATE = 128;
 const int BENCHMARK_DATA_TRANSFORM_TRANSLATE = 1024;
 
@@ -124,6 +125,7 @@ class Inkpad: public wxApp
 		Input* engineInput;
 		Output* engineOutput;
 		Data* engineData;
+		Render* engineRender;
 
 		// File handline
 		void setfile_save(const wxFileName&);
@@ -311,10 +313,12 @@ bool Inkpad::OnInit()
 	engineInput = new Input;
 	engineOutput = new Output;
 	engineData = new Data;
+	engineRender = new Render;
 
 	// Link input and output engines to data engine
 	engineInput->setData(engineData);
 	engineOutput->setData(engineData);
+	engineRender->setData(engineData);
 
 	// Call specific initialiser
 	if (mode == "batch")
@@ -375,11 +379,11 @@ bool Inkpad::InitBenchmark()
 	// Benchmark render engines
 	//
 
-	std::cout << "* Output: render engines" << std::endl;
+	std::cout << "* Render: frames per second" << std::endl;
 
 	// Get list
 	vector<std::string> engines;
-	engineOutput->render_available(engines);
+	engineRender->render_available(engines);
 
 	// Test them all
 	for (int i = 0; i < engines.size(); i++)
@@ -388,13 +392,13 @@ bool Inkpad::InitBenchmark()
 		// Test
 		std::cout << "\t- " << engines[i] << ": ";
 		stopwatch.Start();
-		for (int j = 0; j < BENCHMARK_OUTPUT_RENDER_FPS; j++)
+		for (int j = 0; j < BENCHMARK_RENDER_FPS; j++)
 		{
-			engineOutput->write(dc, engines[i]);
+			engineRender->write(dc, engines[i]);
 		}
 
 		// Output
-		std::cout << 1000*BENCHMARK_OUTPUT_RENDER_FPS/stopwatch.Time() << " frames per second" << std::endl;
+		std::cout << 1000*BENCHMARK_RENDER_FPS/stopwatch.Time() << " frames per second" << std::endl;
 	}
 
 
@@ -418,10 +422,6 @@ bool Inkpad::InitBenchmark()
         engineData->translate(-500, 500);
 	}
     std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_TRANSLATE/stopwatch.Time() << " translations per second" << std::endl;
-
-
-	// Benchmark write
-	//engineOutput->write(std::string(getfile_save().GetFullPath().mb_str()));
 
 	return false;
 }
@@ -953,10 +953,10 @@ void DrawPane::render(wxDC& dc)
 
 		// Get available renders
 		vector<std::string> renders;
-		parent->engineOutput->render_available(renders);
+		parent->engineRender->render_available(renders);
 
 		// Render the data using first available render
-		parent->engineOutput->write(dc, renders[0]);
+		parent->engineRender->write(dc, renders[0]);
 
 		// Adjust status bar
 		wxString statusbar;
