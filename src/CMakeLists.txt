@@ -1,9 +1,9 @@
 # Compile all libraries
-ADD_LIBRARY(libdata data.h data.cpp)
-ADD_LIBRARY(libinput input.h input.cpp)
-ADD_LIBRARY(liboutput output.h output.cpp)
-ADD_LIBRARY(libfile file.h file.cpp)
-ADD_LIBRARY(librender render.h render.cpp)
+ADD_LIBRARY(data data.h data.cpp)
+ADD_LIBRARY(input input.h input.cpp)
+ADD_LIBRARY(output output.h output.cpp)
+ADD_LIBRARY(file file.h file.cpp)
+ADD_LIBRARY(render render.h render.cpp)
 
 # Include wxWidgets
 SET(wxWidgets_USE_LIBS base core) 
@@ -13,11 +13,11 @@ ADD_DEFINITIONS(${wxWidgets_DEFINITIONS})
 
 # Define the main inkpad executable, and what it should be linked too
 ADD_EXECUTABLE(inkpad WIN32 main)
-TARGET_LINK_LIBRARIES(inkpad libdata)
-TARGET_LINK_LIBRARIES(inkpad libinput)
-TARGET_LINK_LIBRARIES(inkpad liboutput)
-TARGET_LINK_LIBRARIES(inkpad libfile)
-TARGET_LINK_LIBRARIES(inkpad librender)
+TARGET_LINK_LIBRARIES(inkpad data)
+TARGET_LINK_LIBRARIES(inkpad input)
+TARGET_LINK_LIBRARIES(inkpad output)
+TARGET_LINK_LIBRARIES(inkpad file)
+TARGET_LINK_LIBRARIES(inkpad render)
 TARGET_LINK_LIBRARIES(inkpad ${wxWidgets_LIBRARIES})
 
 # Use uSTD?
