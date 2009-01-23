@@ -28,6 +28,8 @@
 // http://stackoverflow.com/questions/134569/c-exception-throwing-stdstring
 // Use: can specify level of severity. Maybe able to resume application after throw?
 
+// TODO: move duplicate code (read && search_poly) in open_file or smth
+
 
 //
 // Essential stuff
@@ -76,7 +78,6 @@ enum
 	MENU_Fullscreen,
 
 	MENU_Settings,
-	MENU_SearchPolylines,
 	MENU_SimplifyPolylines,
 
 	MENU_About,
@@ -198,7 +199,6 @@ class FrameMain: public wxFrame
 
 		// Tools menu
 		void OnMenuSettings(wxCommandEvent& event);
-		void OnMenuSearchPolylines(wxCommandEvent& event);
 		void OnMenuSimplifyPolylines(wxCommandEvent& event);
 
 		// Help menu
@@ -230,7 +230,6 @@ BEGIN_EVENT_TABLE(FrameMain, wxFrame)
 	EVT_MENU(MENU_Fullscreen, FrameMain::OnMenuFullscreen)
 
 	EVT_MENU(MENU_Settings, FrameMain::OnMenuSettings)
-	EVT_MENU(MENU_SearchPolylines, FrameMain::OnMenuSearchPolylines)
 	EVT_MENU(MENU_SimplifyPolylines, FrameMain::OnMenuSimplifyPolylines)
 
 	EVT_MENU(MENU_About, FrameMain::OnMenuAbout)
@@ -323,6 +322,11 @@ bool Inkpad::InitBatch()
 		// Read file
 		engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
 
+        // Detect polylines (lossless)
+		engineData->search_polyline();
+
+		// Do other requested transformations
+
 		// Write file
 		engineOutput->write(std::string(getfile_save().GetFullPath().mb_str()));
 	}
@@ -348,6 +352,7 @@ bool Inkpad::InitGui()
 		try
 		{
 			engineInput->read(std::string(getfile_load().GetFullPath().fn_str()));
+			engineData->search_polyline();
 		}
 		catch (std::string error)
 		{
@@ -495,7 +500,6 @@ FrameMain::FrameMain(const wxString& title, const wxPoint& pos, const wxSize& si
 	wxMenu *menuTools = new wxMenu;
 	menuTools->Append(MENU_Settings, _T("&Settings"));
 	menuTools->AppendSeparator();
-	menuTools->Append(MENU_SearchPolylines, _T("Search for &polylines"));
 	menuTools->Append(MENU_SimplifyPolylines, _T("Simplify &polylines"));
 
 	// Help menu
@@ -546,7 +550,7 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 {
 	wxFileDialog *OpenDialog = new wxFileDialog(
 		this, _("Open file"), wxEmptyString, wxEmptyString,
-		wxT("TOP image files (*.top)|*.[tT][oO][pP]|DHW image files (*.top)|*.[dD][hH][wW]|"),
+		wxT("TOP image files (*.top)|*.[tT][oO][pP]|DHW image files (*.dhw)|*.[dD][hH][wW]|"),
 		wxFD_OPEN, wxDefaultPosition);
 
 	// Creates a "open file" dialog
@@ -557,6 +561,9 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 			// Give the input engine the file we selected
 			parent->engineData->clear();
 			parent->engineInput->read(std::string(OpenDialog->GetPath().mb_str()));
+
+			// Detect polylines (lossless)
+			parent->engineData->search_polyline();
 
 			// Save the loaded file
 			parent->setfile_load(OpenDialog->GetPath());
@@ -723,22 +730,6 @@ void FrameMain::OnMenuFullscreen(wxCommandEvent& WXUNUSED(event))
 // Configure the application
 void FrameMain::OnMenuSettings(wxCommandEvent& WXUNUSED(event))
 {
-}
-
-// Search for polylines
-void FrameMain::OnMenuSearchPolylines(wxCommandEvent& WXUNUSED(event))
-{
-	// Redraw
-	try
-	{
-		parent->engineData->search_polyline();
-		parent->drawPane->Refresh();
-	}
-	catch (std::string error)
-	{
-		wxString WXerror(error.c_str(), wxConvUTF8);
-		wxLogError(_T("Error while drawing: ") + WXerror + _T("."));
-	}
 }
 
 // Simplify polylines

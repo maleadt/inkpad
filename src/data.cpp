@@ -188,30 +188,7 @@ void Data::rotate(double angle)
 	}
 
 	// Move the image back to it's original location
-	translate((imgSizeX/2), (imgSizeY/2));
-
-	// TODO: change the image's size correct
-	// Temporary solution (still buggy)
-	if (angle == 90 || angle == -90)
-	{
-		int temp = imgSizeX;
-		imgSizeX = imgSizeY;
-		imgSizeY = temp;
-	}
-	else if (angle == 180 || angle == -180 || ((int)angle%360) == 0)
-	{
-		// Do nothing
-	}
-	else
-	{
-		autocrop();
-	}
-	/*
-	// Now move it so all is positive (alghorithm by Gert-Jan Stockman)
-	int dx = (int)(cos(angle_rad) * (imgSizeX/2) - sin(angle_rad) * (imgSizeY/2) - (imgSizeX/2));
-	int dy = (int)(sin(angle_rad) * (-imgSizeX/2) + cos(angle_rad) * (imgSizeY/2) - (imgSizeY/2));
-	translate(dx, dy);
-	*/
+	autocrop();
 
 	// Invalidate caches
 	cacheBoundsDirty = true;

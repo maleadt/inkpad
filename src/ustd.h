@@ -87,6 +87,7 @@ namespace ustd
 			void clear();
 
 			// Vector information
+			bool empty() const;
 			unsigned int size() const;
 			unsigned int capacity() const;
 
@@ -286,6 +287,13 @@ void ustd::vector<T>::clear()
 // Vector information
 //
 
+// Check if the vector is empty
+template <typename T>
+bool ustd::vector<T>::empty() const
+{
+    return (dataArraySizeVirtual==0);
+}
+
 // The current size
 template <typename T>
 unsigned int ustd::vector<T>::size() const
@@ -386,10 +394,10 @@ namespace ustd
 			typedef iterator const_iterator;
 
 			// Static iterators
-			iterator begin()
+			iterator begin() const
 			{ return iterator(nodeFront); }
-			iterator end()
-			{ return iterator(nodeBack->next); }
+			iterator end() const
+			{ return (nodeBack == 0 ? 0 : nodeBack->next); }    // Could return an ordinary nullpointer, but this is more "correct"
 
 			// Element input
 			void push_front(T data);
@@ -404,7 +412,7 @@ namespace ustd
 			void pop_front();
 			void pop_back();
 			// Erase: http://www.google.com/codesearch/p?hl=nl#721ufgYZrlQ/libg++-2.8.0/libstdc++/stl/stl_list.h&q=lang:c%2B%2B%20list%20iterator%20erase ook in header?????
-			iterator erase(iterator inputIterator)	// TODO: memory leak
+			iterator erase(iterator inputIterator)
 			{
 				// Iterator to next item
 				iterator outputIterator;
@@ -415,7 +423,7 @@ namespace ustd
 
 				return outputIterator;
 			}
-			void clear();	// TODO: memory leak
+			void clear();
 
 			// List information
 			bool empty() const;
@@ -592,8 +600,8 @@ void ustd::list<T>::pop_back()
 template <typename T>
 void ustd::list<T>::clear()
 {
-	nodeFront = NULL;
-	nodeBack = NULL;
+	while (nodeFront != 0)
+        pop_specific(nodeFront);
 }
 
 

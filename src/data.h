@@ -186,7 +186,7 @@ class Data
 		void addElement(Element&, list<Element>::iterator);
 		list<Element> elements;
 
-		// Cache control - image bounds
+		// Cache - image bounds
 		bool cacheBoundsDirty;
 		int cacheBoundsLowerX, cacheBoundsUpperX, cacheBoundsLowerY, cacheBoundsUpperY;
 };
