@@ -52,6 +52,16 @@
 #include <wx/sizer.h>
 
 
+//
+// Constants
+//
+
+// Benchmark counters
+const int BENCHMARK_OUTPUT_RENDER_FPS = 10;
+const int BENCHMARK_DATA_TRANSFORM_ROTATE = 128;
+const int BENCHMARK_DATA_TRANSFORM_TRANSLATE = 1024;
+
+
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
@@ -128,6 +138,7 @@ class Inkpad: public wxApp
 		virtual bool OnInit();
 		bool InitBatch();
 		bool InitGui();
+		bool InitBenchmark();
 
 		// Command-line parser
 		virtual void OnInitCmdLine(wxCmdLineParser& parser);
@@ -138,8 +149,8 @@ class Inkpad: public wxApp
 		wxFileName file_load;
 
 
-		// Application flags
-		bool batch;
+		// Application mode
+		std::string mode;
 };
 
 // Configure the command-line parameters
@@ -149,6 +160,8 @@ static const wxCmdLineEntryDesc g_cmdLineDesc [] =
 	{ wxCMD_LINE_SWITCH, wxT("h"), wxT("help"), wxT("displays help on the command line parameters"),
 		wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
 	{ wxCMD_LINE_SWITCH, wxT("b"), wxT("batch"), wxT("work in batch modus (no gui)"),
+	  wxCMD_LINE_VAL_NONE},
+	{ wxCMD_LINE_SWITCH, wxT("m"), wxT("benchmark"), wxT("benchmark the application"),
 	  wxCMD_LINE_VAL_NONE},
 
 	// Options
@@ -304,11 +317,15 @@ bool Inkpad::OnInit()
 	engineOutput->setData(engineData);
 
 	// Call specific initialiser
-	if (batch)
+	if (mode == "batch")
 	{
 		return InitBatch();
 	}
-	else
+	else if (mode == "benchmark")
+	{
+		return InitBenchmark();
+	}
+	else if (mode == "gui")
 	{
 		return InitGui();
 	}
@@ -322,7 +339,7 @@ bool Inkpad::InitBatch()
 		// Read file
 		engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
 
-        // Detect polylines (lossless)
+		// Detect polylines (lossless)
 		engineData->search_polyline();
 
 		// Do other requested transformations
@@ -334,6 +351,77 @@ bool Inkpad::InitBatch()
 	{
 		std::cout << "Error: " << error << std::endl;
 	}
+
+	return false;
+}
+
+// Specific initialisation: benchmark mode
+bool Inkpad::InitBenchmark()
+{
+	//
+	// Init
+	//
+
+	// Read file
+	engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
+
+	// Re-usable objects
+	wxStopWatch stopwatch;
+	wxBitmap bitmap(1024, 786, 32);
+	wxMemoryDC dc;
+	dc.SelectObject(bitmap);
+
+	//
+	// Benchmark render engines
+	//
+
+	std::cout << "* Output: render engines" << std::endl;
+
+	// Get list
+	vector<std::string> engines;
+	engineOutput->render_available(engines);
+
+	// Test them all
+	for (int i = 0; i < engines.size(); i++)
+	{
+
+		// Test
+		std::cout << "\t- " << engines[i] << ": ";
+		stopwatch.Start();
+		for (int j = 0; j < BENCHMARK_OUTPUT_RENDER_FPS; j++)
+		{
+			engineOutput->write(dc, engines[i]);
+		}
+
+		// Output
+		std::cout << 1000*BENCHMARK_OUTPUT_RENDER_FPS/stopwatch.Time() << " frames per second" << std::endl;
+	}
+
+
+	//
+	// Data transformations
+	//
+
+	std::cout << "* Data: transformations" << std::endl;
+
+	// Rotation
+	stopwatch.Start();
+	for (int j = 0; j < BENCHMARK_DATA_TRANSFORM_ROTATE; j++)
+        engineData->rotate(90);
+    std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_ROTATE/stopwatch.Time() << " rotations per second" << std::endl;
+
+    // Translation
+	stopwatch.Start();
+	for (int j = 0; j < BENCHMARK_DATA_TRANSFORM_TRANSLATE; j+=2)
+	{
+        engineData->translate(500, -500);
+        engineData->translate(-500, 500);
+	}
+    std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_TRANSLATE/stopwatch.Time() << " translations per second" << std::endl;
+
+
+	// Benchmark write
+	//engineOutput->write(std::string(getfile_save().GetFullPath().mb_str()));
 
 	return false;
 }
@@ -426,7 +514,7 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 		setfile_load(wxFileName(parser.GetParam(0)));
 	}
 
-	// Check if we are in batch mode
+	// Mode: batch
 	if (parser.Found(wxT("b")))
 	{
 		// Get input and output parameters
@@ -443,7 +531,7 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 		// Batch mode requirments
 		if (getfile_load().IsOk() && getfile_save().IsOk())
 		{
-			batch = true;
+			mode = "batch";
 		}
 		else
 		{
@@ -452,10 +540,19 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 			return false;
 		}
 	}
+
+	// Mode: benchmark
+	else if (parser.Found(wxT("m")))
+	{
+		mode = "benchmark";
+	}
+
+	// Mode: gui
 	else
 	{
-		batch = false;
+		mode = "gui";
 	}
+
 
 	return true;
 }

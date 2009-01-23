@@ -75,6 +75,13 @@ using std::vector;
 // CLASS DEFINITION //
 //////////////////////
 
+/*
+TODO
+Which renders are available are now pulled out through render_Available.
+This should also be done for output files, through output_file_available or so.
+Therefore, file output and screen output should be split somehow!
+*/
+
 class Output
 {
 	public:
