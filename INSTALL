@@ -38,13 +38,17 @@ Windows
 
 * Compiling wxWidgets
 	- Extract the archive you downloaded somewhere
-	- set WXWIN="path to your wxWidgets sources" (e.g. set WXWIN="c:\wxWidgets")
-	- cd %WXWIN%\build\msw 
-	- nmake -f makefile.vc 
+	- set WXWIN="path to your wxWidgets sources" (e.g. WXWINset WXWIN=c:\Users\XXX\Desktop\wxMSW-2.8.X)
+	- Open "%WXWIN%\build\msw\wx.dwl", convert all targets to the newer format and build the "Debug" and "Release" targets
+//	- Edit "%WXWIN%\include\msw\setup.h", and chance wxUSE_UNICODE to 1, if you want to use UNICODE
+	- Open up the Visual Studio 2008 Command prompt, and enter the directory
+	  cd %WXWIN%\build\msw 
+	- Now build the sources (remove UNICODE=1 if you didn't do the edit before)
+	  nmake -f makefile.vc UNICODE=1 
 
 * Compiling
-	- Make a subdirectory "build", and enter it
+	- Make a build-directory somewhere, and enter it
 	- Use CMake to generate a set of makefiles
-	  cmake ..\ -G "Visual Studio 9 2008"
-	- Open "Inkpad.sln"
+	  cmake "path to build directory" -G "Visual Studio 9 2008"
+	- Open "Inkpad.sln", which should have been generated in the build directory
 	- Hit "Build"

@@ -66,7 +66,7 @@ using std::vector;
 
 // wxWidgets
 #ifdef RENDER_WXWIDGETS
-#include <cairo/cairo.h>
+
 #endif
 
 
