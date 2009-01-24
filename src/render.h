@@ -36,7 +36,6 @@
 // Headers
 #include <iostream>
 #include <string>
-#include <fstream>
 #include "data.h"
 #include <cmath>
 #include <wx/wxprec.h>
@@ -66,7 +65,6 @@ using std::vector;
 
 // wxWidgets
 #ifdef RENDER_WXWIDGETS
-
 #endif
 
 

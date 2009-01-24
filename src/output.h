@@ -39,7 +39,6 @@
 #include <fstream>
 #include "data.h"
 #include "file.h"
-#include <cmath>
 
 
 // Containers
