@@ -49,6 +49,15 @@ using ustd::vector;
 using std::vector;
 #endif
 
+
+//
+// Constants
+//
+
+// Data generation
+const int GENERATE_HEIGHT = 10000;
+const int GENERATE_WIDTH = 10000;
+
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
@@ -62,6 +71,9 @@ class Input
 		// Class member routines
 		void read(const std::string &inputFile);
 		void setData(Data*);
+
+		// Data generation routines
+		void generate_static(int);
 
 	private:
 		// Data processing

@@ -366,7 +366,13 @@ bool Inkpad::InitBenchmark()
 	// Init
 	//
 
-	// Read file
+	// Create a data set
+	// TODO: generated file does still allow polylines...
+	// TODO 2: wxWidgets engine is faster, what's wrong with this test set?
+	//engineInput->generate_static(500);
+	//engineOutput->write("/tmp/test.svg");
+
+	// Load data
 	engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
 
 	// Re-usable objects
@@ -439,7 +445,7 @@ bool Inkpad::InitGui()
 		// Give the input engine the file we selected
 		try
 		{
-			engineInput->read(std::string(getfile_load().GetFullPath().fn_str()));
+			engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
 			engineData->search_polyline();
 		}
 		catch (std::string error)

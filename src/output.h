@@ -32,14 +32,12 @@
 #ifndef __OUTPUT
 #define __OUTPUT
 
-
 // Headers
 #include <iostream>
 #include <string>
 #include <fstream>
 #include "data.h"
 #include "file.h"
-
 
 // Containers
 #ifdef WITH_USTD

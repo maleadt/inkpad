@@ -36,7 +36,6 @@
 #ifndef __DATA
 #define __DATA
 
-
 // Headers
 #include <iostream>
 #include <string.h>

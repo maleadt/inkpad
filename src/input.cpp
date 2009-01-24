@@ -100,6 +100,50 @@ void Input::read(const std::string &inputFile)
 }
 
 
+//
+// Data generation routines
+//
+
+// Generate a set of static data
+void Input::generate_static(int amount)
+{
+	// Configure the pen
+	data->penWidth = 10;
+	data->penForeground = BLACK;
+	data->penBackground = WHITE;
+
+	// Configure image defaults
+	data->imgSizeX = GENERATE_WIDTH;
+	data->imgSizeY = GENERATE_HEIGHT;
+	data->imgBackground = WHITE;
+
+    // Polylines
+    double dx = GENERATE_WIDTH*4/amount;
+    double dy = GENERATE_HEIGHT*4/amount;
+    for (int i = 1; i < amount/4; i+=1)
+    {
+        vector<double> set(10);
+
+        set[0] = i*dx;
+        set[1] = i*dy;
+
+        set[2] = GENERATE_WIDTH-i*dx;
+        set[3] = i*dy;
+
+        set[4] = GENERATE_WIDTH-i*dx;
+        set[5] = GENERATE_HEIGHT-i*dy;
+
+        set[6] = i*dx;
+        set[7] = GENERATE_HEIGHT-i*dy;
+
+        set[8] = i*dx;
+        set[9] = (i+1)*dy;
+
+        data->addPolyline(set);
+    }
+}
+
+
 
 //
 // Data processing
