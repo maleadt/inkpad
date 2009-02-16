@@ -24,7 +24,7 @@
 // CONFIGURATION //
 ///////////////////
 
-// TODO: move duplicate code (read && search_poly) in open_file or smth
+// TODO: move duplicate code (read && search_poly && except handling) in open_file or smth
 
 
 //
