@@ -33,10 +33,14 @@
 #define __INPUT
 
 
-// Headers
+// System headers
 #include <iostream>
 #include <fstream>
 #include <string.h>
+
+// Application headers
+#include "exception.h"
+#include "generic.h"
 #include "data.h"
 #include "file.h"
 

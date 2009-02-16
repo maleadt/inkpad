@@ -36,7 +36,7 @@
 #ifndef __DATA
 #define __DATA
 
-// Headers
+// System headers
 #include <iostream>
 #include <string.h>
 #include <cmath>
@@ -44,6 +44,10 @@
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
 #endif
+
+// Application headers
+#include "exception.h"
+#include "generic.h"
 
 // Containers
 #ifdef WITH_USTD
@@ -163,7 +167,7 @@ class Data
 		void smoothn_polyline(double tension);
 
 		// Element output
-		void getSize(int&, int&, int&, int&);
+		void size(int&, int&, int&, int&);
 
 		// Statistics
 		int statElements() const;

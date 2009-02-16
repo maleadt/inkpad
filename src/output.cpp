@@ -62,13 +62,13 @@ void Output::setData(Data* inputDataPointer)
 void Output::write(const std::string& inputFile, const std::string& inputType) const
 {
 	// Decapitalize given type
-	std::string typeLC;
-	typeLC.resize(inputType.length());
+	std::string type;
+	type.resize(inputType.length());
 	for (unsigned int i = 0; i < inputType.size(); i++)
-		typeLC[i] = tolower(inputType[i]);
+		type[i] = tolower(inputType[i]);
 
 	// Process all cases
-	if (typeLC == "svg")
+	if (type == "svg")
 	{
 		std::ofstream stream;
 		file_open(stream, inputFile);
@@ -79,7 +79,7 @@ void Output::write(const std::string& inputFile, const std::string& inputType) c
 	// We got an undetected case
 	else
 	{
-		throw std::string("unknown output file type");
+	    throw Exception("output", "write", "unknown file type " + type);
 		return;
 	}
 }
@@ -89,13 +89,8 @@ void Output::write(const std::string& inputFile) const
 {
 	// Detect the type
 	std::string type;
-	if (!file_identify(inputFile, type))
-	{
-		throw std::string("unsupported output file type");
-		return;
-	}
 
-	// Write the vile
+	// Call the correct function
 	write(inputFile, type);
 }
 
@@ -152,7 +147,7 @@ void Output::data_output_svg(std::ofstream& stream) const
 
 				// Unsupported type
 			default:
-				throw std::string("unsupported element during svg output");
+                throw Exception("output", "data_output_svg", "unsupported element with ID " + stringify(tempIterator->identifier));
 		}
 		++tempIterator;
 	}

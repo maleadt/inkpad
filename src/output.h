@@ -32,10 +32,14 @@
 #ifndef __OUTPUT
 #define __OUTPUT
 
-// Headers
+// System headers
 #include <iostream>
 #include <string>
 #include <fstream>
+
+// Application headers
+#include "exception.h"
+#include "generic.h"
 #include "data.h"
 #include "file.h"
 

@@ -33,7 +33,7 @@
 #define __RENDER
 
 
-// Headers
+// System headers
 #include <iostream>
 #include <string>
 #include "data.h"
@@ -42,6 +42,10 @@
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
 #endif
+
+// Application headers
+#include "exception.h"
+#include "generic.h"
 
 
 // Containers
@@ -95,10 +99,10 @@ class Render
 	private:
 		// Data processing
         #ifdef RENDER_CAIRO
-		void data_output_cairo(cairo_t*, float scale) const;
+		void render_output_cairo(cairo_t*, float scale) const;
 		#endif
 		#ifdef RENDER_WXWIDGETS
-		void data_output_dc(wxMemoryDC&) const;
+		void render_output_dc(wxMemoryDC&) const;
 		#endif
 
 		// Data

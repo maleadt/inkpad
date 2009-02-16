@@ -69,7 +69,7 @@ void Input::read(const std::string &inputFile)
 	std::string type;
 	if (!file_identify(inputFile, type))
 	{
-		throw std::string("cannot extract input file type");
+        throw Exception("input", "read", "cannot extract file type");
 		return;
 	}
 
@@ -94,7 +94,7 @@ void Input::read(const std::string &inputFile)
 	}
 	else
 	{
-		throw std::string("unsupported input file type");
+	    throw Exception("input", "read", "unsupported file type " + type);
 		return;
 	}
 }
@@ -170,7 +170,7 @@ void Input::data_input_top(std::ifstream& stream)
 	stream.read(buffer, 6);
 	if (strncmp(buffer, "WALTOP", 6) != 0)
 	{
-		throw std::string("header of top file seems damaged");
+		throw Exception("input", "data_input_top", "header of file seems damaged (" + stringify(buffer) + ")");
 		return;
 	}
 	delete[] buffer;
@@ -254,7 +254,7 @@ void Input::data_input_dhw(std::ifstream& stream)
 	stream.read(buffer, 32);
 	if (strncmp(buffer, "ACECAD_DIGIMEMO_HANDWRITING_____", 32) != 0)
 	{
-		throw std::string("header of dhw file seems damaged");
+		throw Exception("input", "data_input_dhw_", "header of file seems damaged (" + stringify(buffer) + ")");
 		return;
 	}
 	delete[] buffer;
@@ -265,7 +265,7 @@ void Input::data_input_dhw(std::ifstream& stream)
 	stream.read(buffer, 1);
 	if (strncmp(buffer, &version, 1) != 0)
 	{
-		throw std::string("unsupported dhw version");
+	    throw Exception("input", "data_input_dhw_", "unsupported version " + stringify(buffer));
 		return;
 	}
 	delete[] buffer;
@@ -329,7 +329,7 @@ void Input::data_input_dhw(std::ifstream& stream)
 	stream.read(buffer, 2);
 	if (dbytes_to_value(buffer[1], buffer[0]) != 0)
 	{
-		throw std::string("dhw padding bytes invalid");
+	    throw Exception("input", "data_input_dhw_", "padding bytes invalid (" + stringify(dbytes_to_value(buffer[1], buffer[0])) + "!=0)");
 		return;
 	}
 	delete[] buffer;
@@ -393,7 +393,7 @@ void Input::data_input_dhw(std::ifstream& stream)
                     data->penForeground = GREEN;
                     break;
                 default:
-                    throw std::string("input-dhw: unknown pen colour");
+                    throw Exception("input", "data_input_dhw_", "unknown pen colour " + stringify(colour));
                     break;
 	        }
 	    }

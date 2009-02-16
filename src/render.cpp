@@ -107,7 +107,7 @@ void Render::write(wxDC& dc, const std::string render) const
 		cr = cairo_create(surface);
 
 		// Draw
-		data_output_cairo(cr, actualScale);
+		render_output_cairo(cr, actualScale);
 
 		// Convert from Cairo RGB24 format to wxImage BGR format.
 		for (int y=0; y<height; y++)
@@ -146,7 +146,7 @@ void Render::write(wxDC& dc, const std::string render) const
 		dc_mem.SelectObject(dc_bitmap);
 
 		// Draw
-		data_output_dc(dc_mem);
+		render_output_dc(dc_mem);
 
 		// Copy the temporary DC's content to the actual DC
 		dc.Blit(wxPoint(0, 0), wxSize(maxX, maxY), &dc_mem, wxPoint(0, 0), wxCOPY);
@@ -160,7 +160,7 @@ void Render::write(wxDC& dc, const std::string render) const
 	// TODO: this throw is not catched
 	else
 	{
-		throw std::string("invalid render specified");
+	    throw Exception("render", "write", "invalid render specified");
 	}
 }
 
@@ -190,7 +190,7 @@ void Render::render_available(vector<std::string>& data) const
 
 // Output data to Cairo surface
 #ifdef RENDER_CAIRO
-void Render::data_output_cairo(cairo_t* cr, float scale) const
+void Render::render_output_cairo(cairo_t* cr, float scale) const
 {
 	// Clear the surface
 
@@ -226,7 +226,7 @@ void Render::data_output_cairo(cairo_t* cr, float scale) const
 
 				// Unsupported type
 			default:
-				throw std::string("unsupported element during cairo output");
+                throw Exception("render", "render_output_cairo", "unsupported element with ID " + stringify(tempIterator->identifier));
 		}
 		++tempIterator;
 	}
@@ -235,7 +235,7 @@ void Render::data_output_cairo(cairo_t* cr, float scale) const
 
 // Output data to wxWidgets draw container
 #ifdef RENDER_WXWIDGETS
-void Render::data_output_dc(wxMemoryDC& dc) const
+void Render::render_output_dc(wxMemoryDC& dc) const
 {
 	// Clear the DC
 	dc.Clear();
@@ -285,7 +285,7 @@ void Render::data_output_dc(wxMemoryDC& dc) const
 
 			// Unsupported type
 			default:
-				throw std::string("unsupported element during dc output");
+                throw Exception("render", "render_output_wxwidgets", "unsupported element with ID " + stringify(tempIterator->identifier));
 		}
 		++tempIterator;
 	}

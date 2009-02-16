@@ -1,4 +1,6 @@
 # Compile all libraries
+ADD_LIBRARY(exception exception.h exception.cpp)
+ADD_LIBRARY(generic generic.h generic.cpp)
 ADD_LIBRARY(data data.h data.cpp)
 ADD_LIBRARY(input input.h input.cpp)
 ADD_LIBRARY(output output.h output.cpp)
@@ -13,6 +15,8 @@ ADD_DEFINITIONS(${wxWidgets_DEFINITIONS})
 
 # Define the main inkpad executable, and what it should be linked too
 ADD_EXECUTABLE(inkpad WIN32 main)
+TARGET_LINK_LIBRARIES(inkpad exception)
+TARGET_LINK_LIBRARIES(inkpad generic)
 TARGET_LINK_LIBRARIES(inkpad data)
 TARGET_LINK_LIBRARIES(inkpad input)
 TARGET_LINK_LIBRARIES(inkpad output)

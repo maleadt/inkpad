@@ -49,7 +49,7 @@ void file_open(std::ifstream& inputStream, const std::string& inputFile)
 	// Check stream validity
 	if (!inputStream.is_open())
 	{
-		throw std::string("error while opening input stream");
+	    throw Exception("file", "file_open(inputstream)", "failed to open stream");
 	}
 }
 void file_open(std::ofstream& inputStream, const std::string& inputFile)
@@ -60,7 +60,7 @@ void file_open(std::ofstream& inputStream, const std::string& inputFile)
 	// Check stream validity
 	if (!inputStream.is_open())
 	{
-		throw std::string("error while opening output stream");
+		throw Exception("file", "file_open(outputstream)", "failed to open stream");
 	}
 }
 

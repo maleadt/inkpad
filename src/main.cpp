@@ -24,10 +24,6 @@
 // CONFIGURATION //
 ///////////////////
 
-// TODO: throw custom exception, include from general.h
-// http://stackoverflow.com/questions/134569/c-exception-throwing-stdstring
-// Use: can specify level of severity. Maybe able to resume application after throw?
-
 // TODO: move duplicate code (read && search_poly) in open_file or smth
 
 
@@ -35,13 +31,7 @@
 // Essential stuff
 //
 
-// Application headers
-#include "input.h"
-#include "output.h"
-#include "data.h"
-#include "render.h"
-
-// Default headers
+// System headers
 #include <iostream>
 #include <ctime>
 #include <wx/filename.h>
@@ -51,6 +41,13 @@
 #include <wx/wx.h>
 #endif
 #include <wx/sizer.h>
+
+// Application headers
+#include "exception.h"
+#include "input.h"
+#include "output.h"
+#include "data.h"
+#include "render.h"
 
 
 //
@@ -351,9 +348,9 @@ bool Inkpad::InitBatch()
 		// Write file
 		engineOutput->write(std::string(getfile_save().GetFullPath().mb_str()));
 	}
-	catch (std::string error)
+	catch (Exception tempException)
 	{
-		std::cout << "Error: " << error << std::endl;
+		std::cout << "Library " << tempException.who() << " caught an error in " << tempException.where() << ": " << tempException.what() << std::endl;
 	}
 
 	return false;
@@ -366,16 +363,23 @@ bool Inkpad::InitBenchmark()
 	// Init
 	//
 
-	// Create a data set
-	if (getfile_load().IsOk())
+    try
+    {
+        // Create a data set
+        if (getfile_load().IsOk())
+        {
+            std::cout << "* Input: using given file" << std::endl;
+            engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
+        }
+        else
+        {
+            std::cout << "* Input: using built-in data set" << std::endl;
+            engineInput->generate_static(500);
+        }
+    }
+	catch (Exception tempException)
 	{
-		std::cout << "* Input: using given file" << std::endl;
-		engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
-	}
-	else
-	{
-		std::cout << "* Input: using built-in data set" << std::endl;
-		engineInput->generate_static(500);
+		std::cout << "Library " << tempException.who() << " caught an error in " << tempException.where() << ": " << tempException.what() << std::endl;
 	}
 
 
@@ -384,6 +388,7 @@ bool Inkpad::InitBenchmark()
 	wxBitmap bitmap(1024, 786, 32);
 	wxMemoryDC dc;
 	dc.SelectObject(bitmap);
+
 
 	//
 	// Benchmark render engines
@@ -452,10 +457,12 @@ bool Inkpad::InitGui()
 			engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
 			engineData->search_polyline();
 		}
-		catch (std::string error)
+		catch (Exception tempException)
 		{
-			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxLogError(_T("Error while reading: ") + WXerror + _T("."));
+		    wxString tempLibrary = wxString(tempException.who(), wxConvUTF8);
+		    wxString tempLocation = wxString(tempException.where(), wxConvUTF8);
+		    wxString tempError = wxString(tempException.what(), wxConvUTF8);
+		    wxLogError(_T("Library ") + tempLibrary + _T(" caught an error in ") + tempLocation + _T(": ") + tempError + _T("."));
 		}
 	}
 
@@ -683,10 +690,12 @@ void FrameMain::OnMenuOpen(wxCommandEvent& WXUNUSED(event))
 			parent->drawPane->Refresh();
 		}
 
-		catch (std::string error)
+		catch (Exception tempException)
 		{
-			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxLogError(_T("Error while reading: ") + WXerror + _T("."));
+		    wxString tempLibrary = wxString(tempException.who(), wxConvUTF8);
+		    wxString tempLocation = wxString(tempException.where(), wxConvUTF8);
+		    wxString tempError = wxString(tempException.what(), wxConvUTF8);
+		    wxLogError(_T("Library ") + tempLibrary + _T(" caught an error in ") + tempLocation + _T(": ") + tempError + _T("."));
 		}
 	}
 }
@@ -703,10 +712,12 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 			parent->engineOutput->write(std::string(parent->getfile_save().GetFullPath().fn_str()));
 		}
 
-		catch (std::string error)
+		catch (Exception tempException)
 		{
-			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxLogError(_T("Error while saving: ") + WXerror + _T("."));
+		    wxString tempLibrary = wxString(tempException.who(), wxConvUTF8);
+		    wxString tempLocation = wxString(tempException.where(), wxConvUTF8);
+		    wxString tempError = wxString(tempException.what(), wxConvUTF8);
+		    wxLogError(_T("Library ") + tempLibrary + _T(" caught an error in ") + tempLocation + _T(": ") + tempError + _T("."));
 		}
 	}
 
@@ -728,11 +739,13 @@ void FrameMain::OnMenuSave(wxCommandEvent& WXUNUSED(event))
 				parent->setfile_save(SaveDialog->GetPath());
 			}
 
-			catch (std::string error)
-			{
-				wxString WXerror(error.c_str(), wxConvUTF8);
-				wxLogError(_T("Error while saving: ") + WXerror + _T("."));
-			}
+		catch (Exception tempException)
+		{
+		    wxString tempLibrary = wxString(tempException.who(), wxConvUTF8);
+		    wxString tempLocation = wxString(tempException.where(), wxConvUTF8);
+		    wxString tempError = wxString(tempException.what(), wxConvUTF8);
+		    wxLogError(_T("Library ") + tempLibrary + _T(" caught an error in ") + tempLocation + _T(": ") + tempError + _T("."));
+		}
 		}
 	}
 }
@@ -755,10 +768,12 @@ void FrameMain::OnMenuSaveAs(wxCommandEvent& WXUNUSED(event))
 			parent->setfile_save(SaveDialog->GetPath());
 		}
 
-		catch (std::string error)
+		catch (Exception tempException)
 		{
-			wxString WXerror(error.c_str(), wxConvUTF8);
-			wxLogError(_T("Error while reading: ") + WXerror + _T("."));
+		    wxString tempLibrary = wxString(tempException.who(), wxConvUTF8);
+		    wxString tempLocation = wxString(tempException.where(), wxConvUTF8);
+		    wxString tempError = wxString(tempException.what(), wxConvUTF8);
+		    wxLogError(_T("Library ") + tempLibrary + _T(" caught an error in ") + tempLocation + _T(": ") + tempError + _T("."));
 		}
 	}
 }
@@ -849,10 +864,12 @@ void FrameMain::OnMenuSimplifyPolylines(wxCommandEvent& WXUNUSED(event))
 		parent->engineData->simplify_polyline(1.5);
 		parent->drawPane->Refresh();
 	}
-	catch (std::string error)
+    catch (Exception tempException)
 	{
-		wxString WXerror(error.c_str(), wxConvUTF8);
-		wxLogError(_T("Error while drawing: ") + WXerror + _T("."));
+	    wxString tempLibrary = wxString(tempException.who(), wxConvUTF8);
+	    wxString tempLocation = wxString(tempException.where(), wxConvUTF8);
+	    wxString tempError = wxString(tempException.what(), wxConvUTF8);
+	    wxLogError(_T("Library ") + tempLibrary + _T(" caught an error in ") + tempLocation + _T(": ") + tempError + _T("."));
 	}
 }
 

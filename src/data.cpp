@@ -182,7 +182,7 @@ void Data::rotate(double angle)
 				break;
 
 			default:
-				throw std::string("unsupported element during canvas rotation");
+                throw Exception("data", "rotate", "unsupported element with ID " + stringify(it->identifier));
 		}
 		++it;
 	}
@@ -228,7 +228,7 @@ void Data::translate(int dx, int dy)
 				break;
 
 			default:
-				throw std::string("unsupported element during canvas relocation");
+                throw Exception("data", "translate", "unsupported element with ID " + stringify(it->identifier));
 		}
 		++it;
 	}
@@ -242,7 +242,7 @@ void Data::autocrop()
 {
 	// Look up the size of our image
 	int x0, y0, x1, y1;
-	getSize(x0, y0, x1, y1);
+	size(x0, y0, x1, y1);
 
 	// Relocate the canvas
 	translate(-x0, -y0);
@@ -505,7 +505,7 @@ inline void help_range(int& low, int& high, const int& value)
 }
 
 // Get the maximum size
-void Data::getSize(int& x0, int& y0, int &x1, int& y1)
+void Data::size(int& x0, int& y0, int &x1, int& y1)
 {
     // Have we got data?
     if (elements.empty())
@@ -565,7 +565,7 @@ void Data::getSize(int& x0, int& y0, int &x1, int& y1)
                     break;
 
                 default:
-                    throw std::string("unsupported element during size check");
+                    throw Exception("data", "size", "unsupported element with ID " + stringify(it->identifier));
             }
             ++it;
         }
