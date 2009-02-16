@@ -373,7 +373,8 @@ bool Inkpad::InitBenchmark()
 	//engineOutput->write("/tmp/test.svg");
 
 	// Load data
-	engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
+    engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
+
 
 	// Re-usable objects
 	wxStopWatch stopwatch;
@@ -523,7 +524,10 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	// Mode: batch
 	if (parser.Found(wxT("b")))
 	{
-		// Get input and output parameters
+	    // Configure mode
+	    mode = "batch";
+
+		// Configure input and output file (through special parameters)
 		wxString paramInput, paramOutput;
 		if (parser.Found(wxT("bi"), &paramInput))
 		{
@@ -534,12 +538,8 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 			setfile_save(wxFileName(paramOutput));
 		}
 
-		// Batch mode requirments
-		if (getfile_load().IsOk() && getfile_save().IsOk())
-		{
-			mode = "batch";
-		}
-		else
+		// Require input and output file
+		if (!getfile_load().IsOk() || !getfile_save().IsOk())
 		{
 			std::cout << "Batch mode requires given input and output parameters" << std::endl;
 			parser.Usage();
@@ -550,12 +550,22 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	// Mode: benchmark
 	else if (parser.Found(wxT("m")))
 	{
+	    // Configure mode
 		mode = "benchmark";
+
+		// Require input and output file (already configured through unnamed parameter)
+		if (!getfile_load().IsOk())
+		{
+			std::cout << "Benchmark mode requires input file (for now)" << std::endl;
+			parser.Usage();
+			return false;
+		}
 	}
 
 	// Mode: gui
 	else
 	{
+	    // Configure mode
 		mode = "gui";
 	}
 
