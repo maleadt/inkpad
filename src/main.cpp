@@ -367,13 +367,14 @@ bool Inkpad::InitBenchmark()
 	//
 
 	// Create a data set
-	// TODO: generated file does still allow polylines...
-	// TODO 2: wxWidgets engine is faster, what's wrong with this test set?
-	//engineInput->generate_static(500);
-	//engineOutput->write("/tmp/test.svg");
-
-	// Load data
-    engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
+	if (getfile_load().IsOk())
+	{
+	    std::cout << "* Input: using given file" << std::endl;
+	    engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
+	} else {
+	    std::cout << "* Input: using built-in data set" << std::endl;
+        engineInput->generate_static(500);
+	}
 
 
 	// Re-usable objects
@@ -552,14 +553,6 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	{
 	    // Configure mode
 		mode = "benchmark";
-
-		// Require input and output file (already configured through unnamed parameter)
-		if (!getfile_load().IsOk())
-		{
-			std::cout << "Benchmark mode requires input file (for now)" << std::endl;
-			parser.Usage();
-			return false;
-		}
 	}
 
 	// Mode: gui
