@@ -369,11 +369,13 @@ bool Inkpad::InitBenchmark()
 	// Create a data set
 	if (getfile_load().IsOk())
 	{
-	    std::cout << "* Input: using given file" << std::endl;
-	    engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
-	} else {
-	    std::cout << "* Input: using built-in data set" << std::endl;
-        engineInput->generate_static(500);
+		std::cout << "* Input: using given file" << std::endl;
+		engineInput->read(std::string(getfile_load().GetFullPath().mb_str()));
+	}
+	else
+	{
+		std::cout << "* Input: using built-in data set" << std::endl;
+		engineInput->generate_static(500);
 	}
 
 
@@ -419,17 +421,17 @@ bool Inkpad::InitBenchmark()
 	// Rotation
 	stopwatch.Start();
 	for (int j = 0; j < BENCHMARK_DATA_TRANSFORM_ROTATE; j++)
-        engineData->rotate(90);
-    std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_ROTATE/stopwatch.Time() << " rotations per second" << std::endl;
+		engineData->rotate(90);
+	std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_ROTATE/stopwatch.Time() << " rotations per second" << std::endl;
 
-    // Translation
+	// Translation
 	stopwatch.Start();
 	for (int j = 0; j < BENCHMARK_DATA_TRANSFORM_TRANSLATE; j+=2)
 	{
-        engineData->translate(500, -500);
-        engineData->translate(-500, 500);
+		engineData->translate(500, -500);
+		engineData->translate(-500, 500);
 	}
-    std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_TRANSLATE/stopwatch.Time() << " translations per second" << std::endl;
+	std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_TRANSLATE/stopwatch.Time() << " translations per second" << std::endl;
 
 	return false;
 }
@@ -525,8 +527,8 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	// Mode: batch
 	if (parser.Found(wxT("b")))
 	{
-	    // Configure mode
-	    mode = "batch";
+		// Configure mode
+		mode = "batch";
 
 		// Configure input and output file (through special parameters)
 		wxString paramInput, paramOutput;
@@ -551,14 +553,14 @@ bool Inkpad::OnCmdLineParsed(wxCmdLineParser& parser)
 	// Mode: benchmark
 	else if (parser.Found(wxT("m")))
 	{
-	    // Configure mode
+		// Configure mode
 		mode = "benchmark";
 	}
 
 	// Mode: gui
 	else
 	{
-	    // Configure mode
+		// Configure mode
 		mode = "gui";
 	}
 
