@@ -159,33 +159,75 @@ void Data::rotate(double angle)
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
 	// Rotate all elements
-	list<Element>::iterator it = elements.begin();
-	while (it != elements.end())
+	list<Element>::iterator it;
+	#pragma omp parallel private(it)
 	{
-		switch (it->identifier)
-		{
-				// Point
-			case 1:
-				help_rotate(it->parameters[0], it->parameters[1], angle_rad);
-				break;
+        for (it = elements.begin(); it != elements.end(); it++)
+        {
+            #pragma omp single nowait
+            {
+                switch (it->identifier)
+                {
+                    // Point
+                    case 1:
+                        help_rotate(it->parameters[0], it->parameters[1], angle_rad);
+                        break;
 
-				// Polyline
-			case 2:
-				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-					help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
-				break;
+                    // Polyline
+                    case 2:
+                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                            help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+                        break;
 
-				// Polybezier
-			case 3:
-				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-					help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
-				break;
+                    // Polybezier
+                    case 3:
+                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                            help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+                        break;
 
-			default:
-                throw Exception("data", "rotate", "unsupported element with ID " + stringify(it->identifier));
-		}
-		++it;
+                    default:
+                        throw Exception("data", "rotate", "unsupported element with ID " + stringify(it->identifier));
+                }
+            }
+        }
 	}
+
+	/* Alternate approach (crashes too)
+	// Rotate all elements
+	list<Element>::iterator it = elements.begin();
+	#pragma omp parallel private(it)
+	{
+        for (long l = 0; l < elements.size(); l++)
+        {
+            #pragma omp critical
+            {
+                it++;
+            }
+            switch (it->identifier)
+            {
+                // Point
+                case 1:
+                    help_rotate(it->parameters[0], it->parameters[1], angle_rad);
+                    break;
+
+                // Polyline
+                case 2:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                        help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+                    break;
+
+                // Polybezier
+                case 3:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                        help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+                    break;
+
+                default:
+                    throw Exception("data", "rotate", "unsupported element with ID " + stringify(it->identifier));
+            }
+        }
+	}
+    */
 
 	// Move the image back to it's original location
 	autocrop();

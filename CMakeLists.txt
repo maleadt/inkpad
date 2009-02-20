@@ -7,12 +7,13 @@ PROJECT(Inkpad)
 # Type of build ("debug" or "release")
 set(CMAKE_BUILD_TYPE debug)
 
-# Use the experimental set of STD replacement data structures?
+# Experimental options
 set(WITH_USTD false)
+set(WITH_OPENMP false)
 
 # Which render engines to use
-set (RENDER_CAIRO true)
-set (RENDER_WXWIDGETS true)
+set(RENDER_CAIRO true)
+set(RENDER_WXWIDGETS true)
 
 # Add individual subdirectories
 ADD_SUBDIRECTORY(src)

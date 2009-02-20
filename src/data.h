@@ -40,6 +40,7 @@
 #include <iostream>
 #include <string.h>
 #include <cmath>
+#include <omp.h>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
