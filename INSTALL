@@ -16,19 +16,29 @@ General
 Ubuntu
 ~~~~~~
 
-* Requirments
+* Requirements:
 	- C++ compiler
 	  sudo aptitude install build-essential
 	- CMake >= 2.6
 	  sudo aptitude install cmake
 	- wxWidgets >= 2.8
-	  sudo aptitude install ...
+	  sudo aptitude install libwxbase2.8-dev libgtk2.8-dev wx2.8-headers
+	- Cairo 2
+	  sudo aptitude install libcairo2-dev
+
+* Compiling inkpad:
+	- Make a build-directory somewhere, and enter it
+	- Use CMake to generate a set of makefiles
+	  cmake "path to build directory"
+	- Execute the "make" commant
+	  make
+	- Resulting binary is located in the "src" subdirectory of your build-directory
 
 
-Windows
-~~~~~~~
+Windows (WIP)
+~~~~~~~~~~~~~
 
-* Requirments:
+* Requirements:
 	- Visual C++ 2008 Express Edition (free)
 	   http://www.microsoft.com/express/vc/
 	- CMake >= 2.6
@@ -36,7 +46,7 @@ Windows
 	- wxWidgets >= 2.8
 	   http://www.wxwidgets.org/downloads/
 
-* Compiling wxWidgets
+* Compiling wxWidgets:
 	- Extract the archive you downloaded somewhere
 	- set WXWIN="path to your wxWidgets sources" (e.g. WXWINset WXWIN=c:\Users\XXX\Desktop\wxMSW-2.8.X)
 	- Open "%WXWIN%\build\msw\wx.dwl", convert all targets to the newer format and build the "Debug" and "Release" targets
@@ -46,9 +56,10 @@ Windows
 	- Now build the sources (remove UNICODE=1 if you didn't do the edit before)
 	  nmake -f makefile.vc UNICODE=1 
 
-* Compiling
+* Compiling inkpad:
 	- Make a build-directory somewhere, and enter it
 	- Use CMake to generate a set of makefiles
 	  cmake "path to build directory" -G "Visual Studio 9 2008"
 	- Open "Inkpad.sln", which should have been generated in the build directory
 	- Hit "Build"
+
