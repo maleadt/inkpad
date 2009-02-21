@@ -58,8 +58,10 @@ using ustd::list;
 #else
 #include <vector>
 #include <list>
+#include <valarray>
 using std::vector;
 using std::list;
+using std::valarray;
 #endif
 
 

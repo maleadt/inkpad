@@ -158,82 +158,45 @@ void Data::rotate(double angle)
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
+	// Convert list to a vector in order to support parallelisation
+	valarray<Element*> tempArray(elements.size());
+	int element_i = 0;
+	for (list<Element>::iterator it = elements.begin(); it != elements.end(); it++)
+        tempArray[element_i++] = &(*it);
+
 	// Rotate all elements
-	list<Element>::iterator it;
-	#pragma omp parallel private(it)
-	{
-        for (it = elements.begin(); it != elements.end(); it++)
+	#pragma omp parallel for default(shared)
+    for (long i = 0; i < elements.size(); i++)
+    {
+        switch (tempArray[i]->identifier)
         {
-            #pragma omp single nowait
-            {
-                switch (it->identifier)
-                {
-                    // Point
-                    case 1:
-                        help_rotate(it->parameters[0], it->parameters[1], angle_rad);
-                        break;
+            // Point
+            case 1:
+                help_rotate(tempArray[i]->parameters[0], tempArray[i]->parameters[1], angle_rad);
+                break;
 
-                    // Polyline
-                    case 2:
-                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                            help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
-                        break;
+            // Polyline
+            case 2:
+                for (unsigned int j = 0; j < tempArray[i]->parameters.size(); j+=2)
+                    help_rotate(tempArray[i]->parameters[j], tempArray[i]->parameters[j+1], angle_rad);
+                break;
 
-                    // Polybezier
-                    case 3:
-                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                            help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
-                        break;
+            // Polybezier
+            case 3:
+                for (unsigned int j = 0; j < tempArray[i]->parameters.size(); j+=2)
+                    help_rotate(tempArray[i]->parameters[j], tempArray[i]->parameters[j+1], angle_rad);
+                break;
 
-                    default:
-                        throw Exception("data", "rotate", "unsupported element with ID " + stringify(it->identifier));
-                }
-            }
+            default:
+                throw Exception("data", "rotate", "unsupported element with ID " + stringify(tempArray[i]->identifier));
         }
-	}
-
-	/* Alternate approach (crashes too)
-	// Rotate all elements
-	list<Element>::iterator it = elements.begin();
-	#pragma omp parallel private(it)
-	{
-        for (long l = 0; l < elements.size(); l++)
-        {
-            #pragma omp critical
-            {
-                it++;
-            }
-            switch (it->identifier)
-            {
-                // Point
-                case 1:
-                    help_rotate(it->parameters[0], it->parameters[1], angle_rad);
-                    break;
-
-                // Polyline
-                case 2:
-                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                        help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
-                    break;
-
-                // Polybezier
-                case 3:
-                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                        help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
-                    break;
-
-                default:
-                    throw Exception("data", "rotate", "unsupported element with ID " + stringify(it->identifier));
-            }
-        }
-	}
-    */
-
-	// Move the image back to it's original location
-	autocrop();
+    }
 
 	// Invalidate caches
 	cacheBoundsDirty = true;
+
+	// Move the image back to it's original location
+	autocrop();
 }
 
 // Relocate the canvas
@@ -582,13 +545,13 @@ void Data::size(int& x0, int& y0, int &x1, int& y1)
         {
             switch (it->identifier)
             {
-                    // Point
+                // Point
                 case 1:
                     help_range(x0, x1, it->parameters[0]);
                     help_range(y0, y1, it->parameters[1]);
                     break;
 
-                    // Polyline
+                // Polyline
                 case 2:
                     for (unsigned int i = 0; i < it->parameters.size(); i+=2)
                     {
@@ -597,7 +560,7 @@ void Data::size(int& x0, int& y0, int &x1, int& y1)
                     }
                     break;
 
-                    // Polybezier
+                // Polybezier
                 case 3:
                     for (unsigned int i = 0; i < it->parameters.size(); i+=2)
                     {
