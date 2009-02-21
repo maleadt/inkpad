@@ -158,8 +158,10 @@ void Data::rotate(double angle)
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
-    // Get the size of the container
-    int size = elements.size();
+	// Save the size (quite expensive, don't want to be this doing in every thread)
+	#ifdef WITH_OPENMP
+	int size = elements.size();
+	#endif
 
     // Process all items in a parallelised manner
     #pragma omp parallel
@@ -172,8 +174,7 @@ void Data::rotate(double angle)
         #endif
 
         // Process the range
-        list<Element>::iterator it;
-        for (it = boost::begin(range); it != boost::end(range); ++it)
+        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
         {
             switch (it->identifier)
             {
@@ -210,8 +211,10 @@ void Data::rotate(double angle)
 // Relocate the canvas
 void Data::translate(int dx, int dy)
 {
-    // Get the size of the container
-    int size = elements.size();
+	// Save the size (quite expensive, don't want to be this doing in every thread)
+	#ifdef WITH_OPENMP
+	int size = elements.size();
+	#endif
 
     // Process all items in a parallelised manner
     #pragma omp parallel
@@ -224,8 +227,7 @@ void Data::translate(int dx, int dy)
         #endif
 
         // Process the range
-        list<Element>::iterator it;
-        for (it = boost::begin(range); it != boost::end(range); ++it)
+        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
         {
             switch (it->identifier)
             {

@@ -60,7 +60,7 @@
 // range.size() may be expensive.
 //
 template<typename Range>
-inline boost::iterator_range< typename Range::iterator > split_range(const Range& range, int partition_count, int partition, int size)
+boost::iterator_range<typename Range::iterator> split_range(const Range& range, int partition_count, int partition, int size)
 {
 	typename Range::iterator begin = boost::begin(range);
 	typename Range::iterator end = boost::end(range);
@@ -98,7 +98,7 @@ inline boost::iterator_range< typename Range::iterator > split_range(const Range
 // (i.e. Range::iterator models random_access_iterator )
 //
 template<typename Range>
-inline boost::iterator_range< typename Range::iterator > split_range(const Range& range, int partition_count, int partition)
+boost::iterator_range<typename Range::iterator> split_range(const Range& range, int partition_count, int partition)
 {
 	return split_range(range, partition_count, partition, range.size());
 }
@@ -117,8 +117,8 @@ inline boost::iterator_range< typename Range::iterator > split_range(const Range
 // This overload, accepting a size, is preferable where
 // range.size() may be expensive.
 //
-template<typename Range >
-inline boost::iterator_range< typename Range::iterator > split_range_openmp(const Range& range, int size)
+template<typename Range>
+boost::iterator_range<typename Range::iterator> split_range_openmp(const Range& range, int size)
 {
 	int thread_count = omp_get_num_threads();
 	int thread = omp_get_thread_num();
@@ -139,8 +139,8 @@ inline boost::iterator_range< typename Range::iterator > split_range_openmp(cons
 // Use this overload where range.size() is not expensive
 // (i.e. Range::iterator models random_access_iterator )
 //
-template<typename Range >
-inline boost::iterator_range< typename Range::iterator > split_range_openmp(const Range& range)
+template<typename Range>
+boost::iterator_range<typename Range::iterator> split_range_openmp(const Range& range)
 {
 	return split_range_openmp(range, range.size());
 }
