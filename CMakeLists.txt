@@ -5,7 +5,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(Inkpad)
 
 # Type of build ("debug" or "release")
-set(CMAKE_BUILD_TYPE debug)
+set(CMAKE_BUILD_TYPE release)
 
 # Experimental options
 set(WITH_USTD false)

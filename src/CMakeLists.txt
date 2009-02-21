@@ -1,6 +1,7 @@
 # Compile all libraries
 ADD_LIBRARY(exception exception.h exception.cpp)
 ADD_LIBRARY(generic generic.h generic.cpp)
+ADD_LIBRARY(multithread multithread.h multithread.cpp)
 ADD_LIBRARY(data data.h data.cpp)
 ADD_LIBRARY(input input.h input.cpp)
 ADD_LIBRARY(output output.h output.cpp)
@@ -13,10 +14,16 @@ FIND_PACKAGE(wxWidgets REQUIRED)
 INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
 ADD_DEFINITIONS(${wxWidgets_DEFINITIONS})
 
+# Include Boost
+FIND_PACKAGE(Boost)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+
 # Define the main inkpad executable, and what it should be linked too
 ADD_EXECUTABLE(inkpad WIN32 main)
 TARGET_LINK_LIBRARIES(inkpad exception)
 TARGET_LINK_LIBRARIES(inkpad generic)
+TARGET_LINK_LIBRARIES(inkpad multithread)
 TARGET_LINK_LIBRARIES(inkpad data)
 TARGET_LINK_LIBRARIES(inkpad input)
 TARGET_LINK_LIBRARIES(inkpad output)
@@ -35,6 +42,7 @@ ENDIF(WITH_USTD)
 # Use OpenMP?
 IF (WITH_OPENMP)
 	MESSAGE("** Using OpenMP multithreading")
+	ADD_DEFINITIONS(-DWITH_OMP)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -openmp")
 	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -openmp")
 ENDIF (WITH_OPENMP)

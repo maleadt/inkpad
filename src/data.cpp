@@ -158,37 +158,42 @@ void Data::rotate(double angle)
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
-	// Convert list to a vector in order to support parallelisation
-	valarray<Element*> tempArray(elements.size());
-	int element_i = 0;
-	for (list<Element>::iterator it = elements.begin(); it != elements.end(); it++)
-        tempArray[element_i++] = &(*it);
-
-	// Rotate all elements
-	#pragma omp parallel for default(shared)
-    for (long i = 0; i < elements.size(); i++)
+    // Process all items in a parallelised manner
+    #pragma omp parallel
     {
-        switch (tempArray[i]->identifier)
+        // Calculate a range
+        #ifdef WITH_OPENMP
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), elements.size());
+        #else
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        #endif
+
+        // Process the range
+        list<Element>::iterator it;
+        for (it = boost::begin(range); it != boost::end(range); ++it)
         {
-            // Point
-            case 1:
-                help_rotate(tempArray[i]->parameters[0], tempArray[i]->parameters[1], angle_rad);
-                break;
+            switch (it->identifier)
+            {
+                // Point
+                case 1:
+                    help_rotate(it->parameters[0], it->parameters[1], angle_rad);
+                    break;
 
-            // Polyline
-            case 2:
-                for (unsigned int j = 0; j < tempArray[i]->parameters.size(); j+=2)
-                    help_rotate(tempArray[i]->parameters[j], tempArray[i]->parameters[j+1], angle_rad);
-                break;
+                // Polyline
+                case 2:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                        help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+                    break;
 
-            // Polybezier
-            case 3:
-                for (unsigned int j = 0; j < tempArray[i]->parameters.size(); j+=2)
-                    help_rotate(tempArray[i]->parameters[j], tempArray[i]->parameters[j+1], angle_rad);
-                break;
+                // Polybezier
+                case 3:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                        help_rotate(it->parameters[i], it->parameters[i+1], angle_rad);
+                    break;
 
-            default:
-                throw Exception("data", "rotate", "unsupported element with ID " + stringify(tempArray[i]->identifier));
+                default:
+                    throw Exception("data", "rotate", "unsupported element with ID " + stringify(it->identifier));
+            }
         }
     }
 
@@ -202,41 +207,51 @@ void Data::rotate(double angle)
 // Relocate the canvas
 void Data::translate(int dx, int dy)
 {
-	// Loop elements
-	list<Element>::iterator it = elements.begin();
-	while (it != elements.end())
-	{
-		switch (it->identifier)
-		{
-				// Point
-			case 1:
-				it->parameters[0] += dx;
-				it->parameters[1] += dy;
-				break;
+    // Process all items in a parallelised manner
+    #pragma omp parallel
+    {
+        // Calculate a range
+        #ifdef WITH_OPENMP
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), elements.size());
+        #else
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        #endif
 
-				// Polyline
-			case 2:
-				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-				{
-					it->parameters[i] += dx;
-					it->parameters[i+1] += dy;
-				}
-				break;
+        // Process the range
+        list<Element>::iterator it;
+        for (it = boost::begin(range); it != boost::end(range); ++it)
+        {
+            switch (it->identifier)
+            {
+                    // Point
+                case 1:
+                    it->parameters[0] += dx;
+                    it->parameters[1] += dy;
+                    break;
 
-				// Polybezier
-			case 3:
-				for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-				{
-					it->parameters[i] += dx;
-					it->parameters[i+1] += dy;
-				}
-				break;
+                    // Polyline
+                case 2:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                    {
+                        it->parameters[i] += dx;
+                        it->parameters[i+1] += dy;
+                    }
+                    break;
 
-			default:
-                throw Exception("data", "translate", "unsupported element with ID " + stringify(it->identifier));
-		}
-		++it;
-	}
+                    // Polybezier
+                case 3:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                    {
+                        it->parameters[i] += dx;
+                        it->parameters[i+1] += dy;
+                    }
+                    break;
+
+                default:
+                    throw Exception("data", "translate", "unsupported element with ID " + stringify(it->identifier));
+            }
+        }
+    }
 
 	// Invalidate caches
 	cacheBoundsDirty = true;
