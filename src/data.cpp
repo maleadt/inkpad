@@ -158,9 +158,9 @@ void Data::rotate(double angle)
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
-	// Save the size (quite expensive, don't want to be this doing in every thread)
+	// Save the size
 	#ifdef WITH_OPENMP
-	int size = elements.size();
+	int size = statElements();
 	#endif
 
     // Process all items in a parallelised manner
@@ -211,9 +211,9 @@ void Data::rotate(double angle)
 // Relocate the canvas
 void Data::translate(int dx, int dy)
 {
-	// Save the size (quite expensive, don't want to be this doing in every thread)
+	// Save the size
 	#ifdef WITH_OPENMP
-	int size = elements.size();
+	int size = statElements();
 	#endif
 
     // Process all items in a parallelised manner
@@ -288,228 +288,277 @@ void Data::autocrop()
 // Data optimalisation
 //
 
-// Look for polylines
+// Look for exact polylines
+// Parallelisation does have a negative impact in here: per x threads more than 1,
+//   theoretically x polylines could be split
 void Data::search_polyline()
 {
-	// Loop elements
-	list<Element>::iterator it = elements.begin();
-	while (it != elements.end())
-	{
-		// Initialize a polyline vector
-		vector<double> polyline;
+	// Save the size
+	#ifdef WITH_OPENMP
+	int size = statElements();
+	#endif
 
-		// Add start point(s)
-		switch (it->identifier)
-		{
-				// Point
-			case 1:
-				polyline.reserve(2);
-				polyline.push_back(it->parameters[0]);
-				polyline.push_back(it->parameters[1]);
-				break;
+    // Process all items in a parallelised manner
+    #pragma omp parallel
+    {
+        // Calculate a range
+        #ifdef WITH_OPENMP
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        #else
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        #endif
 
-				// Polyline
-			case 2:
-				polyline = it->parameters;
-				break;
+        // Process the range
+        list<Element>::iterator it = boost::begin(range);
+        while (it != boost::end(range))
+        {
+            // Initialize a polyline vector
+            vector<double> polyline;
 
-				// Not supported form
-			default:
-				continue;
-		}
+            // Add start point(s)
+            switch (it->identifier)
+            {
+                    // Point
+                case 1:
+                    polyline.reserve(2);
+                    polyline.push_back(it->parameters[0]);
+                    polyline.push_back(it->parameters[1]);
+                    break;
 
-		// Save the end points
-		double x = polyline[ polyline.size() - 2 ];
-		double y = polyline[ polyline.size() - 1 ];
-		unsigned int oldsize = polyline.size();
+                    // Polyline
+                case 2:
+                    polyline = it->parameters;
+                    break;
 
-		// Scan other elements to look for a match with those end points
-		bool found = false;
-		list<Element>::iterator it_a = it;
-		list<Element>::iterator it2 = ++it_a;
-		while (it2 != elements.end())
-		{
-			// Compare ending point
-			switch (it2->identifier)
-			{
-					// Point
-				case 1:
-					if (x == it2->parameters[0] && y == it2->parameters[1])
-						found = true;
-					break;
+                    // Not supported form
+                default:
+                    continue;
+            }
 
-					// Polyline
-				case 2:
-					if (x == it2->parameters[0] && y == it2->parameters[1])
-					{
-						for (unsigned int i = 2; i < it2->parameters.size(); i++)
-							polyline.push_back(it2->parameters[i]);
-						found = true;
-					}
-					break;
+            // Save the end points
+            double x = polyline[ polyline.size() - 2 ];
+            double y = polyline[ polyline.size() - 1 ];
+            unsigned int oldsize = polyline.size();
 
-					// Not supported form
-				default:
-					continue;
-			}
+            // Scan other elements to look for a match with those end points
+            bool found = false;
+            list<Element>::iterator it_a = it;
+            list<Element>::iterator it2 = ++it_a;
+            while (it2 != elements.end())
+            {
+                // Compare ending point
+                switch (it2->identifier)
+                {
+                        // Point
+                    case 1:
+                        if (x == it2->parameters[0] && y == it2->parameters[1])
+                            found = true;
+                        break;
 
-			// If the line matched, remove it and push it up the temporary polyline
-			if (found)
-			{
-				// Delete the old element
-				it2 = elements.erase(it2);
+                        // Polyline
+                    case 2:
+                        if (x == it2->parameters[0] && y == it2->parameters[1])
+                        {
+                            for (unsigned int i = 2; i < it2->parameters.size(); i++)
+                                polyline.push_back(it2->parameters[i]);
+                            found = true;
+                        }
+                        break;
 
-				// Alter the new comparison points
-				x = polyline[ polyline.size() - 2 ];
-				y = polyline[ polyline.size() - 1 ];
-				found = false;
-			}
-			else
-			{
-				++it2;
-			}
-		}
+                        // Not supported form
+                    default:
+                        continue;
+                }
 
-		// If the size differs, we have removed some lines, so save the resulting polyline
-		if (oldsize != polyline.size())
-		{
-			it = elements.erase(it);
-			addPolyline(polyline, it);
-		}
-		else
-		{
-			++it;
-		}
-	}
+                // If the line matched, remove it and push it up the temporary polyline
+                if (found)
+                {
+                    // Delete the old element
+                    it2 = elements.erase(it2);
+
+                    // Alter the new comparison points
+                    x = polyline[ polyline.size() - 2 ];
+                    y = polyline[ polyline.size() - 1 ];
+                    found = false;
+                }
+                else
+                {
+                    ++it2;
+                }
+            }
+
+            // If the size differs, we have removed some lines, so save the resulting polyline
+            if (oldsize != polyline.size())
+            {
+                it = elements.erase(it);
+                addPolyline(polyline, it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
 }
 
 // Simplify polylines
-// http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
+// Parallelisation does have a negative impact in here: per x threads more than 1,
+//   theoretically x polylines could be split
+// See also: http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
 void Data::simplify_polyline(double radius)
 {
-	// Loop elements
-	list<Element>::iterator it = elements.begin();
-	while (it != elements.end())
-	{
-		switch (it->identifier)
-		{
-			case 2:
-			{
-				vector<double> result;
+	// Save the size
+	#ifdef WITH_OPENMP
+	int size = statElements();
+	#endif
 
-				// Define last point
-				double lastX = it->parameters[0];
-				double lastY = it->parameters[1];
-				double lastI = 0;
+    // Process all items in a parallelised manner
+    #pragma omp parallel
+    {
+        // Calculate a range
+        #ifdef WITH_OPENMP
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        #else
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        #endif
 
-				// Starting point should always go on the result
-				result.push_back(lastX);
-				result.push_back(lastY);
+        // Process the range
+        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
+        {
+            switch (it->identifier)
+            {
+                case 2:
+                {
+                    vector<double> result;
 
-				// Loop other points
-				for (unsigned int i = 4; i < it->parameters.size(); i+=2)
-				{
-					// Define current point
-					double curX = it->parameters[i];
-					double curY = it->parameters[i+1];
+                    // Define last point
+                    double lastX = it->parameters[0];
+                    double lastY = it->parameters[1];
+                    double lastI = 0;
 
-					// Calculate primary vector coefficients
-					double lineX = curX - lastX;
-					double lineY = curY - lastY;
+                    // Starting point should always go on the result
+                    result.push_back(lastX);
+                    result.push_back(lastY);
 
-					// Loop all points in between
-					bool falls_in_between = true;
-					for (unsigned int j = lastI+2; j < i-2 && falls_in_between; j+=2)
-					{
-						// Calculate distance from point to line through secondary vector coefficients (dot product)
-						double pointX = it->parameters[j] - lastX;
-						double pointY = it->parameters[j+1] - lastY;
-						double dist = abs(pointX * lineY - lineX * pointY) / sqrt(lineX * lineX + lineY * lineY);
+                    // Loop other points
+                    for (unsigned int i = 4; i < it->parameters.size(); i+=2)
+                    {
+                        // Define current point
+                        double curX = it->parameters[i];
+                        double curY = it->parameters[i+1];
 
-						// Check distance
-						if (dist > radius)
-							falls_in_between = false;
-					}
+                        // Calculate primary vector coefficients
+                        double lineX = curX - lastX;
+                        double lineY = curY - lastY;
 
-					if (!falls_in_between)
-					{
-						result.push_back(curX);
-						result.push_back(curY);
+                        // Loop all points in between
+                        bool falls_in_between = true;
+                        for (unsigned int j = lastI+2; j < i-2 && falls_in_between; j+=2)
+                        {
+                            // Calculate distance from point to line through secondary vector coefficients (dot product)
+                            double pointX = it->parameters[j] - lastX;
+                            double pointY = it->parameters[j+1] - lastY;
+                            double dist = abs(pointX * lineY - lineX * pointY) / sqrt(lineX * lineX + lineY * lineY);
 
-						lastX = curX;
-						lastY = curY;
-						lastI = i;
-					}
-				}
+                            // Check distance
+                            if (dist > radius)
+                                falls_in_between = false;
+                        }
 
-				// And add the final point
-				result.push_back(it->parameters[ it->parameters.size()-2 ]);
-				result.push_back(it->parameters[ it->parameters.size()-1 ]);
+                        if (!falls_in_between)
+                        {
+                            result.push_back(curX);
+                            result.push_back(curY);
 
-				it->parameters = result;
-				break;
-			}
+                            lastX = curX;
+                            lastY = curY;
+                            lastI = i;
+                        }
+                    }
 
-			default:
-				break;
-		}
-		++it;
-	}
+                    // And add the final point
+                    result.push_back(it->parameters[ it->parameters.size()-2 ]);
+                    result.push_back(it->parameters[ it->parameters.size()-1 ]);
+
+                    it->parameters = result;
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+    }
 
 	// Invalidate caches
 	cacheBoundsDirty = true;
 }
 
 // Smoothn polylines
-// http://www.sitepen.com/blog/2007/07/16/softening-polylines-with-dojox-graphics/
+// See also: http://www.sitepen.com/blog/2007/07/16/softening-polylines-with-dojox-graphics/
 void Data::smoothn_polyline(double tension)
 {
-	// Loop elements
-	list<Element>::iterator it = elements.begin();
-	while (it != elements.end())
-	{
-		switch (it->identifier)
-		{
-			case 2:
-			{
-				// Resulting vector
-				vector<double> result;
-				result.push_back(it->parameters[0]);
-				result.push_back(it->parameters[1]);
+	// Save the size
+	#ifdef WITH_OPENMP
+	int size = statElements();
+	#endif
 
-				// Loop polyline
-				for (unsigned int i = 2; i < it->parameters.size(); i+=2)
-				{
-					result.reserve(result.size() + 6);
+    // Process all items in a parallelised manner
+    #pragma omp parallel
+    {
+        // Calculate a range
+        #ifdef WITH_OPENMP
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        #else
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        #endif
 
-					// Calculate data
-					double dx = it->parameters[i] - it->parameters[i-2];
-					double add = dx / tension;
+        // Process the range
+        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
+        {
+            switch (it->identifier)
+            {
+                case 2:
+                {
+                    // Resulting vector
+                    vector<double> result;
+                    result.push_back(it->parameters[0]);
+                    result.push_back(it->parameters[1]);
 
-					// First control point
-					result.push_back(it->parameters[i-2] + add);
-					result.push_back(it->parameters[i-1]);
+                    // Loop polyline
+                    for (unsigned int i = 2; i < it->parameters.size(); i+=2)
+                    {
+                        result.reserve(result.size() + 6);
 
-					// Second control point
-					result.push_back(it->parameters[i] - add);
-					result.push_back(it->parameters[i+1]);
+                        // Calculate data
+                        double dx = it->parameters[i] - it->parameters[i-2];
+                        double add = dx / tension;
 
-					// End point
-					result.push_back(it->parameters[i]);
-					result.push_back(it->parameters[i+1]);
-				}
+                        // First control point
+                        result.push_back(it->parameters[i-2] + add);
+                        result.push_back(it->parameters[i-1]);
+
+                        // Second control point
+                        result.push_back(it->parameters[i] - add);
+                        result.push_back(it->parameters[i+1]);
+
+                        // End point
+                        result.push_back(it->parameters[i]);
+                        result.push_back(it->parameters[i+1]);
+                    }
 
 
-				// Replace polyline with polybezier
-				it = elements.erase(it);
-				addPolybezier(result, it);
-				break;
-			}
+                    // Replace polyline with polybezier
+                    it = elements.erase(it);
+                    addPolybezier(result, it);
+                    break;
+                }
 
-			default:
-				break;
-		}
-	}
+                default:
+                    break;
+            }
+        }
+    }
 
 	// Invalidate caches
 	cacheBoundsDirty = true;
@@ -562,40 +611,54 @@ void Data::size(int& x0, int& y0, int &x1, int& y1)
         x1 = 0;
         y1 = 0;
 
-        // Loop elements
-        list<Element>::const_iterator it = elements.begin();
-        while (it != elements.end())
+        // Save the size
+        #ifdef WITH_OPENMP
+        int size = statElements();
+        #endif
+
+        // Process all items in a parallelised manner
+        #pragma omp parallel
         {
-            switch (it->identifier)
+            // Calculate a range
+            #ifdef WITH_OPENMP
+            boost::iterator_range<list<Element>::const_iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+            #else
+            boost::iterator_range<list<Element>::const_iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+            #endif
+
+            // Process the range
+            for (list<Element>::const_iterator it = boost::begin(range); it != boost::end(range); ++it)
             {
-                // Point
-                case 1:
-                    help_range(x0, x1, it->parameters[0]);
-                    help_range(y0, y1, it->parameters[1]);
-                    break;
+                switch (it->identifier)
+                {
+                    // Point
+                    case 1:
+                        help_range(x0, x1, it->parameters[0]);
+                        help_range(y0, y1, it->parameters[1]);
+                        break;
 
-                // Polyline
-                case 2:
-                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                    {
-                        help_range(x0, x1, it->parameters[i]);
-                        help_range(y0, y1, it->parameters[i+1]);
-                    }
-                    break;
+                    // Polyline
+                    case 2:
+                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                        {
+                            help_range(x0, x1, it->parameters[i]);
+                            help_range(y0, y1, it->parameters[i+1]);
+                        }
+                        break;
 
-                // Polybezier
-                case 3:
-                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                    {
-                        help_range(x0, x1, it->parameters[i]);
-                        help_range(y0, y1, it->parameters[i+1]);
-                    }
-                    break;
+                    // Polybezier
+                    case 3:
+                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                        {
+                            help_range(x0, x1, it->parameters[i]);
+                            help_range(y0, y1, it->parameters[i+1]);
+                        }
+                        break;
 
-                default:
-                    throw Exception("data", "size", "unsupported element with ID " + stringify(it->identifier));
+                    default:
+                        throw Exception("data", "size", "unsupported element with ID " + stringify(it->identifier));
+                }
             }
-            ++it;
         }
     }
 
@@ -622,6 +685,7 @@ int Data::statElements() const
 }
 
 // The amount of parameters
+// TODO: does parallelisation bring a speedup in small routines as this one?
 int Data::statParameters() const
 {
 	// Loop elements
