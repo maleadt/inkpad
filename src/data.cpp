@@ -58,8 +58,8 @@ void Data::clear()
 	// Cache reset
 	cacheBoundsDirty = true;
 
-	// Delete elements
-	elements.clear();
+	// Delete dataElements
+	dataElements.clear();
 }
 
 
@@ -70,7 +70,7 @@ void Data::clear()
 // Add a single point
 void Data::addPoint(int x1, int y1)
 {
-	addPoint(x1, y1, elements.end());
+	addPoint(x1, y1, dataElements.end());
 }
 void Data::addPoint(int x1, int y1, list<Element>::iterator it)
 {
@@ -84,13 +84,13 @@ void Data::addPoint(int x1, int y1, list<Element>::iterator it)
 	tempElement.parameters[1] = y1;
 
 	// Save the element
-	addElement(tempElement, elements.end());
+	addElement(tempElement, dataElements.end());
 }
 
 // Add a new polyline
 void Data::addPolyline(const vector<double>& points)
 {
-	addPolyline(points, elements.end());
+	addPolyline(points, dataElements.end());
 }
 void Data::addPolyline(const vector<double>& points, list<Element>::iterator it)
 {
@@ -108,7 +108,7 @@ void Data::addPolyline(const vector<double>& points, list<Element>::iterator it)
 // Add a new polybezier
 void Data::addPolybezier(const vector<double>& points)
 {
-	addPolybezier(points, elements.end());
+	addPolybezier(points, dataElements.end());
 }
 void Data::addPolybezier(const vector<double>& points, list<Element>::iterator it)
 {
@@ -132,7 +132,7 @@ void Data::addElement(Element& inputElement, list<Element>::iterator it)
 	inputElement.background = penBackground;
 
 	// Save the element
-	elements.insert(it, inputElement);
+	dataElements.insert(it, inputElement);
 
 	// Invalidate caches
 	cacheBoundsDirty = true;
@@ -140,7 +140,7 @@ void Data::addElement(Element& inputElement, list<Element>::iterator it)
 
 
 //
-// Element conversion
+// Transformations
 //
 
 // Rotate the image
@@ -160,7 +160,7 @@ void Data::rotate(double angle)
 
 	// Save the size
 	#ifdef WITH_OPENMP
-	int size = statElements();
+	int size = elements();
 	#endif
 
     // Process all items in a parallelised manner
@@ -168,9 +168,9 @@ void Data::rotate(double angle)
     {
         // Calculate a range
         #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
         #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
         #endif
 
         // Process the range
@@ -213,7 +213,7 @@ void Data::translate(int dx, int dy)
 {
 	// Save the size
 	#ifdef WITH_OPENMP
-	int size = statElements();
+	int size = elements();
 	#endif
 
     // Process all items in a parallelised manner
@@ -221,9 +221,9 @@ void Data::translate(int dx, int dy)
     {
         // Calculate a range
         #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
         #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
         #endif
 
         // Process the range
@@ -285,7 +285,7 @@ void Data::autocrop()
 
 
 //
-// Data optimalisation
+// Optimalisation
 //
 
 // Look for exact polylines
@@ -295,7 +295,7 @@ void Data::search_polyline()
 {
 	// Save the size
 	#ifdef WITH_OPENMP
-	int size = statElements();
+	int size = elements();
 	#endif
 
     // Process all items in a parallelised manner
@@ -303,9 +303,9 @@ void Data::search_polyline()
     {
         // Calculate a range
         #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
         #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
         #endif
 
         // Process the range
@@ -344,7 +344,7 @@ void Data::search_polyline()
             bool found = false;
             list<Element>::iterator it_a = it;
             list<Element>::iterator it2 = ++it_a;
-            while (it2 != elements.end())
+            while (it2 != dataElements.end())
             {
                 // Compare ending point
                 switch (it2->identifier)
@@ -374,7 +374,7 @@ void Data::search_polyline()
                 if (found)
                 {
                     // Delete the old element
-                    it2 = elements.erase(it2);
+                    it2 = dataElements.erase(it2);
 
                     // Alter the new comparison points
                     x = polyline[ polyline.size() - 2 ];
@@ -390,7 +390,7 @@ void Data::search_polyline()
             // If the size differs, we have removed some lines, so save the resulting polyline
             if (oldsize != polyline.size())
             {
-                it = elements.erase(it);
+                it = dataElements.erase(it);
                 addPolyline(polyline, it);
             }
             else
@@ -409,7 +409,7 @@ void Data::simplify_polyline(double radius)
 {
 	// Save the size
 	#ifdef WITH_OPENMP
-	int size = statElements();
+	int size = elements();
 	#endif
 
     // Process all items in a parallelised manner
@@ -417,9 +417,9 @@ void Data::simplify_polyline(double radius)
     {
         // Calculate a range
         #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
         #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
         #endif
 
         // Process the range
@@ -500,7 +500,7 @@ void Data::smoothn_polyline(double tension)
 {
 	// Save the size
 	#ifdef WITH_OPENMP
-	int size = statElements();
+	int size = elements();
 	#endif
 
     // Process all items in a parallelised manner
@@ -508,9 +508,9 @@ void Data::smoothn_polyline(double tension)
     {
         // Calculate a range
         #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
         #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
         #endif
 
         // Process the range
@@ -549,7 +549,7 @@ void Data::smoothn_polyline(double tension)
 
 
                     // Replace polyline with polybezier
-                    it = elements.erase(it);
+                    it = dataElements.erase(it);
                     addPolybezier(result, it);
                     break;
                 }
@@ -566,7 +566,7 @@ void Data::smoothn_polyline(double tension)
 
 
 //
-// Element output
+// Information
 //
 
 inline void help_range(int& low, int& high, const int& value)
@@ -585,7 +585,7 @@ inline void help_range(int& low, int& high, const int& value)
 void Data::size(int& x0, int& y0, int &x1, int& y1)
 {
     // Have we got data?
-    if (elements.empty())
+    if (dataElements.empty())
     {
         x0 = 0;
         y0 = 0;
@@ -613,7 +613,7 @@ void Data::size(int& x0, int& y0, int &x1, int& y1)
 
         // Save the size
         #ifdef WITH_OPENMP
-        int size = statElements();
+        int size = elements();
         #endif
 
         // Process all items in a parallelised manner
@@ -621,9 +621,9 @@ void Data::size(int& x0, int& y0, int &x1, int& y1)
         {
             // Calculate a range
             #ifdef WITH_OPENMP
-            boost::iterator_range<list<Element>::const_iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
+            boost::iterator_range<list<Element>::const_iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
             #else
-            boost::iterator_range<list<Element>::const_iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
+            boost::iterator_range<list<Element>::const_iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
             #endif
 
             // Process the range
@@ -673,25 +673,20 @@ void Data::size(int& x0, int& y0, int &x1, int& y1)
     }
 }
 
-
-//
-// Statistics
-//
-
 // The amount of elements
-int Data::statElements() const
+int Data::elements() const
 {
-	return elements.size();
+	return dataElements.size();
 }
 
 // The amount of parameters
 // TODO: does parallelisation bring a speedup in small routines as this one?
-int Data::statParameters() const
+int Data::parameters() const
 {
-	// Loop elements
+	// Loop dataElements
 	int count = 0;
-	list<Element>::const_iterator it = elements.begin();
-	while (it != elements.end())
+	list<Element>::const_iterator it = dataElements.begin();
+	while (it != dataElements.end())
 	{
 		switch (it->identifier)
 		{

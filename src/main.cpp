@@ -55,10 +55,17 @@
 //
 
 // Benchmark counters
-const int BENCHMARK_RENDER_FPS = 10;
+const int BENCHMARK_DATA_OPERATION_COPY = 256;
 const int BENCHMARK_DATA_TRANSFORM_ROTATE = 128;
 const int BENCHMARK_DATA_TRANSFORM_TRANSLATE = 1024;
-
+const int BENCHMARK_DATA_TRANSFORM_AUTOCROP = 128;
+const int BENCHMARK_DATA_OPTIMIZE_POLYSEARCH = 32;
+const int BENCHMARK_DATA_OPTIMIZE_POLYSIMP = 128;
+const int BENCHMARK_DATA_OPTIMIZE_POLYSMOOTH = 128;
+const int BENCHMARK_DATA_INFORMATION_SIZE = 128;
+const int BENCHMARK_DATA_INFORMATION_ELEMENTS = 128;
+const int BENCHMARK_DATA_INFORMATION_PARAMETERS = 128;
+const int BENCHMARK_RENDER_FPS = 10;
 
 //////////////////////
 // CLASS DEFINITION //
@@ -391,7 +398,134 @@ bool Inkpad::InitBenchmark()
 
 
 	//
-	// Benchmark render engines
+	// Data operations
+	//
+
+    std::cout << "* Data: operations" << std::endl;
+
+    // Copy
+    std::cout << "\t- copies: ";
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_OPERATION_COPY; i++)
+        Data tempData(*engineData);
+    double copy_rate = (double)BENCHMARK_DATA_OPERATION_COPY / stopwatch.Time();
+    std::cout << (int)(1000*copy_rate) << " per second" << std::endl;
+
+
+	//
+	// Data transformation
+	//
+
+	std::cout << "* Data: transformations" << std::endl;
+
+	// Rotation
+	std::cout << "\t- rotations: ";
+	stopwatch.Start();
+	for (int i = 0; i < BENCHMARK_DATA_TRANSFORM_ROTATE; i++)
+		engineData->rotate(90);
+	std::cout << 1000*BENCHMARK_DATA_TRANSFORM_ROTATE/stopwatch.Time() << " per second" << std::endl;
+
+	// Translation
+	std::cout << "\t- translations: ";
+	stopwatch.Start();
+	for (int i = 0; i < BENCHMARK_DATA_TRANSFORM_TRANSLATE; i+=2)
+	{
+		engineData->translate(500, -500);
+		engineData->translate(-500, 500);
+	}
+	std::cout << 1000*BENCHMARK_DATA_TRANSFORM_TRANSLATE/stopwatch.Time() << " per second" << std::endl;
+
+    // autocrop
+    std::cout << "\t- autocrops: ";
+    int dummy;
+    engineData->size(dummy, dummy, dummy, dummy);  // Create a size() cache
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_TRANSFORM_AUTOCROP; i++)
+    {
+        Data tempData(*engineData);
+        tempData.autocrop();
+    }
+    std::cout << int(1000*BENCHMARK_DATA_TRANSFORM_AUTOCROP/(stopwatch.Time()-double(BENCHMARK_DATA_TRANSFORM_AUTOCROP)/copy_rate)) << " per second" << std::endl;
+
+
+	//
+	// Data optimalisations
+	//
+
+	std::cout << "* Data: optimalisations" << std::endl;
+
+    // Search polyline
+    std::cout << "\t- polyline matches: ";
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_OPTIMIZE_POLYSEARCH; i++)
+    {
+        Data tempData(*engineData);
+        tempData.search_polyline();
+    }
+    std::cout << int(1000*BENCHMARK_DATA_OPTIMIZE_POLYSEARCH/(stopwatch.Time()-double(BENCHMARK_DATA_OPTIMIZE_POLYSEARCH)/copy_rate)) << " per second" << std::endl;
+
+    // Simplify polyline
+    std::cout << "\t- polyline simplifications: ";
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_OPTIMIZE_POLYSIMP; i++)
+    {
+        Data tempData(*engineData);
+        tempData.simplify_polyline(1);
+    }
+    std::cout << int(1000*BENCHMARK_DATA_OPTIMIZE_POLYSIMP/(stopwatch.Time()-double(BENCHMARK_DATA_OPTIMIZE_POLYSIMP)/copy_rate)) << " per second" << std::endl;
+
+    // Smooth polyline
+    std::cout << "\t- polyline smoothns: ";
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_OPTIMIZE_POLYSMOOTH; i++)
+    {
+        Data tempData(*engineData);
+        tempData.smoothn_polyline(0.95);
+    }
+    std::cout << int(1000*BENCHMARK_DATA_OPTIMIZE_POLYSMOOTH/(stopwatch.Time()-double(BENCHMARK_DATA_OPTIMIZE_POLYSMOOTH)/copy_rate)) << " per second" << std::endl;
+
+
+    //
+    // Data: information
+    //
+
+    std::cout << "* Data: information" << std::endl;
+    engineData->translate(0, 0);
+
+    // Size
+    std::cout << "\t- size calculations: ";
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_INFORMATION_SIZE; i++)
+    {
+        Data tempData(*engineData);
+        tempData.size(dummy, dummy, dummy, dummy);
+    }
+    std::cout << int(1000*BENCHMARK_DATA_INFORMATION_SIZE/(stopwatch.Time()-double(BENCHMARK_DATA_INFORMATION_SIZE)/copy_rate)) << " per second" << std::endl;
+
+    // Elements
+    std::cout << "\t- element counts: ";
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_INFORMATION_ELEMENTS; i++)
+    {
+        Data tempData(*engineData);
+        tempData.elements();
+    }
+    std::cout << int(1000*BENCHMARK_DATA_INFORMATION_ELEMENTS/(stopwatch.Time()-double(BENCHMARK_DATA_INFORMATION_ELEMENTS)/copy_rate)) << " per second" << std::endl;
+
+    // Parameters
+    std::cout << "\t- parameter counts: ";
+    stopwatch.Start();
+    for (int i = 0; i < BENCHMARK_DATA_INFORMATION_PARAMETERS; i++)
+    {
+        Data tempData(*engineData);
+        tempData.parameters();
+    }
+    std::cout << int(1000*BENCHMARK_DATA_INFORMATION_PARAMETERS/(stopwatch.Time()-double(BENCHMARK_DATA_INFORMATION_PARAMETERS)/copy_rate)) << " per second" << std::endl;
+
+
+
+	//
+	// Render engines
 	//
 
 	std::cout << "* Render: frames per second" << std::endl;
@@ -415,28 +549,6 @@ bool Inkpad::InitBenchmark()
 		// Output
 		std::cout << 1000*BENCHMARK_RENDER_FPS/stopwatch.Time() << " frames per second" << std::endl;
 	}
-
-
-	//
-	// Data transformations
-	//
-
-	std::cout << "* Data: transformations" << std::endl;
-
-	// Rotation
-	stopwatch.Start();
-	for (int j = 0; j < BENCHMARK_DATA_TRANSFORM_ROTATE; j++)
-		engineData->rotate(90);
-	std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_ROTATE/stopwatch.Time() << " rotations per second" << std::endl;
-
-	// Translation
-	stopwatch.Start();
-	for (int j = 0; j < BENCHMARK_DATA_TRANSFORM_TRANSLATE; j+=2)
-	{
-		engineData->translate(500, -500);
-		engineData->translate(-500, 500);
-	}
-	std::cout << "\t- " << 1000*BENCHMARK_DATA_TRANSFORM_TRANSLATE/stopwatch.Time() << " translations per second" << std::endl;
 
 	return false;
 }
@@ -974,7 +1086,7 @@ void DrawPane::eventSize(wxSizeEvent& event)
 void DrawPane::render(wxDC& dc)
 {
 	// Only draw if we have data
-	if (parent->engineData->statElements() > 0)
+	if (parent->engineData->elements() > 0)
 	{
 		// Set the frame's title
 		parent->frame->SetTitle(_T("Inkpad - ") + parent->getfile_load().GetName());
@@ -989,7 +1101,7 @@ void DrawPane::render(wxDC& dc)
 		// Adjust status bar
 		wxString statusbar;
 		statusbar << parent->engineData->imgSizeX << _T(" x ") << parent->engineData->imgSizeY << _T(" pixels")
-		<< _T(" (") << parent->engineData->statElements() << _T(" elements with ") << parent->engineData->statParameters() << _T(" parameters)");
+		<< _T(" (") << parent->engineData->elements() << _T(" elements with ") << parent->engineData->parameters() << _T(" parameters)");
 		parent->frame->SetStatusText(statusbar);
 	}
 }

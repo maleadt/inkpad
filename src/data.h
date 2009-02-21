@@ -164,38 +164,36 @@ class Data
 		void addPolybezier(const vector<double>&);
 		void addPolybezier(const vector<double>&, list<Element>::iterator);
 
-		// Element conversion
+		// Transformations
 		void rotate(double angle);
 		void translate(int dx, int dy);
 		void autocrop();
 
-		// Data omptimalisation
+		// Omptimalisation
 		void search_polyline();
 		void simplify_polyline(double accuracy);
 		void smoothn_polyline(double tension);
 
-		// Element output
+		// Information
 		void size(int&, int&, int&, int&);
-
-		// Statistics
-		int statElements() const;
-		int statParameters() const;
+		int elements() const;
+		int parameters() const;
 
 		// Iterators
 		typedef list<Element>::const_iterator const_iterator;
 		const_iterator begin() const
 		{
-			return elements.begin();
+			return dataElements.begin();
 		}
 		const_iterator end() const
 		{
-			return elements.end();
+			return dataElements.end();
 		}
 
 	private:
 		// Elements
 		void addElement(Element&, list<Element>::iterator);
-		list<Element> elements;
+		list<Element> dataElements;
 
 		// Cache - image bounds
 		bool cacheBoundsDirty;
