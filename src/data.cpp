@@ -158,12 +158,15 @@ void Data::rotate(double angle)
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
+    // Get the size of the container
+    int size = elements.size();
+
     // Process all items in a parallelised manner
     #pragma omp parallel
     {
         // Calculate a range
         #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), elements.size());
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
         #else
         boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
         #endif
@@ -207,12 +210,15 @@ void Data::rotate(double angle)
 // Relocate the canvas
 void Data::translate(int dx, int dy)
 {
+    // Get the size of the container
+    int size = elements.size();
+
     // Process all items in a parallelised manner
     #pragma omp parallel
     {
         // Calculate a range
         #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), elements.size());
+        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(elements.begin(), elements.end()), size);
         #else
         boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(elements.begin(), elements.end());
         #endif

@@ -5,11 +5,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(Inkpad)
 
 # Type of build ("debug" or "release")
-set(CMAKE_BUILD_TYPE release)
+set(CMAKE_BUILD_TYPE debug)
 
 # Experimental options
 set(WITH_USTD false)
-set(WITH_OPENMP true)
+set(WITH_OPENMP false)
 
 # Which render engines to use
 set(RENDER_CAIRO true)
