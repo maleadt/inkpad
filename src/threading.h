@@ -1,6 +1,6 @@
 /*
- * multithread.h
- * Inkpad multithreading support.
+ * threading.h
+ * Inkpad threading support.
  *
  * Original source by Neil Hunt, with following copyright:
  *   You are free to use this code as you see fit,
@@ -36,10 +36,10 @@
 //
 
 // Include guard
-#ifndef __MULTITHREAD
-#define __MULTITHREAD
+#ifndef __THREADING
+#define __THREADING
 
-// System headers
+// Multithreading
 #ifdef WITH_OPENMP
 #include <omp.h>
 #include <algorithm>
@@ -162,7 +162,6 @@ void Thread<T>::split_range(T& inputContainer)
 
 }
 #endif
-
 
 // Include guard
 #endif

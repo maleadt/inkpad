@@ -40,7 +40,6 @@
 #include <iostream>
 #include <string.h>
 #include <cmath>
-#include <boost/range.hpp>
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
@@ -49,9 +48,7 @@
 // Application headers
 #include "exception.h"
 #include "generic.h"
-
-// Thread management
-#include "multithread.h"
+#include "threading.h"
 
 // Containers
 #ifdef WITH_USTD

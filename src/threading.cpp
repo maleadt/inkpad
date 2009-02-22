@@ -1,6 +1,6 @@
 /*
- * multithread.cpp
- * Inkpad multithreading support.
+ * threading.cpp
+ * Inkpad threading support.
  *
  * Original source by Neil Hunt, with following copyright:
  *   You are free to use this code as you see fit,
@@ -36,4 +36,5 @@
 //
 
 // Headers
-#include "multithread.h"
+#include "threading.h"
+
