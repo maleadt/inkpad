@@ -158,23 +158,14 @@ void Data::rotate(double angle)
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
-	// Save the size
-	#ifdef WITH_OPENMP
-	int size = elements();
-	#endif
-
     // Process all items in a parallelised manner
     #pragma omp parallel
     {
-        // Calculate a range
-        #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
-        #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
-        #endif
+       // Create a thread
+       Thread<list<Element> > tempThread(dataElements);
 
         // Process the range
-        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
+        for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
         {
             switch (it->identifier)
             {
@@ -211,23 +202,15 @@ void Data::rotate(double angle)
 // Relocate the canvas
 void Data::translate(int dx, int dy)
 {
-	// Save the size
-	#ifdef WITH_OPENMP
-	int size = elements();
-	#endif
 
     // Process all items in a parallelised manner
     #pragma omp parallel
     {
-        // Calculate a range
-        #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
-        #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
-        #endif
+       // Create a thread
+       Thread<list<Element> > tempThread(dataElements);
 
         // Process the range
-        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
+        for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
         {
             switch (it->identifier)
             {
@@ -293,24 +276,15 @@ void Data::autocrop()
 //   theoretically x polylines could be split
 void Data::search_polyline()
 {
-	// Save the size
-	#ifdef WITH_OPENMP
-	int size = elements();
-	#endif
-
     // Process all items in a parallelised manner
     #pragma omp parallel
     {
-        // Calculate a range
-        #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
-        #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
-        #endif
+       // Create a thread
+       Thread<list<Element> > tempThread(dataElements);
 
         // Process the range
-        list<Element>::iterator it = boost::begin(range);
-        while (it != boost::end(range))
+        list<Element>::iterator it = tempThread.begin;
+        while (it != tempThread.end)
         {
             // Initialize a polyline vector
             vector<double> polyline;
@@ -407,23 +381,14 @@ void Data::search_polyline()
 // See also: http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
 void Data::simplify_polyline(double radius)
 {
-	// Save the size
-	#ifdef WITH_OPENMP
-	int size = elements();
-	#endif
-
     // Process all items in a parallelised manner
     #pragma omp parallel
     {
-        // Calculate a range
-        #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
-        #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
-        #endif
+       // Create a thread
+       Thread<list<Element> > tempThread(dataElements);
 
         // Process the range
-        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
+        for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
         {
             switch (it->identifier)
             {
@@ -498,23 +463,14 @@ void Data::simplify_polyline(double radius)
 // See also: http://www.sitepen.com/blog/2007/07/16/softening-polylines-with-dojox-graphics/
 void Data::smoothn_polyline(double tension)
 {
-	// Save the size
-	#ifdef WITH_OPENMP
-	int size = elements();
-	#endif
-
     // Process all items in a parallelised manner
     #pragma omp parallel
     {
-        // Calculate a range
-        #ifdef WITH_OPENMP
-        boost::iterator_range<list<Element>::iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
-        #else
-        boost::iterator_range<list<Element>::iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
-        #endif
+       // Create a thread
+       Thread<list<Element> > tempThread(dataElements);
 
         // Process the range
-        for (list<Element>::iterator it = boost::begin(range); it != boost::end(range); ++it)
+        for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
         {
             switch (it->identifier)
             {
@@ -611,53 +567,37 @@ void Data::size(int& x0, int& y0, int &x1, int& y1)
         x1 = 0;
         y1 = 0;
 
-        // Save the size
-        #ifdef WITH_OPENMP
-        int size = elements();
-        #endif
-
-        // Process all items in a parallelised manner
-        #pragma omp parallel
+        // Process the range
+        for (list<Element>::iterator it = dataElements.begin(); it != dataElements.end(); ++it)
         {
-            // Calculate a range
-            #ifdef WITH_OPENMP
-            boost::iterator_range<list<Element>::const_iterator> range = split_range_openmp(boost::make_iterator_range(dataElements.begin(), dataElements.end()), size);
-            #else
-            boost::iterator_range<list<Element>::const_iterator> range = boost::make_iterator_range(dataElements.begin(), dataElements.end());
-            #endif
-
-            // Process the range
-            for (list<Element>::const_iterator it = boost::begin(range); it != boost::end(range); ++it)
+            switch (it->identifier)
             {
-                switch (it->identifier)
-                {
-                    // Point
-                    case 1:
-                        help_range(x0, x1, it->parameters[0]);
-                        help_range(y0, y1, it->parameters[1]);
-                        break;
+                // Point
+                case 1:
+                    help_range(x0, x1, it->parameters[0]);
+                    help_range(y0, y1, it->parameters[1]);
+                    break;
 
-                    // Polyline
-                    case 2:
-                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                        {
-                            help_range(x0, x1, it->parameters[i]);
-                            help_range(y0, y1, it->parameters[i+1]);
-                        }
-                        break;
+                // Polyline
+                case 2:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                    {
+                        help_range(x0, x1, it->parameters[i]);
+                        help_range(y0, y1, it->parameters[i+1]);
+                    }
+                    break;
 
-                    // Polybezier
-                    case 3:
-                        for (unsigned int i = 0; i < it->parameters.size(); i+=2)
-                        {
-                            help_range(x0, x1, it->parameters[i]);
-                            help_range(y0, y1, it->parameters[i+1]);
-                        }
-                        break;
+                // Polybezier
+                case 3:
+                    for (unsigned int i = 0; i < it->parameters.size(); i+=2)
+                    {
+                        help_range(x0, x1, it->parameters[i]);
+                        help_range(y0, y1, it->parameters[i+1]);
+                    }
+                    break;
 
-                    default:
-                        throw Exception("data", "size", "unsupported element with ID " + stringify(it->identifier));
-                }
+                default:
+                    throw Exception("data", "size", "unsupported element with ID " + stringify(it->identifier));
             }
         }
     }

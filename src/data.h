@@ -50,10 +50,8 @@
 #include "exception.h"
 #include "generic.h"
 
-// Multithreading
-#ifdef WITH_OPENMP
+// Thread management
 #include "multithread.h"
-#endif
 
 // Containers
 #ifdef WITH_USTD

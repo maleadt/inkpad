@@ -40,110 +40,129 @@
 #define __MULTITHREAD
 
 // System headers
+#ifdef WITH_OPENMP
 #include <omp.h>
-#include <boost/range.hpp>
+#include <algorithm>
+#endif
 
 
-/////////////////
-// SPLIT RANGE //
-/////////////////
+//////////////////////
+// CLASS DEFINITION //
+//////////////////////
 
-///////////////////////////////////////////////
-//
-// The returned sub range is such that if this function is called
-// for each partition [0,partition_count), the entire "range"
-// will be covered by all returned sub ranges, and distributed
-// amongst the partitions in the most even size distribution possible.
-//
-// The size parameter must specify the size of the range.
-// This overload, accepting a size, is preferable where
-// range.size() may be expensive.
-//
-template<typename Range>
-boost::iterator_range<typename Range::iterator> split_range(const Range& range, int partition_count, int partition, int size)
+template <class T>
+class Thread
 {
-	typename Range::iterator begin = boost::begin(range);
-	typename Range::iterator end = boost::end(range);
+    public:
+        // Construction and destruction
+        Thread(T& inputContainer);
+        ~Thread();
 
-	if (partition_count > 1)
-	{
-		int remainder = size % partition_count;
-		int quotient = size / partition_count;
+        // Iterators
+        typename T::iterator begin;
+        typename T::iterator end;
 
-		if (partition < remainder)
+    private:
+        // Range calculation
+        void split_range(T& inputContainer);
+
+
+
+};
+
+
+////////////////////
+// CLASS ROUTINES //
+////////////////////
+
+//
+// Construction and destruction
+//
+
+template <class T>
+Thread<T>::Thread(T& inputContainer)
+{
+    // Split the range
+    split_range(inputContainer);
+}
+
+template <class T>
+Thread<T>::~Thread()
+{
+}
+
+
+//
+// Range calculation
+//
+
+// Split the range without using OpenMP
+#ifndef WITH_OPENMP
+template <class T>
+void Thread<T>::split_range(T& inputContainer)
+{
+    // Return the complete range
+    begin = inputContainer.begin();
+    end = inputContainer.end();
+}
+#endif
+
+// Split the range using OpenMP
+#ifdef WITH_OPENMP
+template <class T>
+void Thread<T>::split_range(T& inputContainer)
+{
+    // Calculate amount of threads
+    int thread_count = omp_get_num_threads();
+
+    // Single threaded work: return the complete range
+    if (thread_count == 1)
+    {
+        begin = inputContainer.begin();
+        end = inputContainer.end();
+        return;
+    }
+
+    // Multi threaded work, split the range
+    else
+    {
+        // Get current thread
+        int thread = omp_get_thread_num();
+
+        // Starting point
+        begin = inputContainer.begin();
+
+        // Fetch size
+        int size;
+        #pragma omp single copyprivate(size)
+        {
+            size = inputContainer.size();
+        }
+
+        // Calculate remainder and quotient
+		int remainder = size % thread_count;
+		int quotient = size / thread_count;
+
+        // Math
+		if (thread < remainder)
 		{
-			std::advance(begin, partition * (1 + quotient));
+			std::advance(begin, thread * (1 + quotient));
 			end = begin;
 			std::advance(end, quotient + 1);
 		}
 		else
-		{
-			std::advance(begin, remainder + partition * quotient);
-			end = begin;
-			std::advance(end, quotient);
-		}
-	}
+        {
+            std::advance(begin, remainder + thread * quotient);
+            end = begin;
+            std::advance(end, quotient);
+        }
 
-	return boost::make_iterator_range(begin, end);
+		return;
+    }
+
 }
+#endif
 
-///////////////////////////////////////////////
-//
-// The returned sub range is such that if this function is called
-// for each partition [0,partition_count), the entire "range"
-// will be covered by all returned sub ranges, and distributed
-// amongst the partitions in the most even size distribution possible.
-//
-// Use this overload where range.size() is not expensive
-// (i.e. Range::iterator models random_access_iterator )
-//
-template<typename Range>
-boost::iterator_range<typename Range::iterator> split_range(const Range& range, int partition_count, int partition)
-{
-	return split_range(range, partition_count, partition, range.size());
-}
-
-///////////////////////////////////////////////
-//
-// This function should be called within a #pragma omp parallel
-// block, and returns a sub_range of the input range.
-//
-// The returned sub range is such that if this function is called
-// by each thread in the parallel thread group, the entirety of "range"
-// will be covered by all threads, and distributed amongst the threads
-// in the most even size distribution possible.
-//
-// The size parameter must specify the size of the range.
-// This overload, accepting a size, is preferable where
-// range.size() may be expensive.
-//
-template<typename Range>
-boost::iterator_range<typename Range::iterator> split_range_openmp(const Range& range, int size)
-{
-	int thread_count = omp_get_num_threads();
-	int thread = omp_get_thread_num();
-
-	return split_range(range, thread_count, thread, size);
-}
-
-///////////////////////////////////////////////
-//
-// This function should be called within a #pragma omp parallel
-// block, and returns a sub_range of the input range.
-//
-// The returned sub range is such that if this function is called
-// by each thread in the parallel thread group, the entirety of "range"
-// will be covered by all threads, and distributed amongst the threads
-// in the most even size() distribution possible.
-//
-// Use this overload where range.size() is not expensive
-// (i.e. Range::iterator models random_access_iterator )
-//
-template<typename Range>
-boost::iterator_range<typename Range::iterator> split_range_openmp(const Range& range)
-{
-	return split_range_openmp(range, range.size());
-}
 
 // Include guard
 #endif
