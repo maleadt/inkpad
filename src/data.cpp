@@ -84,7 +84,7 @@ void Data::addPoint(int x1, int y1, list<Element>::iterator it)
 	tempElement.parameters[1] = y1;
 
 	// Save the element
-	addElement(tempElement, dataElements.end());
+	addElement(tempElement, it);
 }
 
 // Add a new polyline
@@ -309,15 +309,15 @@ void Data::search_polyline()
             }
 
             // Save the end points
-            double x = polyline[ polyline.size() - 2 ];
-            double y = polyline[ polyline.size() - 1 ];
             unsigned int oldsize = polyline.size();
+            double x = polyline[oldsize - 2];
+            double y = polyline[oldsize - 1];
 
             // Scan other elements to look for a match with those end points
             bool found = false;
             list<Element>::iterator it_a = it;
             list<Element>::iterator it2 = ++it_a;
-            while (it2 != dataElements.end())
+            while (it2 != tempThread.end)
             {
                 // Compare ending point
                 switch (it2->identifier)
@@ -332,7 +332,8 @@ void Data::search_polyline()
                     case 2:
                         if (x == it2->parameters[0] && y == it2->parameters[1])
                         {
-                            for (unsigned int i = 2; i < it2->parameters.size(); i++)
+                            int size = it2->parameters.size();
+                            for (unsigned int i = 2; i < size; i++)
                                 polyline.push_back(it2->parameters[i]);
                             found = true;
                         }
@@ -350,8 +351,9 @@ void Data::search_polyline()
                     it2 = dataElements.erase(it2);
 
                     // Alter the new comparison points
-                    x = polyline[ polyline.size() - 2 ];
-                    y = polyline[ polyline.size() - 1 ];
+                    int newsize = polyline.size();
+                    x = polyline[newsize - 2];
+                    y = polyline[newsize - 1];
                     found = false;
                 }
                 else
@@ -375,8 +377,6 @@ void Data::search_polyline()
 }
 
 // Simplify polylines
-// Parallelisation does have a negative impact in here: per x threads more than 1,
-//   theoretically x polylines could be split
 // See also: http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
 void Data::simplify_polyline(double radius)
 {
@@ -622,7 +622,7 @@ int Data::elements() const
 // TODO: does parallelisation bring a speedup in small routines as this one?
 int Data::parameters() const
 {
-	// Loop dataElements
+	// Loop elements
 	int count = 0;
 	list<Element>::const_iterator it = dataElements.begin();
 	while (it != dataElements.end())

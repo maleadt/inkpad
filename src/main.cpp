@@ -396,16 +396,6 @@ bool Inkpad::InitBenchmark()
 	wxMemoryDC dc;
 	dc.SelectObject(bitmap);
 
-    // Search polyline
-    std::cout << "\t- polyline matches: ";
-    stopwatch.Start();
-    for (int i = 0; i < BENCHMARK_DATA_OPTIMIZE_POLYSEARCH; i++)
-    {
-        Data tempData(*engineData);
-        tempData.search_polyline();
-    }
-    std::cout << 1000*BENCHMARK_DATA_OPTIMIZE_POLYSEARCH/stopwatch.Time() << " per second" << std::endl;
-
 	//
 	// Data operations
 	//
