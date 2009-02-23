@@ -14,11 +14,6 @@ FIND_PACKAGE(wxWidgets REQUIRED)
 INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
 ADD_DEFINITIONS(${wxWidgets_DEFINITIONS})
 
-# Include Boost
-FIND_PACKAGE(Boost)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
-
 # Define the main inkpad executable, and what it should be linked too
 ADD_EXECUTABLE(inkpad WIN32 main)
 TARGET_LINK_LIBRARIES(inkpad exception)
