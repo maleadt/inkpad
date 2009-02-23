@@ -408,7 +408,7 @@ bool Inkpad::InitBenchmark()
     stopwatch.Start();
     for (int i = 0; i < BENCHMARK_DATA_OPERATION_COPY; i++)
         Data tempData(*engineData);
-    std::cout << (int)(1000*BENCHMARK_DATA_OPERATION_COPY/stopwatch.Time()) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_OPERATION_COPY/stopwatch.Time() << " per second" << std::endl;
 
 
 	//
@@ -444,7 +444,7 @@ bool Inkpad::InitBenchmark()
         Data tempData(*engineData);
         tempData.autocrop();
     }
-    std::cout << int(1000*BENCHMARK_DATA_TRANSFORM_AUTOCROP/(stopwatch.Time())) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_TRANSFORM_AUTOCROP/stopwatch.Time() << " per second" << std::endl;
 
 
 	//
@@ -461,7 +461,7 @@ bool Inkpad::InitBenchmark()
         Data tempData(*engineData);
         tempData.search_polyline();
     }
-    std::cout << int(1000*BENCHMARK_DATA_OPTIMIZE_POLYSEARCH/(stopwatch.Time())) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_OPTIMIZE_POLYSEARCH/stopwatch.Time() << " per second" << std::endl;
 
     // Simplify polyline
     std::cout << "\t- polyline simplifications: ";
@@ -471,7 +471,7 @@ bool Inkpad::InitBenchmark()
         Data tempData(*engineData);
         tempData.simplify_polyline(1);
     }
-    std::cout << int(1000*BENCHMARK_DATA_OPTIMIZE_POLYSIMP/(stopwatch.Time())) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_OPTIMIZE_POLYSIMP/stopwatch.Time() << " per second" << std::endl;
 
     // Smooth polyline
     std::cout << "\t- polyline smoothns: ";
@@ -481,7 +481,7 @@ bool Inkpad::InitBenchmark()
         Data tempData(*engineData);
         tempData.smoothn_polyline(0.95);
     }
-    std::cout << int(1000*BENCHMARK_DATA_OPTIMIZE_POLYSMOOTH/(stopwatch.Time())) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_OPTIMIZE_POLYSMOOTH/stopwatch.Time() << " per second" << std::endl;
 
 
     //
@@ -499,7 +499,7 @@ bool Inkpad::InitBenchmark()
         Data tempData(*engineData);
         tempData.size(dummy, dummy, dummy, dummy);
     }
-    std::cout << int(1000*BENCHMARK_DATA_INFORMATION_SIZE/(stopwatch.Time())) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_INFORMATION_SIZE/stopwatch.Time() << " per second" << std::endl;
 
     // Elements
     std::cout << "\t- element counts: ";
@@ -509,7 +509,7 @@ bool Inkpad::InitBenchmark()
         Data tempData(*engineData);
         tempData.elements();
     }
-    std::cout << int(1000*BENCHMARK_DATA_INFORMATION_ELEMENTS/(stopwatch.Time())) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_INFORMATION_ELEMENTS/stopwatch.Time() << " per second" << std::endl;
 
     // Parameters
     std::cout << "\t- parameter counts: ";
@@ -519,7 +519,7 @@ bool Inkpad::InitBenchmark()
         Data tempData(*engineData);
         tempData.parameters();
     }
-    std::cout << int(1000*BENCHMARK_DATA_INFORMATION_PARAMETERS/(stopwatch.Time())) << " per second" << std::endl;
+    std::cout << 1000*BENCHMARK_DATA_INFORMATION_PARAMETERS/stopwatch.Time() << " per second" << std::endl;
 
 
 

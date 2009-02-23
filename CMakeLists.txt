@@ -9,7 +9,7 @@ set(CMAKE_BUILD_TYPE release)
 
 # Experimental options
 set(WITH_USTD false)
-set(WITH_OPENMP false)
+set(WITH_OPENMP true)
 
 # Which render engines to use
 set(RENDER_CAIRO true)

@@ -56,15 +56,24 @@ class Thread
     public:
         // Construction and destruction
         Thread(T& inputContainer);
-        ~Thread();
+
+        // Range calculation
+        void split();
 
         // Iterators
         typename T::iterator begin;
         typename T::iterator end;
 
     private:
-        // Range calculation
-        void split_range(T& inputContainer);
+
+        // Internal data
+        T* dataContainer;
+
+        // Internal data (multithreaded)
+        #ifdef WITH_OPENMP
+        int dataSize;
+        int dataThreads;
+        #endif
 
 
 
@@ -82,15 +91,16 @@ class Thread
 template <class T>
 Thread<T>::Thread(T& inputContainer)
 {
-    // Split the range
-    split_range(inputContainer);
-}
+    // Save size
+    #ifdef WITH_OPENMP
+    dataThreads = omp_get_num_threads();
+    if (dataThreads > 1)
+        dataSize = inputContainer.size();
+    #endif
 
-template <class T>
-Thread<T>::~Thread()
-{
+    // Save container
+    dataContainer = &inputContainer;
 }
-
 
 //
 // Range calculation
@@ -99,7 +109,7 @@ Thread<T>::~Thread()
 // Split the range without using OpenMP
 #ifndef WITH_OPENMP
 template <class T>
-void Thread<T>::split_range(T& inputContainer)
+void Thread<T>::split()
 {
     // Return the complete range
     begin = inputContainer.begin();
@@ -110,16 +120,13 @@ void Thread<T>::split_range(T& inputContainer)
 // Split the range using OpenMP
 #ifdef WITH_OPENMP
 template <class T>
-void Thread<T>::split_range(T& inputContainer)
+void Thread<T>::split()
 {
-    // Calculate amount of threads
-    int thread_count = omp_get_num_threads();
-
     // Single threaded work: return the complete range
-    if (thread_count == 1)
+    if (dataThreads == 1)
     {
-        begin = inputContainer.begin();
-        end = inputContainer.end();
+        begin = dataContainer->begin();
+        end = dataContainer->end();
         return;
     }
 
@@ -130,18 +137,11 @@ void Thread<T>::split_range(T& inputContainer)
         int thread = omp_get_thread_num();
 
         // Starting point
-        begin = inputContainer.begin();
-
-        // Fetch size
-        int size;
-        #pragma omp single copyprivate(size)
-        {
-            size = inputContainer.size();
-        }
+        begin = dataContainer->begin();
 
         // Calculate remainder and quotient
-		int remainder = size % thread_count;
-		int quotient = size / thread_count;
+		int remainder = dataSize % dataThreads;
+		int quotient = dataSize / dataThreads;
 
         // Math
 		if (thread < remainder)

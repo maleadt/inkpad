@@ -158,11 +158,14 @@ void Data::rotate(double angle)
 	// Move the image to it's center
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
+    // Create a thread
+    Thread<list<Element> > tempThread(dataElements);
+
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    #pragma omp parallel firstprivate(tempThread)
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Split the range
+        tempThread.split();
 
         // Process the range
         for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
@@ -202,12 +205,14 @@ void Data::rotate(double angle)
 // Relocate the canvas
 void Data::translate(int dx, int dy)
 {
+    // Create a thread
+    Thread<list<Element> > tempThread(dataElements);
 
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    #pragma omp parallel firstprivate(tempThread)
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Split the range
+        tempThread.split();
 
         // Process the range
         for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
@@ -276,11 +281,14 @@ void Data::autocrop()
 //   theoretically x polylines could be split
 void Data::search_polyline()
 {
+    // Create a thread
+    Thread<list<Element> > tempThread(dataElements);
+
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    #pragma omp parallel firstprivate(tempThread)
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Split the range
+        tempThread.split();
 
         // Process the range
         list<Element>::iterator it = tempThread.begin;
@@ -381,11 +389,14 @@ void Data::search_polyline()
 // See also: http://www.kevlindev.com/tutorials/geometry/simplify_polyline/index.htm
 void Data::simplify_polyline(double radius)
 {
+    // Create a thread
+    Thread<list<Element> > tempThread(dataElements);
+
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    #pragma omp parallel firstprivate(tempThread)
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Split the range
+        tempThread.split();
 
         // Process the range
         for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
@@ -463,11 +474,14 @@ void Data::simplify_polyline(double radius)
 // See also: http://www.sitepen.com/blog/2007/07/16/softening-polylines-with-dojox-graphics/
 void Data::smoothn_polyline(double tension)
 {
+    // Create a thread
+    Thread<list<Element> > tempThread(dataElements);
+
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    #pragma omp parallel firstprivate(tempThread)
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Split the range
+        tempThread.split();
 
         // Process the range
         for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
