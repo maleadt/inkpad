@@ -51,19 +51,12 @@
 #include "threading.h"
 
 // Containers
-#ifdef WITH_USTD
-#include "ustd.h"
-using ustd::vector;
-using ustd::list;
-#else
 #include <vector>
 #include <list>
 #include <valarray>
 using std::vector;
 using std::list;
 using std::valarray;
-#endif
-
 
 ////////////////
 // DATA TYPES //

@@ -1,4 +1,0 @@
-
-# Medion Digital Ink Pad Conversion and Synchronisation
-ATTRS{model}=="Pen Pad storage ", NAME="PenPadStorage", RUN+="/home/tim/Bureaublad/inkpad/scripts/inkpad_import.pl"
-

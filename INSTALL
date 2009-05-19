@@ -22,7 +22,7 @@ Ubuntu
 	- CMake >= 2.6
 	  sudo aptitude install cmake
 	- wxWidgets >= 2.8
-	  sudo aptitude install libwxbase2.8-dev libgtk2.8-dev wx2.8-headers
+	  sudo aptitude install libwxbase2.8-dev libwxgtk2.8-dev wx2.8-headers
 	- Cairo 2
 	  sudo aptitude install libcairo2-dev
 

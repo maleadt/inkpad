@@ -26,14 +26,6 @@ TARGET_LINK_LIBRARIES(inkpad file)
 TARGET_LINK_LIBRARIES(inkpad render)
 TARGET_LINK_LIBRARIES(inkpad ${wxWidgets_LIBRARIES})
 
-# Use uSTD?
-IF (WITH_USTD)
-	MESSAGE("** Using uSTD data structures")
-	ADD_DEFINITIONS(-DWITH_USTD)
-	ADD_LIBRARY(libustd ustd.h ustd.cpp)
-	TARGET_LINK_LIBRARIES(inkpad libustd)
-ENDIF(WITH_USTD)
-
 # Use OpenMP?
 INCLUDE(CheckCCompilerFlag)
 IF (WITH_OPENMP)
@@ -57,3 +49,4 @@ IF (RENDER_WXWIDGETS)
 	MESSAGE("** Building wxWidgets render")
 	ADD_DEFINITIONS(-DRENDER_WXWIDGETS)
 ENDIF (RENDER_WXWIDGETS)
+

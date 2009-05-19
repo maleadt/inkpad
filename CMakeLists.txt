@@ -8,7 +8,6 @@ PROJECT(Inkpad)
 set(CMAKE_BUILD_TYPE release)
 
 # Experimental options
-set(WITH_USTD false)
 set(WITH_OPENMP false)
 
 # Which render engines to use
