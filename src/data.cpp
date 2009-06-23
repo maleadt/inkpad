@@ -32,6 +32,7 @@
 #include "data.h"
 
 
+
 ////////////////////
 // CLASS ROUTINES //
 ////////////////////
@@ -67,12 +68,18 @@ void Data::clear()
 // Element input
 //
 
-// Add a single point
+// Single point
 void Data::addPoint(int x1, int y1)
 {
 	addPoint(x1, y1, dataElements.end());
 }
 void Data::addPoint(int x1, int y1, list<Element>::iterator it)
+{
+    // Extend the list
+	Element dummy;
+	setPoint(x1, y1, dataElements.insert(it, dummy));
+}
+void Data::setPoint(int x1, int y1, list<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -84,15 +91,21 @@ void Data::addPoint(int x1, int y1, list<Element>::iterator it)
 	tempElement.parameters[1] = y1;
 
 	// Save the element
-	addElement(tempElement, it);
+	setElement(tempElement, it);
 }
 
-// Add a new polyline
+// Polyline
 void Data::addPolyline(const vector<double>& points)
 {
 	addPolyline(points, dataElements.end());
 }
 void Data::addPolyline(const vector<double>& points, list<Element>::iterator it)
+{
+    // Extend the list
+	Element dummy;
+	setPolyline(points, dataElements.insert(it, dummy));
+}
+void Data::setPolyline(const vector<double>& points, list<Element>::iterator it)
 {
 	// New element
 	Element tempElement;
@@ -102,7 +115,7 @@ void Data::addPolyline(const vector<double>& points, list<Element>::iterator it)
 	tempElement.parameters = points;
 
 	// Save the element
-	addElement(tempElement, it);
+	setElement(tempElement, it);
 }
 
 // Add a new polybezier
@@ -112,6 +125,12 @@ void Data::addPolybezier(const vector<double>& points)
 }
 void Data::addPolybezier(const vector<double>& points, list<Element>::iterator it)
 {
+    // Extend the list
+	Element dummy;
+	setPolybezier(points, dataElements.insert(it, dummy));
+}
+void Data::setPolybezier(const vector<double>& points, list<Element>::iterator it)
+{
 	// New element
 	Element tempElement;
 	tempElement.identifier = 3;
@@ -120,11 +139,11 @@ void Data::addPolybezier(const vector<double>& points, list<Element>::iterator i
 	tempElement.parameters = points;
 
 	// Save the element
-	addElement(tempElement, it);
+	setElement(tempElement, it);
 }
 
-// Add a new element (private, applies current settings)
-void Data::addElement(Element& inputElement, list<Element>::iterator it)
+// Overwrite an existing element (private, applies current settings)
+void Data::setElement(Element& inputElement, list<Element>::iterator it)
 {
 	// Save pen condition
 	inputElement.width = penWidth;
@@ -132,7 +151,7 @@ void Data::addElement(Element& inputElement, list<Element>::iterator it)
 	inputElement.background = penBackground;
 
 	// Save the element
-	dataElements.insert(it, inputElement);
+	*it = inputElement;
 
 	// Invalidate caches
 	cacheBoundsDirty = true;
@@ -278,8 +297,9 @@ void Data::search_polyline()
     // Process all items in a parallelised manner
     PARALLEL
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Create a thread (barried because the list gets altered)
+        Thread<list<Element> > tempThread(dataElements);
+        #pragma omp barrier
 
         // Process the range
         list<Element>::iterator it = tempThread.begin;
@@ -315,20 +335,20 @@ void Data::search_polyline()
 
             // Scan other elements to look for a match with those end points
             bool found = false;
-            list<Element>::iterator it_a = it;
-            list<Element>::iterator it2 = ++it_a;
+            list<Element>::iterator it2 = it;
+            ++it2;
             while (it2 != tempThread.end)
             {
                 // Compare ending point
                 switch (it2->identifier)
                 {
-                        // Point
+                    // Point
                     case 1:
                         if (x == it2->parameters[0] && y == it2->parameters[1])
                             found = true;
                         break;
 
-                        // Polyline
+                    // Polyline
                     case 2:
                         if (x == it2->parameters[0] && y == it2->parameters[1])
                         {
@@ -339,9 +359,9 @@ void Data::search_polyline()
                         }
                         break;
 
-                        // Not supported form
+                    // Not supported form
                     default:
-                        continue;
+                        break;
                 }
 
                 // If the line matched, remove it and push it up the temporary polyline
@@ -365,8 +385,8 @@ void Data::search_polyline()
             // If the size differs, we have removed some lines, so save the resulting polyline
             if (oldsize != polyline.size())
             {
-                it = dataElements.erase(it);
-                addPolyline(polyline, it);
+                //it = dataElements.erase(it);
+                setPolyline(polyline, it);
             }
             else
             {
@@ -383,8 +403,8 @@ void Data::simplify_polyline(double radius)
     // Process all items in a parallelised manner
     PARALLEL
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Create a thread
+        Thread<list<Element> > tempThread(dataElements);
 
         // Process the range
         for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
@@ -465,8 +485,9 @@ void Data::smoothn_polyline(double tension)
     // Process all items in a parallelised manner
     PARALLEL
     {
-       // Create a thread
-       Thread<list<Element> > tempThread(dataElements);
+        // Create a thread (barried because the list gets altered)
+        Thread<list<Element> > tempThread(dataElements);
+        #pragma omp barrier
 
         // Process the range
         for (list<Element>::iterator it = tempThread.begin; it != tempThread.end; ++it)
@@ -502,10 +523,8 @@ void Data::smoothn_polyline(double tension)
                         result.push_back(it->parameters[i+1]);
                     }
 
-
                     // Replace polyline with polybezier
-                    it = dataElements.erase(it);
-                    addPolybezier(result, it);
+                    setPolybezier(result, it);
                     break;
                 }
 

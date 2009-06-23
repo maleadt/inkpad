@@ -27,6 +27,21 @@
  *
  */
 
+/*
+ * Important note
+ * ~~~~~~~~~~~~~~
+ *
+ * When using the thread library to process a container which gets altered
+ * during the processing, two things have to be kept in mind:
+ *     1) The construction of the Thread object has to be barried, in order
+ *        to get evenly distributed slices originating from identical
+ *        iterators;
+ *     2) The Thread.begin iterator _mustn't_ be erased, as it equals to
+ *        the Thread.end iterator of another thread and will probably cause
+ *        invalid reads (memory contents can get altered though, the iterator
+ *        should just be kept valid).
+ */
+
 ///////////////////
 // CONFIGURATION //
 ///////////////////
@@ -46,6 +61,7 @@
 #endif
 
 
+
 ////////////
 // MACROS //
 ////////////
@@ -55,6 +71,7 @@
 #else
 #define PARALLEL
 #endif
+
 
 
 //////////////////////
@@ -72,6 +89,7 @@ class Thread
         // Iterators
         typename T::iterator begin;
         typename T::iterator end;
+        typename T::iterator nearend;
 
         // Debugging routines
         #ifndef NDEBUG
@@ -89,6 +107,7 @@ class Thread
 ////////////////////
 // CLASS ROUTINES //
 ////////////////////
+
 
 //
 // Construction and destruction
@@ -171,11 +190,14 @@ void Thread<T>::split_range(T& inputContainer)
             end = begin;
             std::advance(end, quotient);
         }
+        nearend = end;
+        nearend--;
 		return;
     }
 
 }
 #endif
+
 
 //
 // Debugging routines

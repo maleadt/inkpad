@@ -147,10 +147,13 @@ class Data
 		// Element input
 		void addPoint(int, int);
 		void addPoint(int, int, list<Element>::iterator);
+		void setPoint(int, int, list<Element>::iterator);
 		void addPolyline(const vector<double>&);
 		void addPolyline(const vector<double>&, list<Element>::iterator);
+		void setPolyline(const vector<double>&, list<Element>::iterator);
 		void addPolybezier(const vector<double>&);
 		void addPolybezier(const vector<double>&, list<Element>::iterator);
+		void setPolybezier(const vector<double>&, list<Element>::iterator);
 
 		// Transformations
 		void rotate(double angle);
@@ -180,7 +183,7 @@ class Data
 
 	private:
 		// Elements
-		void addElement(Element&, list<Element>::iterator);
+		void setElement(Element&, list<Element>::iterator);
 		list<Element> dataElements;
 
 		// Cache - image bounds
