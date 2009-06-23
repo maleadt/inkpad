@@ -46,6 +46,17 @@
 #endif
 
 
+////////////
+// MACROS //
+////////////
+
+#ifdef WITH_OPENMP
+#define PARALLEL _Pragma("omp parallel")
+#else
+#define PARALLEL
+#endif
+
+
 //////////////////////
 // CLASS DEFINITION //
 //////////////////////
@@ -62,12 +73,16 @@ class Thread
         typename T::iterator begin;
         typename T::iterator end;
 
+        // Debugging routines
+        #ifndef NDEBUG
+        int dbgThreadCount();
+        int dbgThreadNumber();
+        bool dbgMultithreaded();
+        #endif
+
     private:
         // Range calculation
         void split_range(T& inputContainer);
-
-
-
 };
 
 
@@ -156,11 +171,48 @@ void Thread<T>::split_range(T& inputContainer)
             end = begin;
             std::advance(end, quotient);
         }
-
 		return;
     }
 
 }
+#endif
+
+//
+// Debugging routines
+//
+
+#ifndef NDEBUG
+
+// Amount of threads
+template <class T>
+int Thread<T>::dbgThreadCount() {
+    #ifdef WITH_OPENMP
+    return omp_get_num_threads();
+    #else
+    return 1;
+    #endif
+}
+
+// Number of current thread
+template <class T>
+int Thread<T>::dbgThreadNumber() {
+    #ifdef WITH_OPENMP
+    return omp_get_thread_num();
+    #else
+    return 1;
+    #endif
+}
+
+// Check if multithreaded
+template <class T>
+bool Thread<T>::dbgMultithreaded() {
+    #ifdef WITH_OPENMP
+    return true;
+    #else
+    return false;
+    #endif
+}
+
 #endif
 
 // Include guard

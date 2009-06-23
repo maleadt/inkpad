@@ -159,7 +159,7 @@ void Data::rotate(double angle)
 	translate(-(imgSizeX/2), -(imgSizeY/2));
 
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    PARALLEL
     {
        // Create a thread
        Thread<list<Element> > tempThread(dataElements);
@@ -203,7 +203,7 @@ void Data::rotate(double angle)
 void Data::translate(int dx, int dy)
 {
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    PARALLEL
     {
        // Create a thread
        Thread<list<Element> > tempThread(dataElements);
@@ -276,7 +276,7 @@ void Data::autocrop()
 void Data::search_polyline()
 {
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    PARALLEL
     {
        // Create a thread
        Thread<list<Element> > tempThread(dataElements);
@@ -381,7 +381,7 @@ void Data::search_polyline()
 void Data::simplify_polyline(double radius)
 {
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    PARALLEL
     {
        // Create a thread
        Thread<list<Element> > tempThread(dataElements);
@@ -463,7 +463,7 @@ void Data::simplify_polyline(double radius)
 void Data::smoothn_polyline(double tension)
 {
     // Process all items in a parallelised manner
-    #pragma omp parallel
+    PARALLEL
     {
        // Create a thread
        Thread<list<Element> > tempThread(dataElements);
