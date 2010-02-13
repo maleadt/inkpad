@@ -88,10 +88,14 @@ void Output::write(const std::string& inputFile, const std::string& inputType) c
 void Output::write(const std::string& inputFile) const
 {
 	// Detect the type
-	std::string type;
+	int tDot = inputFile.find_last_of(".");
+        if (tDot == std::string::npos) {
+            throw Exception("output", "write", "unable to extract extension");
+        }
+        std::string tType = inputFile.substr(tDot+1);
 
 	// Call the correct function
-	write(inputFile, type);
+	write(inputFile, tType);
 }
 
 
