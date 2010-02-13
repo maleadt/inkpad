@@ -12,7 +12,17 @@ ADD_LIBRARY(render render.h render.cpp)
 SET(wxWidgets_USE_LIBS base core) 
 FIND_PACKAGE(wxWidgets REQUIRED) 
 INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
-ADD_DEFINITIONS(${wxWidgets_DEFINITIONS})
+
+# What the hell?
+IF (${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 6)
+	SET(wxWidgets_DDEFINITIONS "")
+	FOREACH(definition ${wxWidgets_DEFINITIONS})
+		SET(wxWidgets_DDEFINITIONS "${wxWidgets_DDEFINITIONS} -D${definition}")
+	endforeach(definition) 
+	ADD_DEFINITIONS(${wxWidgets_DDEFINITIONS})
+ELSE (${CMAKE_MAJOR_VERSION} EQUAL 2 ${CMAKE_MINOR_VERSION} GREATER 6)
+	ADD_DEFINITIONS(${wxWidgets_DEFINITIONS})
+ENDIF (${CMAKE_MAJOR_VERSION} EQUAL 2 ${CMAKE_MINOR_VERSION} GREATER 6)
 
 # Define the main inkpad executable, and what it should be linked too
 ADD_EXECUTABLE(inkpad WIN32 main)
